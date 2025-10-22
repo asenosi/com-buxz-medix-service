@@ -40,11 +40,11 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped }: DoseCardProps) =>
   return (
     <Card
       className={cn(
-        "border-l-4 transition-all duration-300",
-        dose.isTaken && "opacity-60 bg-muted/50 border-l-success",
-        dose.isSkipped && "bg-warning/10 border-l-warning",
-        !isCompleted && dose.status === "overdue" && "border-l-destructive animate-pulse",
-        !isCompleted && dose.status === "due" && "border-l-accent",
+        "border-l-4 transition-all duration-500 hover:shadow-lg hover:scale-[1.01]",
+        dose.isTaken && "opacity-60 bg-success/5 border-l-success animate-fade-in",
+        dose.isSkipped && "bg-warning/20 border-l-warning opacity-75 animate-fade-in",
+        !isCompleted && dose.status === "overdue" && "border-l-destructive animate-pulse shadow-destructive/20 shadow-lg",
+        !isCompleted && dose.status === "due" && "border-l-accent shadow-accent/20 shadow-lg",
         !isCompleted && dose.status === "upcoming" && "border-l-primary"
       )}
     >
@@ -110,17 +110,17 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped }: DoseCardProps) =>
             <Button
               onClick={() => onMarkTaken(dose)}
               size="lg"
-              className="flex-1 text-xl"
+              className="flex-1 text-xl hover:scale-105 transition-transform duration-200 hover:shadow-xl"
               variant="default"
             >
-              <CheckCircle2 className="w-6 h-6 mr-2" />
+              <CheckCircle2 className="w-6 h-6 mr-2 animate-scale-in" />
               I Took This
             </Button>
             <Button 
               onClick={() => onMarkSkipped(dose)}
               size="lg" 
               variant="outline" 
-              className="text-xl"
+              className="text-xl hover:scale-105 transition-transform duration-200 hover:border-warning hover:text-warning"
             >
               <XCircle className="w-6 h-6 mr-2" />
               Skip

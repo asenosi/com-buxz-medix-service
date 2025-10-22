@@ -18,6 +18,16 @@ interface Schedule {
   days_of_week?: number[];
 }
 
+interface IntervalSchedule {
+  enabled: boolean;
+  doses_per_day: number;
+  interval_hours: number;
+  start_time: string;
+  with_food: boolean;
+  special_instructions: string;
+  days_of_week: number[];
+}
+
 const Medications = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -31,6 +41,16 @@ const Medications = () => {
   const [schedules, setSchedules] = useState<Schedule[]>([
     { time_of_day: "08:00", with_food: false, special_instructions: "", days_of_week: [0,1,2,3,4,5,6] }
   ]);
+  const [useInterval, setUseInterval] = useState(false);
+  const [intervalSchedule, setIntervalSchedule] = useState<IntervalSchedule>({
+    enabled: false,
+    doses_per_day: 2,
+    interval_hours: 12,
+    start_time: "08:00",
+    with_food: false,
+    special_instructions: "",
+    days_of_week: [0,1,2,3,4,5,6]
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -72,6 +92,27 @@ const Medications = () => {
     setSchedules(newSchedules);
   };
 
+  const generateIntervalSchedules = (): Schedule[] => {
+    const generated: Schedule[] = [];
+    const [startHours, startMinutes] = intervalSchedule.start_time.split(":").map(Number);
+    
+    for (let i = 0; i < intervalSchedule.doses_per_day; i++) {
+      const totalMinutes = startHours * 60 + startMinutes + (i * intervalSchedule.interval_hours * 60);
+      const hours = Math.floor(totalMinutes / 60) % 24;
+      const minutes = totalMinutes % 60;
+      const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      
+      generated.push({
+        time_of_day: timeString,
+        with_food: intervalSchedule.with_food,
+        special_instructions: intervalSchedule.special_instructions,
+        days_of_week: intervalSchedule.days_of_week
+      });
+    }
+    
+    return generated;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -102,7 +143,8 @@ const Medications = () => {
 
       if (medError) throw medError;
 
-      const scheduleInserts = schedules.map(schedule => ({
+      const schedulesToInsert = useInterval ? generateIntervalSchedules() : schedules;
+      const scheduleInserts = schedulesToInsert.map(schedule => ({
         medication_id: medData.id,
         time_of_day: schedule.time_of_day,
         with_food: schedule.with_food,
@@ -246,14 +288,142 @@ const Medications = () => {
                     When should you take this medication?
                   </CardDescription>
                 </div>
-                <Button type="button" onClick={addSchedule} size="lg">
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add Time
-                </Button>
+                {!useInterval && (
+                  <Button type="button" onClick={addSchedule} size="lg">
+                    <Plus className="w-5 h-5 mr-2" />
+                    Add Time
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {schedules.map((schedule, index) => (
+              <div className="flex gap-4 mb-6">
+                <Button
+                  type="button"
+                  variant={!useInterval ? "default" : "outline"}
+                  onClick={() => setUseInterval(false)}
+                  size="lg"
+                  className="flex-1"
+                >
+                  Manual Times
+                </Button>
+                <Button
+                  type="button"
+                  variant={useInterval ? "default" : "outline"}
+                  onClick={() => setUseInterval(true)}
+                  size="lg"
+                  className="flex-1"
+                >
+                  Interval-Based
+                </Button>
+              </div>
+
+              {useInterval ? (
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <Label className="text-lg font-semibold">Doses Per Day</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="24"
+                          value={intervalSchedule.doses_per_day}
+                          onChange={(e) => setIntervalSchedule({
+                            ...intervalSchedule,
+                            doses_per_day: parseInt(e.target.value) || 1
+                          })}
+                          className="text-lg h-14"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-lg font-semibold">Every (hours)</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="24"
+                          value={intervalSchedule.interval_hours}
+                          onChange={(e) => setIntervalSchedule({
+                            ...intervalSchedule,
+                            interval_hours: parseInt(e.target.value) || 1
+                          })}
+                          className="text-lg h-14"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-lg font-semibold">Start Time</Label>
+                      <Input
+                        type="time"
+                        value={intervalSchedule.start_time}
+                        onChange={(e) => setIntervalSchedule({
+                          ...intervalSchedule,
+                          start_time: e.target.value
+                        })}
+                        className="text-lg h-14"
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-lg font-semibold">Repeat On</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, dayIdx) => (
+                          <Button
+                            key={dayIdx}
+                            type="button"
+                            variant={intervalSchedule.days_of_week.includes(dayIdx) ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              const newDays = intervalSchedule.days_of_week.includes(dayIdx)
+                                ? intervalSchedule.days_of_week.filter(d => d !== dayIdx)
+                                : [...intervalSchedule.days_of_week, dayIdx].sort();
+                              setIntervalSchedule({ ...intervalSchedule, days_of_week: newDays });
+                            }}
+                            className="text-base"
+                          >
+                            {day}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <Checkbox
+                        id="interval-with-food"
+                        checked={intervalSchedule.with_food}
+                        onCheckedChange={(checked) =>
+                          setIntervalSchedule({ ...intervalSchedule, with_food: !!checked })
+                        }
+                        className="w-6 h-6"
+                      />
+                      <Label htmlFor="interval-with-food" className="text-lg cursor-pointer">
+                        Take with food
+                      </Label>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-lg font-semibold">Special Instructions</Label>
+                      <Input
+                        value={intervalSchedule.special_instructions}
+                        onChange={(e) =>
+                          setIntervalSchedule({ ...intervalSchedule, special_instructions: e.target.value })
+                        }
+                        placeholder="e.g., Apply 4 times, 6 hourly"
+                        className="text-lg h-14"
+                      />
+                    </div>
+
+                    <div className="bg-primary/10 p-4 rounded-lg">
+                      <p className="text-sm font-semibold mb-2">Generated Times:</p>
+                      <p className="text-base text-muted-foreground">
+                        {generateIntervalSchedules().map(s => s.time_of_day).join(", ")}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                schedules.map((schedule, index) => (
                 <Card key={index} className="bg-muted/50">
                   <CardContent className="pt-6 space-y-4">
                     <div className="flex justify-between items-center">
@@ -332,7 +502,8 @@ const Medications = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+              )}
             </CardContent>
           </Card>
 

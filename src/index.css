@@ -50,8 +50,8 @@ All colors MUST be HSL.
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning amber */
-    --warning: 38 92% 50%;
+    /* Warning orange */
+    --warning: 25 95% 53%;
     --warning-foreground: 215 25% 20%;
 
     /* Gradients */
@@ -102,7 +102,7 @@ All colors MUST be HSL.
     --success: 142 70% 42%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 90% 55%;
+    --warning: 25 95% 53%;
     --warning-foreground: 0 0% 100%;
 
     --sidebar-background: 215 28% 17%;
