@@ -15,6 +15,7 @@ interface Schedule {
   time_of_day: string;
   with_food: boolean;
   special_instructions: string;
+  days_of_week?: number[];
 }
 
 const Medications = () => {
@@ -28,7 +29,7 @@ const Medications = () => {
   const [instructions, setInstructions] = useState("");
   const [totalPills, setTotalPills] = useState("");
   const [schedules, setSchedules] = useState<Schedule[]>([
-    { time_of_day: "08:00", with_food: false, special_instructions: "" }
+    { time_of_day: "08:00", with_food: false, special_instructions: "", days_of_week: [0,1,2,3,4,5,6] }
   ]);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ const Medications = () => {
   }, [navigate]);
 
   const addSchedule = () => {
-    setSchedules([...schedules, { time_of_day: "08:00", with_food: false, special_instructions: "" }]);
+    setSchedules([...schedules, { time_of_day: "08:00", with_food: false, special_instructions: "", days_of_week: [0,1,2,3,4,5,6] }]);
   };
 
   const removeSchedule = (index: number) => {
@@ -106,6 +107,7 @@ const Medications = () => {
         time_of_day: schedule.time_of_day,
         with_food: schedule.with_food,
         special_instructions: schedule.special_instructions || null,
+        days_of_week: schedule.days_of_week || null,
         active: true,
       }));
 
@@ -165,20 +167,6 @@ const Medications = () => {
               </div>
 
               <div className="space-y-3">
-                <Label htmlFor="dosage" className="text-lg font-semibold">
-                  Dosage *
-                </Label>
-                <Input
-                  id="dosage"
-                  value={dosage}
-                  onChange={(e) => setDosage(e.target.value)}
-                  placeholder="e.g., 100mg"
-                  required
-                  className="text-lg h-14"
-                />
-              </div>
-
-              <div className="space-y-3">
                 <Label htmlFor="form" className="text-lg font-semibold">
                   Form
                 </Label>
@@ -193,8 +181,30 @@ const Medications = () => {
                     <SelectItem value="injection" className="text-lg">Injection</SelectItem>
                     <SelectItem value="cream" className="text-lg">Cream/Ointment</SelectItem>
                     <SelectItem value="inhaler" className="text-lg">Inhaler</SelectItem>
+                    <SelectItem value="eye_drops" className="text-lg">Eye Drops</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="dosage" className="text-lg font-semibold">
+                  {form === "cream" || form === "inhaler" || form === "eye_drops" 
+                    ? "Application/Usage *" 
+                    : "Dosage *"}
+                </Label>
+                <Input
+                  id="dosage"
+                  value={dosage}
+                  onChange={(e) => setDosage(e.target.value)}
+                  placeholder={
+                    form === "cream" ? "e.g., Apply thin layer" :
+                    form === "inhaler" ? "e.g., 2 puffs" :
+                    form === "eye_drops" ? "e.g., 1 drop per eye" :
+                    "e.g., 100mg"
+                  }
+                  required
+                  className="text-lg h-14"
+                />
               </div>
 
               <div className="space-y-3">
@@ -269,6 +279,30 @@ const Medications = () => {
                         required
                         className="text-lg h-14"
                       />
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-lg font-semibold">Repeat On</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, dayIdx) => (
+                          <Button
+                            key={dayIdx}
+                            type="button"
+                            variant={schedule.days_of_week?.includes(dayIdx) ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              const currentDays = schedule.days_of_week || [];
+                              const newDays = currentDays.includes(dayIdx)
+                                ? currentDays.filter(d => d !== dayIdx)
+                                : [...currentDays, dayIdx].sort();
+                              updateSchedule(index, "days_of_week", newDays);
+                            }}
+                            className="text-base"
+                          >
+                            {day}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="flex items-center space-x-3">

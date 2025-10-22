@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Plus, LogOut, Pill } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
+import { DoseCard } from "@/components/DoseCard";
+import { AdherenceStats } from "@/components/AdherenceStats";
 
 interface Medication {
   id: string;
@@ -29,6 +31,8 @@ interface TodayDose {
   schedule: Schedule;
   nextDoseTime: Date;
   status: "upcoming" | "due" | "overdue";
+  isTaken?: boolean;
+  isSkipped?: boolean;
 }
 
 const Dashboard = () => {
@@ -37,6 +41,10 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [todayDoses, setTodayDoses] = useState<TodayDose[]>([]);
+  const [streak, setStreak] = useState(0);
+  const [totalTaken, setTotalTaken] = useState(0);
+  const [todayProgress, setTodayProgress] = useState(0);
+  const [weeklyAdherence, setWeeklyAdherence] = useState(0);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -88,13 +96,31 @@ const Dashboard = () => {
 
         if (schedError) throw schedError;
 
+        // Fetch today's logs
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const { data: logsData } = await supabase
+          .from("dose_logs")
+          .select("*")
+          .gte("scheduled_time", startOfDay.toISOString())
+          .lte("scheduled_time", endOfDay.toISOString());
+
         const doses: TodayDose[] = [];
         const now = new Date();
+        const currentDay = now.getDay();
 
         medsData.forEach(med => {
           const medSchedules = schedulesData?.filter(s => s.medication_id === med.id) || [];
           
           medSchedules.forEach(schedule => {
+            // Check if today is in the days_of_week array
+            if (schedule.days_of_week && !schedule.days_of_week.includes(currentDay)) {
+              return; // Skip this schedule if today is not in the recurring days
+            }
+
             const [hours, minutes] = schedule.time_of_day.split(":").map(Number);
             const doseTime = new Date();
             doseTime.setHours(hours, minutes, 0, 0);
@@ -109,21 +135,98 @@ const Dashboard = () => {
               status = "overdue";
             }
 
+            // Check if this dose has been logged
+            const doseLog = logsData?.find(log => 
+              log.schedule_id === schedule.id &&
+              new Date(log.scheduled_time).getHours() === hours &&
+              new Date(log.scheduled_time).getMinutes() === minutes
+            );
+
             doses.push({
               medication: med,
               schedule,
               nextDoseTime: doseTime,
               status,
+              isTaken: doseLog?.status === "taken",
+              isSkipped: doseLog?.status === "skipped",
             });
           });
         });
 
         doses.sort((a, b) => a.nextDoseTime.getTime() - b.nextDoseTime.getTime());
         setTodayDoses(doses);
+
+        // Calculate today's progress
+        if (doses.length > 0) {
+          const takenCount = doses.filter(d => d.isTaken).length;
+          setTodayProgress(Math.round((takenCount / doses.length) * 100));
+        }
       }
+
+      // Fetch gamification stats
+      await fetchGamificationStats();
     } catch (error: any) {
       toast.error("Failed to load medications");
       console.error(error);
+    }
+  };
+
+  const fetchGamificationStats = async () => {
+    try {
+      // Get total taken doses
+      const { data: allLogs, error: logsError } = await supabase
+        .from("dose_logs")
+        .select("*")
+        .eq("status", "taken")
+        .order("taken_at", { ascending: false });
+
+      if (logsError) throw logsError;
+
+      setTotalTaken(allLogs?.length || 0);
+
+      // Calculate streak
+      if (allLogs && allLogs.length > 0) {
+        let currentStreak = 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let i = 0; i < 365; i++) {
+          const checkDate = new Date(today);
+          checkDate.setDate(today.getDate() - i);
+          checkDate.setHours(0, 0, 0, 0);
+          
+          const nextDay = new Date(checkDate);
+          nextDay.setDate(checkDate.getDate() + 1);
+          
+          const hasLog = allLogs.some(log => {
+            const logDate = new Date(log.taken_at || log.scheduled_time);
+            return logDate >= checkDate && logDate < nextDay;
+          });
+          
+          if (hasLog) {
+            currentStreak++;
+          } else if (i > 0) {
+            break;
+          }
+        }
+        setStreak(currentStreak);
+      }
+
+      // Calculate weekly adherence
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data: weekLogs } = await supabase
+        .from("dose_logs")
+        .select("*")
+        .gte("scheduled_time", sevenDaysAgo.toISOString());
+
+      if (weekLogs && weekLogs.length > 0) {
+        const takenCount = weekLogs.filter(l => l.status === "taken").length;
+        setWeeklyAdherence(Math.round((takenCount / weekLogs.length) * 100));
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch gamification stats:", error);
     }
   };
 
@@ -156,10 +259,32 @@ const Dashboard = () => {
         if (updateError) throw updateError;
       }
 
-      toast.success(`Marked ${dose.medication.name} as taken!`);
+      toast.success(`✅ Great job! ${dose.medication.name} marked as taken!`);
       fetchMedications();
     } catch (error: any) {
       toast.error("Failed to log dose");
+      console.error(error);
+    }
+  };
+
+  const markAsSkipped = async (dose: TodayDose) => {
+    try {
+      const { error } = await supabase.from("dose_logs").insert([
+        {
+          medication_id: dose.medication.id,
+          schedule_id: dose.schedule.id,
+          scheduled_time: dose.nextDoseTime.toISOString(),
+          taken_at: null,
+          status: "skipped",
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast.info(`${dose.medication.name} marked as skipped`);
+      fetchMedications();
+    } catch (error: any) {
+      toast.error("Failed to log skip");
       console.error(error);
     }
   };
@@ -221,75 +346,35 @@ const Dashboard = () => {
           </Card>
         ) : (
           <>
+            <AdherenceStats
+              streak={streak}
+              todayProgress={todayProgress}
+              weeklyAdherence={weeklyAdherence}
+              totalTaken={totalTaken}
+            />
+
             <div className="mb-8">
               <h2 className="text-2xl font-bold mb-4">Today's Schedule</h2>
-              <div className="grid gap-4">
-                {todayDoses.map((dose, idx) => (
-                  <Card
-                    key={`${dose.schedule.id}-${idx}`}
-                    className={`border-l-4 ${
-                      dose.status === "overdue"
-                        ? "border-l-destructive"
-                        : dose.status === "due"
-                        ? "border-l-accent"
-                        : "border-l-primary"
-                    }`}
-                  >
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-2xl">{dose.medication.name}</CardTitle>
-                          <CardDescription className="text-lg mt-2">
-                            {dose.medication.dosage}
-                            {dose.medication.form && ` • ${dose.medication.form}`}
-                          </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-6 h-6 text-muted-foreground" />
-                          <span className="text-2xl font-semibold">
-                            {dose.nextDoseTime.toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-4 mb-4 text-lg">
-                        {dose.schedule.with_food && (
-                          <span className="text-muted-foreground">Take with food</span>
-                        )}
-                        {dose.schedule.special_instructions && (
-                          <span className="text-muted-foreground">
-                            {dose.schedule.special_instructions}
-                          </span>
-                        )}
-                        {dose.medication.pills_remaining !== null && (
-                          <span className="text-muted-foreground">
-                            {dose.medication.pills_remaining} pills remaining
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={() => markAsTaken(dose)}
-                          size="lg"
-                          className="flex-1 text-xl"
-                          variant="default"
-                        >
-                          <CheckCircle2 className="w-6 h-6 mr-2" />
-                          I Took This
-                        </Button>
-                        <Button size="lg" variant="outline" className="text-xl">
-                          <XCircle className="w-6 h-6 mr-2" />
-                          Skip
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {todayDoses.length === 0 ? (
+                <Card className="text-center py-8">
+                  <CardContent>
+                    <p className="text-xl text-muted-foreground">
+                      No medications scheduled for today
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {todayDoses.map((dose, idx) => (
+                    <DoseCard
+                      key={`${dose.schedule.id}-${idx}`}
+                      dose={dose}
+                      onMarkTaken={markAsTaken}
+                      onMarkSkipped={markAsSkipped}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
