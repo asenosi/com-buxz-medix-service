@@ -23,7 +23,7 @@ export const AdherenceStats = ({
           <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
           <Flame className={cn(
             "h-6 w-6",
-            streak > 0 ? "text-orange-500" : "text-muted-foreground"
+            streak > 0 ? "text-accent" : "text-muted-foreground"
           )} />
         </CardHeader>
         <CardContent>
