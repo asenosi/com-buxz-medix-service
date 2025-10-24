@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar } from "lucide-react";
+import { Plus, LogOut, Pill, Calendar, User as UserIcon } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { DoseCard } from "@/components/DoseCard";
@@ -357,10 +358,17 @@ const Dashboard = () => {
                 <p className="text-sm sm:text-lg text-muted-foreground">Your medication companion</p>
               </div>
             </div>
-            <Button onClick={handleSignOut} variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              Sign Out
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto items-center">
+              <ThemeToggle />
+              <Button onClick={() => navigate("/profile")} variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
+                <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                Profile
+              </Button>
+              <Button onClick={handleSignOut} variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
