@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon, ArrowLeft, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
+import { DayDetailsDialog } from "@/components/DayDetailsDialog";
 
 interface DoseLog {
   id: string;
@@ -39,6 +40,8 @@ const Calendar = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [selectedMedication, setSelectedMedication] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
+  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+  const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
 
   const fetchMedications = useCallback(async () => {
     try {
@@ -215,6 +218,11 @@ const Calendar = () => {
     return 'bg-card text-card-foreground border border-border';
   };
 
+  const handleDayClick = (day: CalendarDay) => {
+    setSelectedDay(day);
+    setIsDayDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -337,9 +345,10 @@ const Calendar = () => {
               ))}
               
               {calendarDays.map((day, idx) => (
-                <div
+                <button
                   key={idx}
-                  className={`aspect-square rounded-lg flex flex-col items-center justify-center p-2 transition-all hover:scale-105 ${getDayColor(day)}`}
+                  onClick={() => handleDayClick(day)}
+                  className={`aspect-square rounded-lg flex flex-col items-center justify-center p-2 transition-all hover:scale-105 cursor-pointer ${getDayColor(day)}`}
                 >
                   <div className="text-lg font-semibold">{day.date.getDate()}</div>
                   {day.logs.length > 0 && (
@@ -347,12 +356,20 @@ const Calendar = () => {
                       {day.logs.length}
                     </Badge>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           </CardContent>
         </Card>
       </main>
+
+      <DayDetailsDialog
+        open={isDayDialogOpen}
+        onOpenChange={setIsDayDialogOpen}
+        date={selectedDay?.date || null}
+        logs={selectedDay?.logs || []}
+        medications={medications}
+      />
     </div>
   );
 };
