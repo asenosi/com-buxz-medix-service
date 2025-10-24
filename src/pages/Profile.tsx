@@ -44,7 +44,7 @@ const Profile = () => {
   const loadProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from<ProfileRow>("profiles")
+        .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .single();
