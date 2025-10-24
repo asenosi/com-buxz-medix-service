@@ -135,49 +135,76 @@ export type Database = {
           active: boolean | null
           created_at: string
           dosage: string
+          end_date: string | null
           form: string | null
           id: string
           image_url: string | null
           instructions: string | null
+          medication_color: string | null
+          medication_icon: string | null
           name: string
           pills_remaining: number | null
           prescribing_doctor: string | null
+          reason_for_taking: string | null
+          refill_reminder_threshold: number | null
           refills_remaining: number | null
+          route_of_administration: string | null
+          start_date: string | null
           total_pills: number | null
+          treatment_duration_days: number | null
           updated_at: string
           user_id: string
+          with_food_timing: string | null
         }
         Insert: {
           active?: boolean | null
           created_at?: string
           dosage: string
+          end_date?: string | null
           form?: string | null
           id?: string
           image_url?: string | null
           instructions?: string | null
+          medication_color?: string | null
+          medication_icon?: string | null
           name: string
           pills_remaining?: number | null
           prescribing_doctor?: string | null
+          reason_for_taking?: string | null
+          refill_reminder_threshold?: number | null
           refills_remaining?: number | null
+          route_of_administration?: string | null
+          start_date?: string | null
           total_pills?: number | null
+          treatment_duration_days?: number | null
           updated_at?: string
           user_id: string
+          with_food_timing?: string | null
         }
         Update: {
           active?: boolean | null
           created_at?: string
           dosage?: string
+          end_date?: string | null
           form?: string | null
           id?: string
           image_url?: string | null
           instructions?: string | null
+          medication_color?: string | null
+          medication_icon?: string | null
           name?: string
           pills_remaining?: number | null
           prescribing_doctor?: string | null
+          reason_for_taking?: string | null
+          refill_reminder_threshold?: number | null
           refills_remaining?: number | null
+          route_of_administration?: string | null
+          start_date?: string | null
           total_pills?: number | null
+          treatment_duration_days?: number | null
           updated_at?: string
           user_id?: string
+          with_food_timing?: string | null
         }
         Relationships: []
       }
