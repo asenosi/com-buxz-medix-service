@@ -41,23 +41,23 @@ const Profile = () => {
     return parts.map(p => p.charAt(0).toUpperCase()).join("") || "U";
   }, [fullName, session]);
 
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string, userMetadata?: any) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== "PGRST116") throw error; // 116: no rows
+      if (error) throw error;
 
       if (!data) {
         const { error: insertError } = await supabase.from("profiles").insert({
           user_id: userId,
-          full_name: session?.user?.user_metadata?.full_name ?? null,
+          full_name: userMetadata?.full_name ?? null,
         });
         if (insertError) throw insertError;
-        setFullName(session?.user?.user_metadata?.full_name ?? "");
+        setFullName(userMetadata?.full_name ?? "");
         setDob("");
         setPhone("");
         setIsCaregiver(false);
@@ -73,7 +73,7 @@ const Profile = () => {
       console.error(e);
       toast.error("Failed to load profile");
     }
-  }, [session]);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -83,7 +83,7 @@ const Profile = () => {
         navigate("/auth");
         return;
       }
-      await loadProfile(current.user.id);
+      await loadProfile(current.user.id, current.user.user_metadata);
       setLoading(false);
     };
     init();
