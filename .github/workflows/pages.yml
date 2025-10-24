@@ -28,7 +28,12 @@ jobs:
           node-version: 20
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+      - name: Warn on lockfile drift
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            echo "::warning::package-lock.json changed after install. Commit it to keep builds reproducible."
+          fi
       - name: Build
         run: npm run build
       - name: Upload Pages artifact

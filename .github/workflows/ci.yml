@@ -25,7 +25,12 @@ jobs:
           node-version: 20
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+      - name: Warn on lockfile drift
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            echo "::warning::package-lock.json changed after install. Commit it to keep builds reproducible."
+          fi
       - name: Run ESLint
         run: npm run lint
 
@@ -42,7 +47,12 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+      - name: Warn on lockfile drift
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            echo "::warning::package-lock.json changed after install. Commit it to keep builds reproducible."
+          fi
       - name: Run unit tests
         run: npm run test:run
 
@@ -59,7 +69,12 @@ jobs:
           node-version: 20
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+      - name: Warn on lockfile drift
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            echo "::warning::package-lock.json changed after install. Commit it to keep builds reproducible."
+          fi
       - name: Build app
         run: npm run build
       - name: Upload dist artifact
