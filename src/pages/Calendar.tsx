@@ -40,41 +40,6 @@ const Calendar = () => {
   const [selectedMedication, setSelectedMedication] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
 
-  useEffect(() => {
-    const initAuth = async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          setSession(session);
-          if (!session) {
-            navigate("/auth");
-          }
-        }
-      );
-
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      
-      if (!currentSession) {
-        navigate("/auth");
-      } else {
-        await fetchMedications();
-        await fetchCalendarData();
-      }
-
-      setLoading(false);
-
-      return () => subscription.unsubscribe();
-    };
-
-    initAuth();
-  }, [navigate, fetchMedications, fetchCalendarData]);
-
-  useEffect(() => {
-    if (session) {
-      fetchCalendarData();
-    }
-  }, [currentMonth, selectedMedication, session, fetchCalendarData]);
-
   const fetchMedications = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -194,7 +159,40 @@ const Calendar = () => {
     }
   }, [currentMonth, selectedMedication, calculateStreak]);
 
-  
+  useEffect(() => {
+    const initAuth = async () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          if (!session) {
+            navigate("/auth");
+          }
+        }
+      );
+
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      setSession(currentSession);
+      
+      if (!currentSession) {
+        navigate("/auth");
+      } else {
+        await fetchMedications();
+        await fetchCalendarData();
+      }
+
+      setLoading(false);
+
+      return () => subscription.unsubscribe();
+    };
+
+    initAuth();
+  }, [navigate, fetchMedications, fetchCalendarData]);
+
+  useEffect(() => {
+    if (session) {
+      fetchCalendarData();
+    }
+  }, [currentMonth, selectedMedication, session, fetchCalendarData]);
 
   const previousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));

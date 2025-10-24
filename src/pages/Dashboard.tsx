@@ -49,33 +49,64 @@ const Dashboard = () => {
   const [todayProgress, setTodayProgress] = useState(0);
   const [weeklyAdherence, setWeeklyAdherence] = useState(0);
 
-  useEffect(() => {
-    const initAuth = async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          setSession(session);
-          if (!session) {
-            navigate("/auth");
+  const fetchGamificationStats = useCallback(async () => {
+    try {
+      // Get total taken doses
+      const { data: allLogs, error: logsError } = await supabase
+        .from("dose_logs")
+        .select("*")
+        .eq("status", "taken")
+        .order("taken_at", { ascending: false });
+
+      if (logsError) throw logsError;
+
+      setTotalTaken(allLogs?.length || 0);
+
+      // Calculate streak
+      if (allLogs && allLogs.length > 0) {
+        let currentStreak = 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let i = 0; i < 365; i++) {
+          const checkDate = new Date(today);
+          checkDate.setDate(today.getDate() - i);
+          checkDate.setHours(0, 0, 0, 0);
+          
+          const nextDay = new Date(checkDate);
+          nextDay.setDate(checkDate.getDate() + 1);
+          
+          const hasLog = allLogs.some(log => {
+            const logDate = new Date(log.taken_at || log.scheduled_time);
+            return logDate >= checkDate && logDate < nextDay;
+          });
+          
+          if (hasLog) {
+            currentStreak++;
+          } else if (i > 0) {
+            break;
           }
         }
-      );
-
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      
-      if (!currentSession) {
-        navigate("/auth");
-      } else {
-        fetchMedications();
+        setStreak(currentStreak);
       }
 
-      setLoading(false);
+      // Calculate weekly adherence
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data: weekLogs } = await supabase
+        .from("dose_logs")
+        .select("*")
+        .gte("scheduled_time", sevenDaysAgo.toISOString());
 
-      return () => subscription.unsubscribe();
-    };
-
-    initAuth();
-  }, [navigate, fetchMedications]);
+      if (weekLogs && weekLogs.length > 0) {
+        const takenCount = weekLogs.filter(l => l.status === "taken").length;
+        setWeeklyAdherence(Math.round((takenCount / weekLogs.length) * 100));
+      }
+    } catch (error: unknown) {
+      console.error("Failed to fetch gamification stats:", error);
+    }
+  }, []);
 
   const fetchMedications = useCallback(async () => {
     try {
@@ -184,64 +215,33 @@ const Dashboard = () => {
     }
   }, [fetchGamificationStats]);
 
-  const fetchGamificationStats = useCallback(async () => {
-    try {
-      // Get total taken doses
-      const { data: allLogs, error: logsError } = await supabase
-        .from("dose_logs")
-        .select("*")
-        .eq("status", "taken")
-        .order("taken_at", { ascending: false });
-
-      if (logsError) throw logsError;
-
-      setTotalTaken(allLogs?.length || 0);
-
-      // Calculate streak
-      if (allLogs && allLogs.length > 0) {
-        let currentStreak = 0;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        for (let i = 0; i < 365; i++) {
-          const checkDate = new Date(today);
-          checkDate.setDate(today.getDate() - i);
-          checkDate.setHours(0, 0, 0, 0);
-          
-          const nextDay = new Date(checkDate);
-          nextDay.setDate(checkDate.getDate() + 1);
-          
-          const hasLog = allLogs.some(log => {
-            const logDate = new Date(log.taken_at || log.scheduled_time);
-            return logDate >= checkDate && logDate < nextDay;
-          });
-          
-          if (hasLog) {
-            currentStreak++;
-          } else if (i > 0) {
-            break;
+  useEffect(() => {
+    const initAuth = async () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          if (!session) {
+            navigate("/auth");
           }
         }
-        setStreak(currentStreak);
-      }
+      );
 
-      // Calculate weekly adherence
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      setSession(currentSession);
       
-      const { data: weekLogs } = await supabase
-        .from("dose_logs")
-        .select("*")
-        .gte("scheduled_time", sevenDaysAgo.toISOString());
-
-      if (weekLogs && weekLogs.length > 0) {
-        const takenCount = weekLogs.filter(l => l.status === "taken").length;
-        setWeeklyAdherence(Math.round((takenCount / weekLogs.length) * 100));
+      if (!currentSession) {
+        navigate("/auth");
+      } else {
+        fetchMedications();
       }
-    } catch (error: unknown) {
-      console.error("Failed to fetch gamification stats:", error);
-    }
-  }, []);
+
+      setLoading(false);
+
+      return () => subscription.unsubscribe();
+    };
+
+    initAuth();
+  }, [navigate, fetchMedications]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
