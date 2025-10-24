@@ -302,44 +302,52 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary rounded-full p-3">
-                <Pill className="w-8 h-8 text-primary-foreground" />
+      <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-card/95 animate-slide-down">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="flex items-center gap-3 animate-fade-in">
+              <div className="bg-primary rounded-full p-2 sm:p-3 animate-scale-in">
+                <Pill className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold">MedTracker</h1>
-                <p className="text-lg text-muted-foreground">Your medication companion</p>
+                <h1 className="text-2xl sm:text-3xl font-bold">MedTracker</h1>
+                <p className="text-sm sm:text-lg text-muted-foreground">Your medication companion</p>
               </div>
             </div>
-            <Button onClick={handleSignOut} variant="outline" size="lg">
-              <LogOut className="w-5 h-5 mr-2" />
+            <Button onClick={handleSignOut} variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Sign Out
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <Button onClick={() => navigate("/medications")} size="lg" className="text-xl">
-            <Plus className="w-6 h-6 mr-2" />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8 animate-fade-in">
+          <Button 
+            onClick={() => navigate("/medications")} 
+            size="lg" 
+            className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-all duration-300 hover:shadow-xl animate-bounce-subtle"
+          >
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
             Add Medication
           </Button>
         </div>
 
         {medications.length === 0 ? (
-          <Card className="text-center py-16">
+          <Card className="text-center py-12 sm:py-16 animate-fade-in">
             <CardContent>
-              <Pill className="w-20 h-20 text-muted-foreground mx-auto mb-6" />
-              <h2 className="text-2xl font-semibold mb-3">No Medications Yet</h2>
-              <p className="text-xl text-muted-foreground mb-6">
+              <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
+              <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
+              <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
                 Get started by adding your first medication
               </p>
-              <Button onClick={() => navigate("/medications")} size="lg" className="text-xl">
-                <Plus className="w-6 h-6 mr-2" />
+              <Button 
+                onClick={() => navigate("/medications")} 
+                size="lg" 
+                className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-transform"
+              >
+                <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                 Add Your First Medication
               </Button>
             </CardContent>
@@ -353,46 +361,55 @@ const Dashboard = () => {
               totalTaken={totalTaken}
             />
 
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">Today's Schedule</h2>
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">Today's Schedule</h2>
               {todayDoses.length === 0 ? (
-                <Card className="text-center py-8">
+                <Card className="text-center py-6 sm:py-8 animate-fade-in">
                   <CardContent>
-                    <p className="text-xl text-muted-foreground">
+                    <p className="text-lg sm:text-xl text-muted-foreground px-4">
                       No medications scheduled for today
                     </p>
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                   {todayDoses.map((dose, idx) => (
-                    <DoseCard
+                    <div 
                       key={`${dose.schedule.id}-${idx}`}
-                      dose={dose}
-                      onMarkTaken={markAsTaken}
-                      onMarkSkipped={markAsSkipped}
-                    />
+                      className="animate-slide-in-right"
+                      style={{ animationDelay: `${idx * 0.1}s` }}
+                    >
+                      <DoseCard
+                        dose={dose}
+                        onMarkTaken={markAsTaken}
+                        onMarkSkipped={markAsSkipped}
+                      />
+                    </div>
                   ))}
                 </div>
               )}
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold mb-4">All Medications</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {medications.map((med) => (
-                  <Card key={med.id} className="hover:shadow-lg transition-shadow">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">All Medications</h2>
+              <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {medications.map((med, idx) => (
+                  <Card 
+                    key={med.id} 
+                    className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 animate-scale-in cursor-pointer"
+                    style={{ animationDelay: `${idx * 0.1}s` }}
+                  >
                     <CardHeader>
-                      <CardTitle className="text-xl">{med.name}</CardTitle>
-                      <CardDescription className="text-lg">
+                      <CardTitle className="text-lg sm:text-xl">{med.name}</CardTitle>
+                      <CardDescription className="text-base sm:text-lg">
                         {med.dosage}
                         {med.form && ` • ${med.form}`}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       {med.pills_remaining !== null && (
-                        <p className="text-lg text-muted-foreground">
-                          {med.pills_remaining} pills remaining
+                        <p className="text-base sm:text-lg text-muted-foreground">
+                          {med.pills_remaining} remaining
                         </p>
                       )}
                     </CardContent>
