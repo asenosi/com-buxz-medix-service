@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -75,9 +75,9 @@ const Dashboard = () => {
     };
 
     initAuth();
-  }, [navigate]);
+  }, [navigate, fetchMedications]);
 
-  const fetchMedications = async () => {
+  const fetchMedications = useCallback(async () => {
     try {
       const { data: medsData, error: medsError } = await supabase
         .from("medications")
@@ -178,13 +178,13 @@ const Dashboard = () => {
 
       // Fetch gamification stats
       await fetchGamificationStats();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to load medications");
       console.error(error);
     }
-  };
+  }, [fetchGamificationStats]);
 
-  const fetchGamificationStats = async () => {
+  const fetchGamificationStats = useCallback(async () => {
     try {
       // Get total taken doses
       const { data: allLogs, error: logsError } = await supabase
@@ -238,10 +238,10 @@ const Dashboard = () => {
         const takenCount = weekLogs.filter(l => l.status === "taken").length;
         setWeeklyAdherence(Math.round((takenCount / weekLogs.length) * 100));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to fetch gamification stats:", error);
     }
-  };
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -274,7 +274,7 @@ const Dashboard = () => {
 
       toast.success(`✅ Great job! ${dose.medication.name} marked as taken!`);
       fetchMedications();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to log dose");
       console.error(error);
     }
@@ -296,7 +296,7 @@ const Dashboard = () => {
 
       toast.info(`${dose.medication.name} marked as skipped`);
       fetchMedications();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to log skip");
       console.error(error);
     }
@@ -322,7 +322,7 @@ const Dashboard = () => {
 
       toast.success(`⏰ ${dose.medication.name} snoozed until ${snoozeUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
       fetchMedications();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to snooze");
       console.error(error);
     }

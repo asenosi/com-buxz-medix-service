@@ -207,8 +207,9 @@ const Medications = () => {
 
       toast.success("Medication added successfully!");
       navigate("/dashboard");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add medication");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to add medication";
+      toast.error(message);
       console.error(error);
     } finally {
       setLoading(false);

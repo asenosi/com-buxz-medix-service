@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -67,15 +67,15 @@ const Calendar = () => {
     };
 
     initAuth();
-  }, [navigate]);
+  }, [navigate, fetchMedications, fetchCalendarData]);
 
   useEffect(() => {
     if (session) {
       fetchCalendarData();
     }
-  }, [currentMonth, selectedMedication]);
+  }, [currentMonth, selectedMedication, session, fetchCalendarData]);
 
-  const fetchMedications = async () => {
+  const fetchMedications = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("medications")
@@ -85,13 +85,62 @@ const Calendar = () => {
 
       if (error) throw error;
       setMedications(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to load medications");
       console.error(error);
     }
-  };
+  }, []);
 
-  const fetchCalendarData = async () => {
+  const calculateStreak = useCallback(async () => {
+    try {
+      let query = supabase
+        .from("dose_logs")
+        .select("*")
+        .eq("status", "taken")
+        .order("taken_at", { ascending: false });
+
+      if (selectedMedication) {
+        query = query.eq("medication_id", selectedMedication);
+      }
+
+      const { data: allLogs, error } = await query;
+
+      if (error) throw error;
+
+      if (allLogs && allLogs.length > 0) {
+        let currentStreak = 0;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let i = 0; i < 365; i++) {
+          const checkDate = new Date(today);
+          checkDate.setDate(today.getDate() - i);
+          checkDate.setHours(0, 0, 0, 0);
+          
+          const nextDay = new Date(checkDate);
+          nextDay.setDate(checkDate.getDate() + 1);
+          
+          const hasLog = allLogs.some(log => {
+            const logDate = new Date(log.taken_at || log.scheduled_time);
+            return logDate >= checkDate && logDate < nextDay;
+          });
+          
+          if (hasLog) {
+            currentStreak++;
+          } else if (i > 0) {
+            break;
+          }
+        }
+        setStreak(currentStreak);
+      } else {
+        setStreak(0);
+      }
+    } catch (error: unknown) {
+      console.error("Failed to calculate streak:", error);
+    }
+  }, [selectedMedication]);
+
+  const fetchCalendarData = useCallback(async () => {
     try {
       const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
       const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
@@ -139,60 +188,13 @@ const Calendar = () => {
 
       // Calculate streak
       calculateStreak();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to load calendar data");
       console.error(error);
     }
-  };
+  }, [currentMonth, selectedMedication, calculateStreak]);
 
-  const calculateStreak = async () => {
-    try {
-      let query = supabase
-        .from("dose_logs")
-        .select("*")
-        .eq("status", "taken")
-        .order("taken_at", { ascending: false });
-
-      if (selectedMedication) {
-        query = query.eq("medication_id", selectedMedication);
-      }
-
-      const { data: allLogs, error } = await query;
-
-      if (error) throw error;
-
-      if (allLogs && allLogs.length > 0) {
-        let currentStreak = 0;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        for (let i = 0; i < 365; i++) {
-          const checkDate = new Date(today);
-          checkDate.setDate(today.getDate() - i);
-          checkDate.setHours(0, 0, 0, 0);
-          
-          const nextDay = new Date(checkDate);
-          nextDay.setDate(checkDate.getDate() + 1);
-          
-          const hasLog = allLogs.some(log => {
-            const logDate = new Date(log.taken_at || log.scheduled_time);
-            return logDate >= checkDate && logDate < nextDay;
-          });
-          
-          if (hasLog) {
-            currentStreak++;
-          } else if (i > 0) {
-            break;
-          }
-        }
-        setStreak(currentStreak);
-      } else {
-        setStreak(0);
-      }
-    } catch (error: any) {
-      console.error("Failed to calculate streak:", error);
-    }
-  };
+  
 
   const previousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));

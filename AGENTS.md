@@ -24,6 +24,24 @@
 - Styling: Tailwind CSS; co-locate minimal CSS in `src/index.css` or component-level when necessary.
 - Linting: `eslint.config.js` (JS/TS recommended, React Hooks rules, refresh guard). Address warnings; CI should pass lint before merge.
 
+## ESLint Rules
+- Base config: `@eslint/js` recommended + `typescript-eslint` recommended for `**/*.{ts,tsx}`.
+- Environment: Browser, ES2020 modules.
+- Plugins: `react-hooks` (recommended rules) and `react-refresh`.
+- Notable rules and expectations:
+  - React Hooks: obey exhaustive-deps. Prefer `useCallback`/`useMemo` to stabilize deps over disabling the rule.
+  - Fast Refresh: `react-refresh/only-export-components` is `warn` with `allowConstantExport: true`.
+    - Files in `src/components/**` should only export components. Move helpers/constants to separate files if needed.
+  - TypeScript hygiene:
+    - Avoid `any` (`no-explicit-any`). Use specific types or `unknown` with narrowing.
+    - Avoid empty interfaces that mirror supertypes (`no-empty-object-type`). Use a `type` alias instead.
+    - Forbid `require()` in TS (`no-require-imports`). Use ESM `import`.
+    - Do not use triple-slash refs for Vitest in tests; import from `vitest`.
+  - Unused vars: `@typescript-eslint/no-unused-vars` is disabled in this repo to reduce noise, but prefer removing unused code.
+- Commands:
+  - Lint locally: `npm run lint`
+  - CI treats ESLint errors as blocking; warnings are allowed but should be addressed when reasonable.
+
 ## Testing Guidelines
 - No test runner is configured yet. If adding tests, use Vitest + React Testing Library.
 - Suggested patterns: `*.test.ts` or `*.test.tsx` beside source files; aim for key logic and hooks first.

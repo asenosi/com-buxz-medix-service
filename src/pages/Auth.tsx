@@ -70,8 +70,9 @@ const Auth = () => {
         toast.success("Account created successfully!");
         navigate("/dashboard");
       }
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An error occurred";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
