@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill } from "lucide-react";
+import { Plus, LogOut, Pill, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { DoseCard } from "@/components/DoseCard";
@@ -16,6 +16,7 @@ interface Medication {
   form: string | null;
   pills_remaining: number | null;
   active: boolean;
+  image_url: string | null;
 }
 
 interface Schedule {
@@ -365,7 +366,7 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="mb-6 sm:mb-8 animate-fade-in">
+        <div className="mb-6 sm:mb-8 animate-fade-in flex flex-col sm:flex-row gap-3 sm:gap-4">
           <Button 
             onClick={() => navigate("/medications")} 
             size="lg" 
@@ -373,6 +374,15 @@ const Dashboard = () => {
           >
             <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
             Add Medication
+          </Button>
+          <Button 
+            onClick={() => navigate("/calendar")} 
+            size="lg" 
+            variant="outline"
+            className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-all duration-300"
+          >
+            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+            View Calendar
           </Button>
         </div>
 
@@ -444,11 +454,22 @@ const Dashboard = () => {
                     style={{ animationDelay: `${idx * 0.1}s` }}
                   >
                     <CardHeader>
-                      <CardTitle className="text-lg sm:text-xl">{med.name}</CardTitle>
-                      <CardDescription className="text-base sm:text-lg">
-                        {med.dosage}
-                        {med.form && ` • ${med.form}`}
-                      </CardDescription>
+                      <div className="flex items-center gap-3 mb-2">
+                        {med.image_url && (
+                          <img 
+                            src={med.image_url} 
+                            alt={med.name}
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <CardTitle className="text-lg sm:text-xl">{med.name}</CardTitle>
+                          <CardDescription className="text-base sm:text-lg">
+                            {med.dosage}
+                            {med.form && ` • ${med.form}`}
+                          </CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       {med.pills_remaining !== null && (

@@ -137,6 +137,7 @@ export type Database = {
           dosage: string
           form: string | null
           id: string
+          image_url: string | null
           instructions: string | null
           name: string
           pills_remaining: number | null
@@ -152,6 +153,7 @@ export type Database = {
           dosage: string
           form?: string | null
           id?: string
+          image_url?: string | null
           instructions?: string | null
           name: string
           pills_remaining?: number | null
@@ -167,6 +169,7 @@ export type Database = {
           dosage?: string
           form?: string | null
           id?: string
+          image_url?: string | null
           instructions?: string | null
           name?: string
           pills_remaining?: number | null

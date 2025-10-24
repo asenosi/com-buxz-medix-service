@@ -11,6 +11,7 @@ interface Medication {
   dosage: string;
   form: string | null;
   pills_remaining: number | null;
+  image_url: string | null;
 }
 
 interface Schedule {
@@ -59,19 +60,27 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
       <CardHeader className="pb-3 sm:pb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex items-center gap-2 sm:gap-3 flex-1">
-            <div className={cn(
-              "p-2 sm:p-3 rounded-full transition-all duration-300",
-              dose.isTaken && "bg-success/20 animate-scale-in",
-              (dose.isSkipped || dose.isSnoozed) && "bg-warning/20 animate-scale-in",
-              !isCompleted && "bg-primary/20 animate-pulse-slow"
-            )}>
-              <Pill className={cn(
-                "w-5 h-5 sm:w-6 sm:h-6",
-                dose.isTaken && "text-success",
-                (dose.isSkipped || dose.isSnoozed) && "text-warning",
-                !isCompleted && "text-primary"
-              )} />
-            </div>
+            {dose.medication.image_url ? (
+              <img 
+                src={dose.medication.image_url} 
+                alt={dose.medication.name}
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
+              />
+            ) : (
+              <div className={cn(
+                "p-2 sm:p-3 rounded-full transition-all duration-300",
+                dose.isTaken && "bg-success/20 animate-scale-in",
+                (dose.isSkipped || dose.isSnoozed) && "bg-warning/20 animate-scale-in",
+                !isCompleted && "bg-primary/20 animate-pulse-slow"
+              )}>
+                <Pill className={cn(
+                  "w-5 h-5 sm:w-6 sm:h-6",
+                  dose.isTaken && "text-success",
+                  (dose.isSkipped || dose.isSnoozed) && "text-warning",
+                  !isCompleted && "text-primary"
+                )} />
+              </div>
+            )}
             <div>
               <CardTitle className="text-lg sm:text-2xl">{dose.medication.name}</CardTitle>
               <CardDescription className="text-base sm:text-lg mt-1 sm:mt-2">

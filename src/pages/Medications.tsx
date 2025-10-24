@@ -41,6 +41,8 @@ const Medications = () => {
   const [form, setForm] = useState("");
   const [instructions, setInstructions] = useState("");
   const [totalPills, setTotalPills] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([
     { time_of_day: "08:00", with_food: false, special_instructions: "", days_of_week: [0,1,2,3,4,5,6] }
   ]);
@@ -97,6 +99,7 @@ const Medications = () => {
       setForm(medData.form || "");
       setInstructions(medData.instructions || "");
       setTotalPills(medData.total_pills?.toString() || "");
+      setImageUrl(medData.image_url || null);
 
       const { data: schedData, error: schedError } = await supabase
         .from("medication_schedules")
@@ -170,6 +173,24 @@ const Medications = () => {
     setLoading(true);
 
     try {
+      let uploadedImageUrl = imageUrl;
+
+      // Upload image if there's a new file
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${session.user.id}/${Math.random()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('medication-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw uploadError;
+        
+        uploadedImageUrl = supabase.storage
+          .from('medication-images')
+          .getPublicUrl(fileName).data.publicUrl;
+      }
+
       if (editMedicationId) {
         // Update existing medication
         const { error: medError } = await supabase
@@ -180,6 +201,7 @@ const Medications = () => {
             form: form || null,
             instructions: instructions || null,
             total_pills: totalPills ? parseInt(totalPills) : null,
+            image_url: uploadedImageUrl,
           })
           .eq("id", editMedicationId);
 
@@ -225,6 +247,7 @@ const Medications = () => {
               total_pills: totalPills ? parseInt(totalPills) : null,
               pills_remaining: totalPills ? parseInt(totalPills) : null,
               active: true,
+              image_url: uploadedImageUrl,
             },
           ])
           .select()
@@ -373,6 +396,31 @@ const Medications = () => {
                   min="1"
                   className="text-lg h-14"
                 />
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="image" className="text-lg font-semibold">
+                  Medication Image
+                </Label>
+                {imageUrl && !imageFile && (
+                  <div className="mb-3">
+                    <img 
+                      src={imageUrl} 
+                      alt="Current medication" 
+                      className="w-32 h-32 object-cover rounded-lg border-2 border-border"
+                    />
+                  </div>
+                )}
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  className="text-lg h-14"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Upload a picture of your medication for easy identification
+                </p>
               </div>
             </CardContent>
           </Card>
