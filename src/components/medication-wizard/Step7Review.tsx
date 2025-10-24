@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Pill, Syringe, Droplet, Wind, Bandage, Clipboard } from "lucide-react";
+import type React from "react";
 
 interface Step7ReviewProps {
   data: {
@@ -16,7 +17,7 @@ interface Step7ReviewProps {
   };
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   pill: Pill,
   injection: Syringe,
   drop: Droplet,
