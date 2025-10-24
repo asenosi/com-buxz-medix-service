@@ -3,7 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar, User as UserIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Settings } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
@@ -360,37 +367,51 @@ const Dashboard = () => {
             </div>
             <div className="flex gap-2 w-full sm:w-auto items-center">
               <ThemeToggle />
-              <Button onClick={() => navigate("/profile")} variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
-                <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Profile
-              </Button>
-              <Button onClick={handleSignOut} variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
-                <LogOut className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Sign Out
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="lg" className="hover:scale-105 transition-transform">
+                    <Menu className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+                    <UserIcon className="w-4 h-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Preferences
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="mb-6 sm:mb-8 animate-fade-in flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div className="mb-6 sm:mb-8 animate-fade-in flex gap-3">
           <Button 
             onClick={() => navigate("/medications")} 
             size="lg" 
-            className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-all duration-300 hover:shadow-xl animate-bounce-subtle"
+            className="hover:scale-105 transition-all duration-300 hover:shadow-xl"
+            title="Add Medication"
           >
-            <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-            Add Medication
+            <Plus className="w-6 h-6" />
           </Button>
           <Button 
             onClick={() => navigate("/calendar")} 
             size="lg" 
             variant="outline"
-            className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-all duration-300"
+            className="hover:scale-105 transition-all duration-300"
+            title="View Calendar"
           >
-            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-            View Calendar
+            <Calendar className="w-6 h-6" />
           </Button>
         </div>
 
