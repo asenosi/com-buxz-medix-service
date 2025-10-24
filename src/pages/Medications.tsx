@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,8 +30,11 @@ interface IntervalSchedule {
 
 const Medications = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editMedicationId = searchParams.get("edit");
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
   
   const [name, setName] = useState("");
   const [dosage, setDosage] = useState("");
@@ -59,6 +62,8 @@ const Medications = () => {
       
       if (!currentSession) {
         navigate("/auth");
+      } else if (editMedicationId) {
+        loadMedicationData(editMedicationId);
       }
     };
 
@@ -74,7 +79,48 @@ const Medications = () => {
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, editMedicationId]);
+
+  const loadMedicationData = async (medicationId: string) => {
+    setLoadingData(true);
+    try {
+      const { data: medData, error: medError } = await supabase
+        .from("medications")
+        .select("*")
+        .eq("id", medicationId)
+        .single();
+
+      if (medError) throw medError;
+
+      setName(medData.name);
+      setDosage(medData.dosage);
+      setForm(medData.form || "");
+      setInstructions(medData.instructions || "");
+      setTotalPills(medData.total_pills?.toString() || "");
+
+      const { data: schedData, error: schedError } = await supabase
+        .from("medication_schedules")
+        .select("*")
+        .eq("medication_id", medicationId)
+        .eq("active", true);
+
+      if (schedError) throw schedError;
+
+      if (schedData && schedData.length > 0) {
+        setSchedules(schedData.map(s => ({
+          time_of_day: s.time_of_day,
+          with_food: s.with_food,
+          special_instructions: s.special_instructions || "",
+          days_of_week: s.days_of_week || [0,1,2,3,4,5,6]
+        })));
+      }
+    } catch (error: any) {
+      toast.error("Failed to load medication data");
+      console.error(error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   const addSchedule = () => {
     setSchedules([...schedules, { time_of_day: "08:00", with_food: false, special_instructions: "", days_of_week: [0,1,2,3,4,5,6] }]);
@@ -124,45 +170,90 @@ const Medications = () => {
     setLoading(true);
 
     try {
-      const { data: medData, error: medError } = await supabase
-        .from("medications")
-        .insert([
-          {
-            user_id: session.user.id,
+      if (editMedicationId) {
+        // Update existing medication
+        const { error: medError } = await supabase
+          .from("medications")
+          .update({
             name,
             dosage,
             form: form || null,
             instructions: instructions || null,
             total_pills: totalPills ? parseInt(totalPills) : null,
-            pills_remaining: totalPills ? parseInt(totalPills) : null,
-            active: true,
-          },
-        ])
-        .select()
-        .single();
+          })
+          .eq("id", editMedicationId);
 
-      if (medError) throw medError;
+        if (medError) throw medError;
 
-      const schedulesToInsert = useInterval ? generateIntervalSchedules() : schedules;
-      const scheduleInserts = schedulesToInsert.map(schedule => ({
-        medication_id: medData.id,
-        time_of_day: schedule.time_of_day,
-        with_food: schedule.with_food,
-        special_instructions: schedule.special_instructions || null,
-        days_of_week: schedule.days_of_week || null,
-        active: true,
-      }));
+        // Delete old schedules
+        const { error: deleteError } = await supabase
+          .from("medication_schedules")
+          .delete()
+          .eq("medication_id", editMedicationId);
 
-      const { error: schedError } = await supabase
-        .from("medication_schedules")
-        .insert(scheduleInserts);
+        if (deleteError) throw deleteError;
 
-      if (schedError) throw schedError;
+        // Insert new schedules
+        const schedulesToInsert = useInterval ? generateIntervalSchedules() : schedules;
+        const scheduleInserts = schedulesToInsert.map(schedule => ({
+          medication_id: editMedicationId,
+          time_of_day: schedule.time_of_day,
+          with_food: schedule.with_food,
+          special_instructions: schedule.special_instructions || null,
+          days_of_week: schedule.days_of_week || null,
+          active: true,
+        }));
 
-      toast.success("Medication added successfully!");
+        const { error: schedError } = await supabase
+          .from("medication_schedules")
+          .insert(scheduleInserts);
+
+        if (schedError) throw schedError;
+
+        toast.success("Medication updated successfully!");
+      } else {
+        // Create new medication
+        const { data: medData, error: medError } = await supabase
+          .from("medications")
+          .insert([
+            {
+              user_id: session.user.id,
+              name,
+              dosage,
+              form: form || null,
+              instructions: instructions || null,
+              total_pills: totalPills ? parseInt(totalPills) : null,
+              pills_remaining: totalPills ? parseInt(totalPills) : null,
+              active: true,
+            },
+          ])
+          .select()
+          .single();
+
+        if (medError) throw medError;
+
+        const schedulesToInsert = useInterval ? generateIntervalSchedules() : schedules;
+        const scheduleInserts = schedulesToInsert.map(schedule => ({
+          medication_id: medData.id,
+          time_of_day: schedule.time_of_day,
+          with_food: schedule.with_food,
+          special_instructions: schedule.special_instructions || null,
+          days_of_week: schedule.days_of_week || null,
+          active: true,
+        }));
+
+        const { error: schedError } = await supabase
+          .from("medication_schedules")
+          .insert(scheduleInserts);
+
+        if (schedError) throw schedError;
+
+        toast.success("Medication added successfully!");
+      }
+      
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Failed to add medication");
+      toast.error(error.message || `Failed to ${editMedicationId ? 'update' : 'add'} medication`);
       console.error(error);
     } finally {
       setLoading(false);
@@ -177,15 +268,22 @@ const Medications = () => {
             <ArrowLeft className="w-6 h-6 mr-2" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">Add New Medication</h1>
+          <h1 className="text-3xl font-bold">{editMedicationId ? "Edit Medication" : "Add New Medication"}</h1>
           <p className="text-lg text-muted-foreground mt-2">
-            Enter your medication details and schedule
+            {editMedicationId ? "Update your medication details and schedule" : "Enter your medication details and schedule"}
           </p>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
+        {loadingData ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <p className="text-xl text-muted-foreground">Loading medication data...</p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Medication Information</CardTitle>
@@ -514,7 +612,7 @@ const Medications = () => {
               className="flex-1 text-xl h-16"
               disabled={loading}
             >
-              {loading ? "Adding..." : "Add Medication"}
+              {loading ? (editMedicationId ? "Updating..." : "Adding...") : (editMedicationId ? "Update Medication" : "Add Medication")}
             </Button>
             <Button
               type="button"
@@ -527,6 +625,7 @@ const Medications = () => {
             </Button>
           </div>
         </form>
+        )}
       </main>
     </div>
   );

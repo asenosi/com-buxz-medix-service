@@ -46,6 +46,7 @@ export type Database = {
           notes: string | null
           schedule_id: string
           scheduled_time: string
+          snooze_until: string | null
           status: string
           taken_at: string | null
         }
@@ -56,6 +57,7 @@ export type Database = {
           notes?: string | null
           schedule_id: string
           scheduled_time: string
+          snooze_until?: string | null
           status?: string
           taken_at?: string | null
         }
@@ -66,6 +68,7 @@ export type Database = {
           notes?: string | null
           schedule_id?: string
           scheduled_time?: string
+          snooze_until?: string | null
           status?: string
           taken_at?: string | null
         }

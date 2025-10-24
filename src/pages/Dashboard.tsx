@@ -33,6 +33,8 @@ interface TodayDose {
   status: "upcoming" | "due" | "overdue";
   isTaken?: boolean;
   isSkipped?: boolean;
+  isSnoozed?: boolean;
+  snoozeUntil?: Date;
 }
 
 const Dashboard = () => {
@@ -142,6 +144,14 @@ const Dashboard = () => {
               new Date(log.scheduled_time).getMinutes() === minutes
             );
 
+            // Skip snoozed doses if their snooze time hasn't passed yet
+            if (doseLog?.status === "snoozed" && doseLog.snooze_until) {
+              const snoozeUntil = new Date(doseLog.snooze_until);
+              if (now < snoozeUntil) {
+                return; // Don't show this dose yet
+              }
+            }
+
             doses.push({
               medication: med,
               schedule,
@@ -149,6 +159,8 @@ const Dashboard = () => {
               status,
               isTaken: doseLog?.status === "taken",
               isSkipped: doseLog?.status === "skipped",
+              isSnoozed: doseLog?.status === "snoozed",
+              snoozeUntil: doseLog?.snooze_until ? new Date(doseLog.snooze_until) : undefined,
             });
           });
         });
@@ -289,6 +301,36 @@ const Dashboard = () => {
     }
   };
 
+  const markAsSnoozed = async (dose: TodayDose, minutes: number) => {
+    try {
+      const snoozeUntil = new Date();
+      snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
+
+      const { error } = await supabase.from("dose_logs").insert([
+        {
+          medication_id: dose.medication.id,
+          schedule_id: dose.schedule.id,
+          scheduled_time: dose.nextDoseTime.toISOString(),
+          taken_at: null,
+          status: "snoozed",
+          snooze_until: snoozeUntil.toISOString(),
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast.success(`⏰ ${dose.medication.name} snoozed until ${snoozeUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+      fetchMedications();
+    } catch (error: any) {
+      toast.error("Failed to snooze");
+      console.error(error);
+    }
+  };
+
+  const handleEditMedication = (medicationId: string) => {
+    navigate(`/medications?edit=${medicationId}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -383,6 +425,8 @@ const Dashboard = () => {
                         dose={dose}
                         onMarkTaken={markAsTaken}
                         onMarkSkipped={markAsSkipped}
+                        onMarkSnoozed={markAsSnoozed}
+                        onEdit={handleEditMedication}
                       />
                     </div>
                   ))}
