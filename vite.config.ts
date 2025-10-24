@@ -19,4 +19,14 @@ export default defineConfig(({ mode }) => ({
     include: ["react", "react-dom", "@tanstack/react-query"],
     force: true,
   },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.ts"],
+    css: true,
+    coverage: {
+      reporter: ["text", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
+    },
+  },
 }));
