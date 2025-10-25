@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -15,6 +15,9 @@ import { Step7Review } from "@/components/medication-wizard/Step7Review";
 
 const Medications = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+  const focus = searchParams.get("focus");
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -72,6 +75,76 @@ const Medications = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Jump to a focused step when requested
+  useEffect(() => {
+    if (!focus) return;
+    const mapping: Record<string, number> = {
+      name: 1,
+      form: 2,
+      route: 3,
+      reason: 4,
+      dosage: 4,
+      frequency: 5,
+      schedule: 5,
+      options: 6,
+      review: 7,
+    };
+    if (mapping[focus]) setCurrentStep(mapping[focus]);
+  }, [focus]);
+
+  // Prepopulate when editing a medication
+  useEffect(() => {
+    const load = async () => {
+      if (!editId) return;
+      try {
+        const { data: med } = await supabase
+          .from("medications")
+          .select("*")
+          .eq("id", editId)
+          .single();
+        if (med) {
+          setName(med.name ?? "");
+          setForm(med.form ?? "");
+          setRoute(med.route_of_administration ?? "");
+          setReason(med.reason_for_taking ?? "");
+          setDosage(med.dosage ?? "");
+          setInstructions(med.instructions ?? "");
+          setTotalPills(med.total_pills?.toString?.() ?? "");
+          setRefillThreshold(med.refill_reminder_threshold?.toString?.() ?? "");
+          setWithFood(med.with_food_timing ?? "");
+          setStartDate(med.start_date ?? "");
+          setTreatmentDays(med.treatment_duration_days?.toString?.() ?? "");
+          setMedicationColor(med.medication_color ?? medicationColor);
+          setMedicationIcon(med.medication_icon ?? medicationIcon);
+        }
+
+        const { data: scheds } = await supabase
+          .from("medication_schedules")
+          .select("time_of_day, days_of_week, with_food, special_instructions")
+          .eq("medication_id", editId)
+          .eq("active", true);
+        if (scheds && scheds.length) {
+          type SchedRow = { time_of_day: string; days_of_week: number[] | null; with_food: boolean | null };
+          const timesUnique = Array.from(new Set((scheds as SchedRow[]).map((s) => s.time_of_day))).sort();
+          setTimes(timesUnique.length ? timesUnique : ["08:00"]);
+          const allDays = Array.from(new Set((scheds as SchedRow[]).flatMap((s) => (Array.isArray(s.days_of_week) ? s.days_of_week : []))));
+          if (allDays.length) {
+            setFrequencyType("specific_days");
+            setSelectedDays(allDays);
+          } else {
+            setFrequencyType("everyday");
+            setSelectedDays([0,1,2,3,4,5,6]);
+          }
+          if ((scheds as SchedRow[]).some((s) => Boolean(s.with_food))) setWithFood("while");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId]);
+
   const canProceed = () => {
     switch (currentStep) {
       case 1:
@@ -127,12 +200,12 @@ const Medications = () => {
         endDate = start.toISOString().split('T')[0];
       }
 
-      // Create medication
-      const { data: medData, error: medError } = await supabase
-        .from("medications")
-        .insert([
-          {
-            user_id: session.user.id,
+      // Create or update medication
+      let medId = editId as string | null;
+      if (editId) {
+        const { error: updErr } = await supabase
+          .from("medications")
+          .update({
             name,
             dosage,
             form: form || null,
@@ -140,7 +213,6 @@ const Medications = () => {
             reason_for_taking: reason || null,
             instructions: instructions || null,
             total_pills: totalPills ? parseInt(totalPills) : null,
-            pills_remaining: totalPills ? parseInt(totalPills) : null,
             refill_reminder_threshold: refillThreshold ? parseInt(refillThreshold) : null,
             with_food_timing: withFood || null,
             start_date: startDate || null,
@@ -148,20 +220,45 @@ const Medications = () => {
             treatment_duration_days: treatmentDays ? parseInt(treatmentDays) : null,
             medication_color: medicationColor,
             medication_icon: medicationIcon,
-            active: true,
-          },
-        ])
-        .select()
-        .single();
-
-      if (medError) throw medError;
+          })
+          .eq("id", editId);
+        if (updErr) throw updErr;
+      } else {
+        const { data: medData, error: medError } = await supabase
+          .from("medications")
+          .insert([
+            {
+              user_id: session.user.id,
+              name,
+              dosage,
+              form: form || null,
+              route_of_administration: route || null,
+              reason_for_taking: reason || null,
+              instructions: instructions || null,
+              total_pills: totalPills ? parseInt(totalPills) : null,
+              pills_remaining: totalPills ? parseInt(totalPills) : null,
+              refill_reminder_threshold: refillThreshold ? parseInt(refillThreshold) : null,
+              with_food_timing: withFood || null,
+              start_date: startDate || null,
+              end_date: endDate,
+              treatment_duration_days: treatmentDays ? parseInt(treatmentDays) : null,
+              medication_color: medicationColor,
+              medication_icon: medicationIcon,
+              active: true,
+            },
+          ])
+          .select()
+          .single();
+        if (medError) throw medError;
+        medId = medData.id;
+      }
 
       // Create schedules based on frequency type
       let scheduleInserts = [];
       
       if (frequencyType === "everyday") {
         scheduleInserts = times.map(time => ({
-          medication_id: medData.id,
+          medication_id: medId,
           time_of_day: time,
           with_food: withFood === "while" || withFood === "before" || withFood === "after",
           special_instructions: instructions || null,
@@ -170,7 +267,7 @@ const Medications = () => {
         }));
       } else if (frequencyType === "specific_days") {
         scheduleInserts = [{
-          medication_id: medData.id,
+          medication_id: medId,
           time_of_day: times[0],
           with_food: withFood === "while" || withFood === "before" || withFood === "after",
           special_instructions: instructions || null,
@@ -179,7 +276,7 @@ const Medications = () => {
         }];
       } else if (frequencyType === "every_other_day") {
         scheduleInserts = [{
-          medication_id: medData.id,
+          medication_id: medId,
           time_of_day: times[0],
           with_food: withFood === "while" || withFood === "before" || withFood === "after",
           special_instructions: "Every other day",
@@ -188,7 +285,7 @@ const Medications = () => {
         }];
       } else if (frequencyType === "as_needed") {
         scheduleInserts = [{
-          medication_id: medData.id,
+          medication_id: medId,
           time_of_day: "08:00",
           with_food: false,
           special_instructions: "As needed",
@@ -198,14 +295,20 @@ const Medications = () => {
       }
 
       if (scheduleInserts.length > 0) {
+        if (editId) {
+          const { error: delErr } = await supabase
+            .from("medication_schedules")
+            .delete()
+            .eq("medication_id", editId);
+          if (delErr) throw delErr;
+        }
         const { error: schedError } = await supabase
           .from("medication_schedules")
           .insert(scheduleInserts);
-
         if (schedError) throw schedError;
       }
 
-      toast.success("Medication added successfully!");
+      toast.success(editId ? "Medication updated!" : "Medication added successfully!");
       navigate("/dashboard");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Failed to add medication";
@@ -288,7 +391,7 @@ const Medications = () => {
             <ArrowLeft className="w-6 h-6 mr-2" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">Add New Medication</h1>
+          <h1 className="text-3xl font-bold">{editId ? "Edit Medication" : "Add New Medication"}</h1>
           <p className="text-lg text-muted-foreground mt-2">
             Step {currentStep} of {totalSteps}
           </p>
@@ -337,7 +440,7 @@ const Medications = () => {
                 className="flex-1 text-xl h-16"
                 disabled={loading || !canProceed()}
               >
-                {loading ? "Saving..." : "Save Medication"}
+                {loading ? (editId ? "Updating..." : "Saving...") : (editId ? "Update Medication" : "Save Medication")}
               </Button>
             )}
           </div>
