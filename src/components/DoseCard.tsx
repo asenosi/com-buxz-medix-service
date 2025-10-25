@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Clock, CheckCircle2, XCircle, Pill, AlarmClock, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useCountdown } from "@/hooks/use-countdown";
 
 interface Medication {
   id: string;
@@ -39,15 +40,25 @@ interface DoseCardProps {
   onMarkSkipped: (dose: TodayDose) => void;
   onMarkSnoozed: (dose: TodayDose, minutes: number) => void;
   onEdit: (medicationId: string) => void;
+  onOpenDetails: (medicationId: string) => void;
 }
 
-export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEdit }: DoseCardProps) => {
+export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEdit, onOpenDetails }: DoseCardProps) => {
   const [snoozeMinutes, setSnoozeMinutes] = useState("15");
   const [showSnoozeOptions, setShowSnoozeOptions] = useState(false);
   const isCompleted = dose.isTaken || dose.isSkipped || dose.isSnoozed;
+  const showCountdown = !isCompleted && dose.status === "upcoming";
+  const countdown = useCountdown(showCountdown ? dose.nextDoseTime : null);
+  const snoozeCountdown = useCountdown(dose.isSnoozed && dose.snoozeUntil ? dose.snoozeUntil : null);
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button,[role=button],a,input,select,textarea")) return;
+    onOpenDetails(dose.medication.id);
+  };
 
   return (
     <Card
+      onClick={handleCardClick}
       className={cn(
         "border-l-4 transition-all duration-500 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
         dose.isTaken && "opacity-60 bg-success/5 border-l-success animate-fade-in",
@@ -107,6 +118,26 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
                 minute: "2-digit",
               })}
             </span>
+            {showCountdown && (
+              <span className="ml-2 text-xs sm:text-sm text-muted-foreground">
+                in {countdown.days > 0 ? `${countdown.days}d ` : ""}
+                {countdown.hours > 0 ? `${countdown.hours}h ` : ""}
+                {countdown.minutes}m {countdown.seconds}s
+              </span>
+            )}
+            {dose.isSnoozed && dose.snoozeUntil && (
+              <span className="ml-2 text-xs sm:text-sm text-muted-foreground">
+                resumes in {snoozeCountdown.days > 0 ? `${snoozeCountdown.days}d ` : ""}
+                {snoozeCountdown.hours > 0 ? `${snoozeCountdown.hours}h ` : ""}
+                {snoozeCountdown.minutes}m {snoozeCountdown.seconds}s
+              </span>
+            )}
+            {!isCompleted && dose.status === "due" && (
+              <span className="ml-2 text-xs sm:text-sm text-warning font-medium">Due now</span>
+            )}
+            {!isCompleted && dose.status === "overdue" && (
+              <span className="ml-2 text-xs sm:text-sm text-destructive font-medium">Overdue</span>
+            )}
           </div>
         </div>
       </CardHeader>

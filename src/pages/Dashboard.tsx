@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor } from "lucide-react";
+import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3 } from "lucide-react";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ import { Session } from "@supabase/supabase-js";
 import { DoseCard } from "@/components/DoseCard";
 import { AdherenceStats } from "@/components/AdherenceStats";
 import { useTheme } from "@/hooks/use-theme";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Medication {
   id: string;
@@ -52,6 +54,54 @@ const Dashboard = () => {
   const [todayProgress, setTodayProgress] = useState(0);
   const [weeklyAdherence, setWeeklyAdherence] = useState(0);
   const { mode, setMode } = useTheme();
+  const scheduledRef = useRef<Set<string>>(new Set());
+  const timersRef = useRef<Map<string, number>>(new Map());
+  const [showStats, setShowStats] = useState(false);
+
+  // Search & Filters for Today's Schedule
+  type StatusFilter = "all" | "upcoming" | "due" | "overdue" | "taken" | "skipped" | "snoozed";
+  type TimeBucket = "all" | "morning" | "afternoon" | "evening" | "night";
+  type WithFood = "any" | "yes" | "no";
+  type SortOpt = "timeAsc" | "timeDesc";
+
+  const [searchText, setSearchText] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [timeBucket, setTimeBucket] = useState<TimeBucket>("all");
+  const [withFood, setWithFood] = useState<WithFood>("any");
+  const [sortOpt, setSortOpt] = useState<SortOpt>("timeAsc");
+
+  const filteredDoses = useMemo(() => {
+    const inBucket = (d: Date): boolean => {
+      const h = d.getHours();
+      if (timeBucket === "all") return true;
+      if (timeBucket === "morning") return h >= 5 && h < 11;
+      if (timeBucket === "afternoon") return h >= 11 && h < 17;
+      if (timeBucket === "evening") return h >= 17 && h < 21;
+      if (timeBucket === "night") return h >= 21 || h < 5;
+      return true;
+    };
+
+    const list = todayDoses
+      .filter(d => !searchText || d.medication.name.toLowerCase().includes(searchText.toLowerCase()))
+      .filter(d => {
+        if (statusFilter === "all") return true;
+        if (statusFilter === "taken") return Boolean(d.isTaken);
+        if (statusFilter === "skipped") return Boolean(d.isSkipped);
+        if (statusFilter === "snoozed") return Boolean(d.isSnoozed);
+        return d.status === statusFilter;
+      })
+      .filter(d => {
+        if (withFood === "any") return true;
+        if (withFood === "yes") return Boolean(d.schedule.with_food);
+        return !d.schedule.with_food;
+      })
+      .filter(d => inBucket(d.nextDoseTime))
+      .slice()
+      .sort((a,b) => sortOpt === "timeAsc" ? a.nextDoseTime.getTime() - b.nextDoseTime.getTime() : b.nextDoseTime.getTime() - a.nextDoseTime.getTime());
+
+    return list;
+  }, [todayDoses, searchText, statusFilter, timeBucket, withFood, sortOpt]);
 
   const fetchGamificationStats = useCallback(async () => {
     try {
@@ -180,13 +230,7 @@ const Dashboard = () => {
               new Date(log.scheduled_time).getMinutes() === minutes
             );
 
-            // Skip snoozed doses if their snooze time hasn't passed yet
-            if (doseLog?.status === "snoozed" && doseLog.snooze_until) {
-              const snoozeUntil = new Date(doseLog.snooze_until);
-              if (now < snoozeUntil) {
-                return; // Don't show this dose yet
-              }
-            }
+            // Keep snoozed doses in the list; surface as snoozed with snoozeUntil
 
             doses.push({
               medication: med,
@@ -247,6 +291,82 @@ const Dashboard = () => {
     initAuth();
   }, [navigate, fetchMedications]);
 
+  // Ask for browser notification permission; falls back to in-app toast
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      try {
+        if (Notification.permission === "default") {
+          Notification.requestPermission().catch(() => {});
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach((id) => clearTimeout(id));
+      timersRef.current.clear();
+      scheduledRef.current.clear();
+    };
+  }, []);
+
+  const notify = useCallback((title: string, body: string) => {
+    try {
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        // eslint-disable-next-line no-new
+        new Notification(title, { body });
+      }
+    } catch {
+      // ignore Notification failures; fallback to toast below
+    }
+    toast.info(body, { description: title });
+  }, []);
+
+  const scheduleReminder = useCallback((key: string, when: Date, title: string, message: string) => {
+    if (scheduledRef.current.has(key)) return;
+    const delay = when.getTime() - Date.now();
+    const trigger = () => {
+      notify(title, message);
+      scheduledRef.current.delete(key);
+      const t = timersRef.current.get(key);
+      if (t) timersRef.current.delete(key);
+    };
+    if (delay <= 0) {
+      trigger();
+      return;
+    }
+    scheduledRef.current.add(key);
+    const timeoutId = window.setTimeout(trigger, delay);
+    timersRef.current.set(key, timeoutId);
+  }, [notify]);
+
+  // Schedule reminders for upcoming medication times and snooze end times
+  useEffect(() => {
+    const now = Date.now();
+    todayDoses.forEach((dose) => {
+      // Snoozed item: schedule reminder for snooze end
+      if (dose.isSnoozed && dose.snoozeUntil && dose.snoozeUntil.getTime() > now) {
+        const sKey = `snooze-${dose.schedule.id}-${dose.snoozeUntil.toISOString()}`;
+        scheduleReminder(sKey, dose.snoozeUntil, "Snooze Over", `Take ${dose.medication.name} now`);
+        return;
+      }
+
+      // Otherwise, schedule regular reminder if not taken/skipped
+      if (dose.isTaken || dose.isSkipped) return;
+      const key = `${dose.schedule.id}-${dose.nextDoseTime.toISOString()}`;
+      const when = dose.nextDoseTime;
+      if (when.getTime() > now) {
+        scheduleReminder(key, when, "Medication Reminder", `Time to take ${dose.medication.name}`);
+      } else if ((now - when.getTime()) < 60_000) {
+        // Just became due within last minute
+        scheduleReminder(key, new Date(), "Medication Reminder", `Time to take ${dose.medication.name}`);
+      }
+    });
+  }, [todayDoses, scheduleReminder]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast.success("Signed out successfully");
@@ -277,6 +397,8 @@ const Dashboard = () => {
       }
 
       toast.success(`✅ Great job! ${dose.medication.name} marked as taken!`);
+      const key = `snooze-${dose.schedule.id}-${snoozeUntil.toISOString()}`;
+      scheduleReminder(key, snoozeUntil, "Snooze Over", `Take ${dose.medication.name} now`);
       fetchMedications();
     } catch (error: unknown) {
       toast.error("Failed to log dose");
@@ -374,6 +496,12 @@ const Dashboard = () => {
                 <DropdownMenuItem onSelect={() => navigate("/profile")}>
                   <UserIcon className="w-4 h-4 mr-2" /> Profile
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => navigate("/search")}>
+                  <SearchIcon className="w-4 h-4 mr-2" /> Search
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setShowStats(s => !s)}>
+                  <BarChart3 className="w-4 h-4 mr-2" /> {showStats ? "Hide Stats" : "Show Stats"}
+                </DropdownMenuItem>
                 <ThemePicker trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}><span className="flex items-center"><Menu className="w-4 h-4 mr-2" /> Themes</span></DropdownMenuItem>} />
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Theme Mode</DropdownMenuLabel>
@@ -437,12 +565,82 @@ const Dashboard = () => {
           </Card>
         ) : (
           <>
-            <AdherenceStats
-              streak={streak}
-              todayProgress={todayProgress}
-              weeklyAdherence={weeklyAdherence}
-              totalTaken={totalTaken}
-            />
+            {showStats && (
+              <AdherenceStats
+                streak={streak}
+                todayProgress={todayProgress}
+                weeklyAdherence={weeklyAdherence}
+                totalTaken={totalTaken}
+              />
+            )}
+
+            {/* Search entry just below stats */}
+            <Card className="mb-4">
+              <CardContent className="pt-6">
+                <div className="flex flex-col lg:flex-row gap-3 items-stretch">
+                  <div className="relative flex-1">
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      placeholder="Search doses"
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      className="pl-10 h-12 rounded-xl"
+                    />
+                  </div>
+                  <Button variant="outline" className="h-12 rounded-xl w-full lg:w-[160px]" onClick={() => setShowFilters(s => !s)}>
+                    <SlidersHorizontal className="w-4 h-4 mr-2" /> {showFilters ? "Hide Filters" : "Filters"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="h-12 rounded-xl w-full lg:w-[120px]"
+                    onClick={() => { setSearchText(""); setStatusFilter("all"); setTimeBucket("all"); setWithFood("any"); setSortOpt("timeAsc"); setShowFilters(false); }}
+                  >
+                    Clear
+                  </Button>
+                </div>
+                {showFilters && (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
+                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Status" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All statuses</SelectItem>
+                        <SelectItem value="upcoming">Upcoming</SelectItem>
+                        <SelectItem value="due">Due</SelectItem>
+                        <SelectItem value="overdue">Overdue</SelectItem>
+                        <SelectItem value="taken">Taken</SelectItem>
+                        <SelectItem value="snoozed">Snoozed</SelectItem>
+                        <SelectItem value="skipped">Skipped</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={timeBucket} onValueChange={(v: TimeBucket) => setTimeBucket(v)}>
+                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Time of day" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Any time</SelectItem>
+                        <SelectItem value="morning">Morning (5–11)</SelectItem>
+                        <SelectItem value="afternoon">Afternoon (11–17)</SelectItem>
+                        <SelectItem value="evening">Evening (17–21)</SelectItem>
+                        <SelectItem value="night">Night (21–5)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={withFood} onValueChange={(v: WithFood) => setWithFood(v)}>
+                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="With food" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="any">With or without</SelectItem>
+                        <SelectItem value="yes">With food</SelectItem>
+                        <SelectItem value="no">Without food</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={sortOpt} onValueChange={(v: SortOpt) => setSortOpt(v)}>
+                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="timeAsc">Time ↑</SelectItem>
+                        <SelectItem value="timeDesc">Time ↓</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">Today's Schedule</h2>
@@ -456,7 +654,7 @@ const Dashboard = () => {
                 </Card>
               ) : (
                 <div className="grid gap-3 sm:gap-4">
-                  {todayDoses.map((dose, idx) => (
+                  {(filteredDoses.length === 0 ? [] : filteredDoses).map((dose, idx) => (
                     <div 
                       key={`${dose.schedule.id}-${idx}`}
                       className="animate-slide-in-right"
@@ -468,9 +666,17 @@ const Dashboard = () => {
                         onMarkSkipped={markAsSkipped}
                         onMarkSnoozed={markAsSnoozed}
                         onEdit={handleEditMedication}
+                        onOpenDetails={(id) => navigate(`/medications/${id}`)}
                       />
                     </div>
                   ))}
+                  {filteredDoses.length === 0 && (
+                    <Card className="text-center py-6 sm:py-8 animate-fade-in">
+                      <CardContent>
+                        <p className="text-lg sm:text-xl text-muted-foreground px-4">No medications match your search/filter for today</p>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
             </div>
@@ -483,6 +689,7 @@ const Dashboard = () => {
                     key={med.id} 
                     className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 animate-scale-in cursor-pointer"
                     style={{ animationDelay: `${idx * 0.1}s` }}
+                    onClick={() => navigate(`/medications/${med.id}`)}
                   >
                     <CardHeader>
                       <div className="flex items-center gap-3 mb-2">
@@ -497,7 +704,7 @@ const Dashboard = () => {
                           <CardTitle className="text-lg sm:text-xl">{med.name}</CardTitle>
                           <CardDescription className="text-base sm:text-lg">
                             {med.dosage}
-                            {med.form && ` • ${med.form}`}
+                            {med.form && ` - ${med.form}`}
                           </CardDescription>
                         </div>
                       </div>
