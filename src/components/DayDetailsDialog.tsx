@@ -66,6 +66,13 @@ export const DayDetailsDialog = ({ open, onOpenChange, date, logs, medications }
     }
   };
 
+  const getBadgeVariant = (status: string) => {
+    if (status === 'taken') return 'success' as const;
+    if (status === 'snoozed') return 'warning' as const;
+    if (status === 'skipped') return 'destructive' as const;
+    return 'secondary' as const;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
@@ -104,7 +111,7 @@ export const DayDetailsDialog = ({ open, onOpenChange, date, logs, medications }
                           </p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="flex items-center gap-1">
+                      <Badge variant={getBadgeVariant(log.status)} className="flex items-center gap-1 capitalize">
                         {getStatusIcon(log.status)}
                         {log.status}
                       </Badge>
@@ -153,7 +160,7 @@ export const DayDetailsDialog = ({ open, onOpenChange, date, logs, medications }
                           )}
                         </div>
                       </div>
-                      <Badge variant="secondary" className="flex items-center gap-1">
+                      <Badge variant={getBadgeVariant(log.status)} className="flex items-center gap-1 capitalize">
                         {getStatusIcon(log.status)}
                         {log.status}
                       </Badge>

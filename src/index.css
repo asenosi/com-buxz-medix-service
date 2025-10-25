@@ -247,4 +247,118 @@ All colors MUST be HSL.
       transform: translateY(-5px);
     }
   }
+
+  /* Marching-ants dotted outline utilities using theme primary color */
+  .ants-hover { position: relative; }
+  .ants-hover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: hsl(var(--primary) / 0.06);
+    transition: opacity 200ms ease;
+  }
+  .ants-hover:hover::before { opacity: 1; }
+
+  .ants-hover::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background:
+      linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 0) top / 12px 2px repeat-x,
+      linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 0) bottom / 12px 2px repeat-x,
+      linear-gradient(0deg, hsl(var(--primary)) 50%, transparent 0) left / 2px 12px repeat-y,
+      linear-gradient(0deg, hsl(var(--primary)) 50%, transparent 0) right / 2px 12px repeat-y;
+    animation: ants 3s linear infinite;
+  }
+  .ants-hover:hover::after { opacity: 1; }
+
+  .ants-border { position: relative; }
+  .ants-border::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 0) top / 12px 2px repeat-x,
+      linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 0) bottom / 12px 2px repeat-x,
+      linear-gradient(0deg, hsl(var(--primary)) 50%, transparent 0) left / 2px 12px repeat-y,
+      linear-gradient(0deg, hsl(var(--primary)) 50%, transparent 0) right / 2px 12px repeat-y;
+    animation: ants 3s linear infinite;
+  }
+
+  @keyframes ants {
+    to {
+      background-position:
+        12px 0,
+        -12px 0,
+        0 12px,
+        0 -12px;
+    }
+  }
+}
+
+/* Theme palettes (override primary/secondary/accent). Declared after base/dark for precedence */
+@layer base {
+  :root[data-theme="default"] {
+    --primary: 210 90% 48%;
+    --secondary: 142 76% 36%;
+    --accent: 38 92% 50%;
+    --ring: 210 90% 48%;
+  }
+
+  :root[data-theme="ubuntu"] {
+    --primary: 24 95% 54%; /* orange */
+    --secondary: 16 72% 45%; /* deep orange */
+    --accent: 40 95% 55%; /* amber */
+    --ring: 24 95% 54%;
+  }
+
+  :root[data-theme="african-sunset"] {
+    --primary: 10 88% 55%; /* sunset red */
+    --secondary: 28 92% 54%; /* warm orange */
+    --accent: 40 92% 58%; /* amber */
+    --ring: 10 88% 55%;
+  }
+
+  :root[data-theme="township-green"] {
+    --primary: 142 70% 45%; /* vibrant green */
+    --secondary: 156 72% 40%; /* teal green */
+    --accent: 120 60% 45%; /* forest */
+    --ring: 142 70% 45%;
+  }
+
+  :root[data-theme="kwazulu-gold"] {
+    --primary: 42 96% 56%; /* gold */
+    --secondary: 36 90% 52%; /* warm gold */
+    --accent: 25 95% 53%; /* orange */
+    --ring: 42 96% 56%;
+  }
+
+  :root[data-theme="cape-blue"] {
+    --primary: 217 92% 55%; /* ocean blue */
+    --secondary: 199 89% 48%; /* sea teal */
+    --accent: 222 84% 57%; /* sky */
+    --ring: 217 92% 55%;
+  }
+
+  :root[data-theme="pretoria-purple"] {
+    --primary: 262 83% 58%; /* violet */
+    --secondary: 270 80% 55%; /* purple */
+    --accent: 286 75% 60%; /* accent violet */
+    --ring: 262 83% 58%;
+  }
+
+  :root[data-theme="mandela"] {
+    --primary: 0 0% 15%; /* near black */
+    --secondary: 0 0% 35%; /* dark gray */
+    --accent: 42 96% 56%; /* gold accent */
+    --ring: 0 0% 15%;
+  }
 }

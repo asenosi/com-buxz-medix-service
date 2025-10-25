@@ -23,6 +23,23 @@ interface Medication {
   image_url: string | null;
 }
 
+interface Schedule {
+  id: string;
+  medication_id: string;
+  time_of_day: string;
+  with_food: boolean;
+  special_instructions: string | null;
+  days_of_week: number[] | null;
+  active: boolean;
+}
+
+interface SelectedDoseItem {
+  medication: Medication;
+  schedule: Schedule;
+  time: Date;
+  status: "taken" | "skipped" | "snoozed" | "pending";
+}
+
 interface CalendarDay {
   date: Date;
   logs: DoseLog[];
@@ -42,6 +59,8 @@ const Calendar = () => {
   const [streak, setStreak] = useState(0);
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
   const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDoses, setSelectedDoses] = useState<SelectedDoseItem[]>([]);
 
   const fetchMedications = useCallback(async () => {
     try {
@@ -162,6 +181,56 @@ const Calendar = () => {
     }
   }, [currentMonth, selectedMedication, calculateStreak]);
 
+  const computeDosesForDate = useCallback(async (date: Date) => {
+    try {
+      let meds = medications;
+      if (meds.length === 0) {
+        const { data: medsData } = await supabase
+          .from("medications")
+          .select("id, name, image_url, active")
+          .eq("active", true);
+        meds = medsData || [];
+        setMedications(meds);
+      }
+
+      const medIds = meds.map(m => m.id);
+      if (medIds.length === 0) { setSelectedDoses([]); return; }
+
+      const { data: schedulesData } = await supabase
+        .from("medication_schedules")
+        .select("id, medication_id, time_of_day, with_food, special_instructions, days_of_week, active")
+        .in("medication_id", medIds)
+        .eq("active", true);
+
+      const startOfDay = new Date(date); startOfDay.setHours(0,0,0,0);
+      const endOfDay = new Date(date); endOfDay.setHours(23,59,59,999);
+
+      const { data: logsData } = await supabase
+        .from("dose_logs")
+        .select("*")
+        .gte("scheduled_time", startOfDay.toISOString())
+        .lte("scheduled_time", endOfDay.toISOString());
+
+      const dayOfWeek = date.getDay();
+      const items: SelectedDoseItem[] = [];
+      (schedulesData || []).forEach((s: Schedule) => {
+        if (selectedMedication && s.medication_id !== selectedMedication) return;
+        if (s.days_of_week && !s.days_of_week.includes(dayOfWeek)) return;
+        const [h, m] = s.time_of_day.split(":").map(Number);
+        const t = new Date(date); t.setHours(h, m, 0, 0);
+        const log = logsData?.find(l => l.schedule_id === s.id && new Date(l.scheduled_time).getHours() === h && new Date(l.scheduled_time).getMinutes() === m);
+        const med = meds.find(mm => mm.id === s.medication_id)!;
+        items.push({ medication: med, schedule: s, time: t, status: (log?.status as any) || "pending" });
+      });
+
+      items.sort((a,b) => a.time.getTime() - b.time.getTime());
+      setSelectedDoses(items);
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to load day schedule");
+    }
+  }, [medications, selectedMedication]);
+
   useEffect(() => {
     const initAuth = async () => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -219,8 +288,18 @@ const Calendar = () => {
   };
 
   const handleDayClick = (day: CalendarDay) => {
+    const date = day.date;
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    if (isMobile) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth()+1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      navigate(`/calendar/day?date=${y}-${m}-${d}`);
+      return;
+    }
     setSelectedDay(day);
-    setIsDayDialogOpen(true);
+    setSelectedDate(date);
+    computeDosesForDate(date);
   };
 
   if (loading) {
@@ -303,6 +382,7 @@ const Calendar = () => {
           </CardContent>
         </Card>
 
+        <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -361,6 +441,42 @@ const Calendar = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="hidden lg:block h-fit sticky top-24">
+          <CardHeader>
+            <CardTitle>{selectedDate ? selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "Pick a date"}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!selectedDate ? (
+              <p className="text-muted-foreground">Select a date to see your schedule.</p>
+            ) : selectedDoses.length === 0 ? (
+              <p className="text-muted-foreground">No medications scheduled.</p>
+            ) : (
+              <div className="space-y-3">
+                {selectedDoses.map((it, idx) => (
+                  <div key={`${it.schedule.id}-${idx}`} className="p-3 border rounded-lg hover:shadow-sm transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {it.medication.image_url && <img src={it.medication.image_url} alt={it.medication.name} className="w-10 h-10 rounded object-cover" />}
+                        <div>
+                          <div className="font-medium">{it.medication.name}</div>
+                          <div className="text-sm text-muted-foreground">{it.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                        </div>
+                      </div>
+                      <Badge
+                        variant={it.status === 'taken' ? 'success' : it.status === 'snoozed' ? 'warning' : it.status === 'skipped' ? 'destructive' : 'secondary'}
+                        className="capitalize"
+                      >
+                        {it.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        </div>
       </main>
 
       <DayDetailsDialog

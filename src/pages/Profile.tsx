@@ -10,6 +10,9 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "@/components/ThemeToggle";
+import ThemePicker from "@/components/ThemePicker";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Menu, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Calendar as CalendarIcon, Phone, ShieldCheck, User as UserIcon } from "lucide-react";
 
@@ -178,10 +181,24 @@ const Profile = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ThemeToggle />
-                  <Button variant="outline" onClick={() => navigate(-1)} className="hover:scale-105 transition-transform">
-                    Back
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="hover:scale-105 transition-transform">
+                        <Menu className="w-4 h-4 mr-2" /> Menu
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => navigate("/profile")}>Profile</DropdownMenuItem>
+                      <ThemePicker trigger={<DropdownMenuItem onSelect={(e)=>e.preventDefault()}>Themes</DropdownMenuItem>} />
+                      <DropdownMenuItem onSelect={() => navigate("/dashboard")}>Dashboard</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={async () => { await supabase.auth.signOut(); navigate("/auth"); }}>
+                        <LogOut className="w-4 h-4 mr-2" /> Log Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>

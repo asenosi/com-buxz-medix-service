@@ -11,6 +11,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Medications = lazy(() => import("./pages/Medications"));
 const Calendar = lazy(() => import("./pages/Calendar"));
+const CalendarDay = lazy(() => import("./pages/CalendarDay"));
 const Profile = lazy(() => import("./pages/Profile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/medications" element={<Medications />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/calendar/day" element={<CalendarDay />} />
             <Route path="/profile" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
