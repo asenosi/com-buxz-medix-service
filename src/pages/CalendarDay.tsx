@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 type Medication = { id: string; name: string; image_url: string | null };
 type Schedule = { id: string; medication_id: string; time_of_day: string; with_food: boolean; special_instructions: string | null; days_of_week: number[] | null; active: boolean };
-type DoseItem = { medication: Medication; schedule: Schedule; time: Date; status: "taken" | "skipped" | "snoozed" | "pending" };
+type DoseStatus = "pending" | "taken" | "skipped" | "snoozed" | "missed";
+type DoseItem = { medication: Medication; schedule: Schedule; time: Date; status: DoseStatus };
 
 const CalendarDay = () => {
   const navigate = useNavigate();
@@ -43,6 +44,10 @@ const CalendarDay = () => {
         .lte("scheduled_time", end.toISOString());
 
       const dow = date.getDay();
+      const toStatus = (v?: string): DoseStatus => {
+        const allowed: DoseStatus[] = ["pending", "taken", "skipped", "snoozed", "missed"];
+        return allowed.includes((v as DoseStatus)) ? (v as DoseStatus) : "pending";
+      };
       const list: DoseItem[] = [];
       (schedules || []).forEach((s: Schedule) => {
         if (s.days_of_week && !s.days_of_week.includes(dow)) return;
@@ -50,7 +55,7 @@ const CalendarDay = () => {
         const t = new Date(date); t.setHours(h, m, 0, 0);
         const log = logs?.find(l => l.schedule_id === s.id && new Date(l.scheduled_time).getHours() === h && new Date(l.scheduled_time).getMinutes() === m);
         const med = (meds || []).find(mm => mm.id === s.medication_id)!;
-        list.push({ medication: med, schedule: s, time: t, status: (log?.status as any) || "pending" });
+        list.push({ medication: med, schedule: s, time: t, status: toStatus(log?.status) });
       });
       list.sort((a,b)=> a.time.getTime() - b.time.getTime());
       setItems(list);

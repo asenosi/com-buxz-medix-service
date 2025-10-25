@@ -33,11 +33,13 @@ interface Schedule {
   active: boolean;
 }
 
+type DoseStatus = "pending" | "taken" | "skipped" | "snoozed" | "missed";
+
 interface SelectedDoseItem {
   medication: Medication;
   schedule: Schedule;
   time: Date;
-  status: "taken" | "skipped" | "snoozed" | "pending";
+  status: DoseStatus;
 }
 
 interface CalendarDay {
@@ -213,6 +215,11 @@ const Calendar = () => {
 
       const dayOfWeek = date.getDay();
       const items: SelectedDoseItem[] = [];
+      const toStatus = (v?: string): DoseStatus => {
+        const allowed: DoseStatus[] = ["pending", "taken", "skipped", "snoozed", "missed"];
+        return allowed.includes((v as DoseStatus)) ? (v as DoseStatus) : "pending";
+      };
+
       (schedulesData || []).forEach((s: Schedule) => {
         if (selectedMedication && s.medication_id !== selectedMedication) return;
         if (s.days_of_week && !s.days_of_week.includes(dayOfWeek)) return;
@@ -220,7 +227,7 @@ const Calendar = () => {
         const t = new Date(date); t.setHours(h, m, 0, 0);
         const log = logsData?.find(l => l.schedule_id === s.id && new Date(l.scheduled_time).getHours() === h && new Date(l.scheduled_time).getMinutes() === m);
         const med = meds.find(mm => mm.id === s.medication_id)!;
-        items.push({ medication: med, schedule: s, time: t, status: (log?.status as any) || "pending" });
+        items.push({ medication: med, schedule: s, time: t, status: toStatus(log?.status) });
       });
 
       items.sort((a,b) => a.time.getTime() - b.time.getTime());
