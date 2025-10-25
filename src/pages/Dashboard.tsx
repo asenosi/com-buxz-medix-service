@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar, User as UserIcon } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
+import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor } from "lucide-react";
+import ThemePicker from "@/components/ThemePicker";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { DoseCard } from "@/components/DoseCard";
 import { AdherenceStats } from "@/components/AdherenceStats";
+import { useTheme } from "@/hooks/use-theme";
 
 interface Medication {
   id: string;
@@ -49,6 +51,7 @@ const Dashboard = () => {
   const [totalTaken, setTotalTaken] = useState(0);
   const [todayProgress, setTodayProgress] = useState(0);
   const [weeklyAdherence, setWeeklyAdherence] = useState(0);
+  const { mode, setMode } = useTheme();
 
   const fetchGamificationStats = useCallback(async () => {
     try {
@@ -358,17 +361,37 @@ const Dashboard = () => {
                 <p className="text-sm sm:text-lg text-muted-foreground">Your medication companion</p>
               </div>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto items-center">
-              <ThemeToggle />
-              <Button onClick={() => navigate("/profile")} variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
-                <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Profile
-              </Button>
-              <Button onClick={handleSignOut} variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
-                <LogOut className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Sign Out
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="lg" className="w-full sm:w-auto hover:scale-105 transition-transform">
+                  <Menu className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  Menu
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => navigate("/profile")}>
+                  <UserIcon className="w-4 h-4 mr-2" /> Profile
+                </DropdownMenuItem>
+                <ThemePicker trigger={<DropdownMenuItem onSelect={(e) => e.preventDefault()}><span className="flex items-center"><Menu className="w-4 h-4 mr-2" /> Themes</span></DropdownMenuItem>} />
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Theme Mode</DropdownMenuLabel>
+                <DropdownMenuItem onSelect={() => setMode("light")}>
+                  <Sun className="w-4 h-4 mr-2" /> Light
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setMode("dark")}>
+                  <Moon className="w-4 h-4 mr-2" /> Dark
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setMode("system")}>
+                  <Monitor className="w-4 h-4 mr-2" /> System
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" /> Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
