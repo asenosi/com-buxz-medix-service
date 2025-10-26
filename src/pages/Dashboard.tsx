@@ -176,7 +176,7 @@ const Dashboard = () => {
       
       // Attach up to 5 storage images per medication
       const medsWithImages: Medication[] = await (async () => {
-        const listForMed = async (med: any): Promise<string[]> => {
+        const listForMed = async (med: Pick<Medication, "user_id" | "id">): Promise<string[]> => {
           const base = `${med.user_id}/${med.id}`;
           const { data: files } = await supabase.storage
             .from("medication-images")
@@ -184,7 +184,7 @@ const Dashboard = () => {
           const names = (files || []).slice(0, 5).map(f => `${base}/${f.name}`);
           return names.map(n => supabase.storage.from("medication-images").getPublicUrl(n).data.publicUrl);
         };
-        return Promise.all((medsData || []).map(async (m: any) => ({ ...m, images: await listForMed(m) })));
+        return Promise.all(((medsData || []) as Medication[]).map(async (m) => ({ ...m, images: await listForMed(m) })));
       })();
 
       setMedications(medsWithImages || []);
@@ -331,7 +331,6 @@ const Dashboard = () => {
   const notify = useCallback((title: string, body: string) => {
     try {
       if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-        // eslint-disable-next-line no-new
         new Notification(title, { body });
       }
     } catch {
