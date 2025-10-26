@@ -23,6 +23,7 @@ type Medication = {
   medication_color: string | null;
   medication_icon: string | null;
   image_url: string | null;
+  user_id: string;
 };
 
 type Schedule = {
@@ -40,6 +41,7 @@ const MedicationDetails = () => {
   const [loading, setLoading] = useState(true);
   const [med, setMed] = useState<Medication | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -52,6 +54,18 @@ const MedicationDetails = () => {
           .single();
         if (mErr) throw mErr;
         setMed(m as Medication);
+        // Load up to 5 images from storage for this medication
+        try {
+          const base = `${(m as Medication).user_id}/${(m as Medication).id}`;
+          const { data: files } = await supabase.storage
+            .from("medication-images")
+            .list(base, { limit: 10, sortBy: { column: "updated_at", order: "desc" } });
+          const names = (files || []).slice(0, 10).map(f => `${base}/${f.name}`);
+          const urls = names.map(n => supabase.storage.from("medication-images").getPublicUrl(n).data.publicUrl);
+          setImages(urls.slice(0, 5));
+        } catch {
+          setImages([]);
+        }
 
         const { data: scheds, error: sErr } = await supabase
           .from("medication_schedules")
@@ -135,11 +149,26 @@ const MedicationDetails = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {images.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Images</CardTitle>
+              <CardDescription>Medication photos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {images.map((src, idx) => (
+                  <img key={idx} src={src} alt={`${med.name} ${idx+1}`} className="w-28 h-28 rounded-lg object-cover border" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
-              {med.image_url && (
-                <img src={med.image_url} alt={med.name} className="w-16 h-16 rounded-lg object-cover border" />
+              {(images[0] || med.image_url) && (
+                <img src={images[0] || med.image_url || ''} alt={med.name} className="w-16 h-16 rounded-lg object-cover border" />
               )}
               <div>
                 <CardTitle className="text-2xl">{med.name}</CardTitle>
