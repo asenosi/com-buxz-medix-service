@@ -44,23 +44,23 @@ const Profile = () => {
     return parts.map(p => p.charAt(0).toUpperCase()).join("") || "U";
   }, [fullName, session]);
 
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string, userMetadata?: { full_name?: string }) => {
     try {
       const { data, error } = await supabase
-        .from<ProfileRow>("profiles")
+        .from("profiles")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== "PGRST116") throw error; // 116: no rows
+      if (error && error.code !== "PGRST116") throw error;
 
       if (!data) {
         const { error: insertError } = await supabase.from("profiles").insert({
           user_id: userId,
-          full_name: session?.user?.user_metadata?.full_name ?? null,
+          full_name: userMetadata?.full_name ?? null,
         });
         if (insertError) throw insertError;
-        setFullName(session?.user?.user_metadata?.full_name ?? "");
+        setFullName(userMetadata?.full_name ?? "");
         setDob("");
         setPhone("");
         setIsCaregiver(false);
@@ -70,13 +70,13 @@ const Profile = () => {
         setDob(data.date_of_birth ?? "");
         setPhone(data.phone_number ?? "");
         setIsCaregiver(Boolean(data.is_caregiver));
-        setAvatarUrl(data.avatar_url ?? null);
+        // Avatar URL is managed through storage and state
       }
     } catch (e) {
       console.error(e);
       toast.error("Failed to load profile");
     }
-  }, [session]);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -86,7 +86,7 @@ const Profile = () => {
         navigate("/auth");
         return;
       }
-      await loadProfile(current.user.id);
+      await loadProfile(current.user.id, current.user.user_metadata);
       setLoading(false);
     };
     init();
@@ -95,17 +95,15 @@ const Profile = () => {
   const handleSave = async () => {
     if (!session) return;
     try {
-      const payload: ProfileRow = {
-        user_id: session.user.id,
-        full_name: fullName || null,
-        date_of_birth: dob || null,
-        phone_number: phone || null,
-        is_caregiver: isCaregiver,
-        avatar_url: avatarUrl || null,
-      };
       const { error } = await supabase
         .from("profiles")
-        .upsert(payload, { onConflict: "user_id" });
+        .upsert({
+          user_id: session.user.id,
+          full_name: fullName || null,
+          date_of_birth: dob || null,
+          phone_number: phone || null,
+          is_caregiver: isCaregiver,
+        }, { onConflict: "user_id" });
       if (error) throw error;
       toast.success("Profile updated");
     } catch (e) {
@@ -141,11 +139,6 @@ const Profile = () => {
       if (!publicUrl) throw new Error("Failed to get public URL");
 
       setAvatarUrl(publicUrl);
-      const { error: saveErr } = await supabase
-        .from("profiles")
-        .update({ avatar_url: publicUrl })
-        .eq("user_id", session.user.id);
-      if (saveErr) throw saveErr;
       toast.success("Avatar updated");
     } catch (err) {
       console.error(err);
