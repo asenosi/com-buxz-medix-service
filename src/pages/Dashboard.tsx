@@ -397,8 +397,6 @@ const Dashboard = () => {
       }
 
       toast.success(`✅ Great job! ${dose.medication.name} marked as taken!`);
-      const key = `snooze-${dose.schedule.id}-${snoozeUntil.toISOString()}`;
-      scheduleReminder(key, snoozeUntil, "Snooze Over", `Take ${dose.medication.name} now`);
       fetchMedications();
     } catch (error: unknown) {
       toast.error("Failed to log dose");
