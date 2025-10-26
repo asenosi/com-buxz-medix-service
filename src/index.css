@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -42,9 +42,9 @@ All colors MUST be HSL.
     /* Subtle borders */
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 210 90% 48%;
+    --ring: 210 90% 48% / 0.7;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Success green */
     --success: 142 76% 36%;
@@ -97,7 +97,7 @@ All colors MUST be HSL.
 
     --border: 215 28% 25%;
     --input: 215 28% 25%;
-    --ring: 210 90% 55%;
+    --ring: 210 90% 55% / 0.7;
 
     --success: 142 70% 42%;
     --success-foreground: 0 0% 100%;
@@ -118,7 +118,7 @@ All colors MUST be HSL.
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border/60;
   }
 
   body {
@@ -310,55 +310,60 @@ All colors MUST be HSL.
     --primary: 210 90% 48%;
     --secondary: 142 76% 36%;
     --accent: 38 92% 50%;
-    --ring: 210 90% 48%;
+    --ring: 210 90% 48% / 0.7;
   }
 
   :root[data-theme="ubuntu"] {
     --primary: 24 95% 54%; /* orange */
     --secondary: 16 72% 45%; /* deep orange */
     --accent: 40 95% 55%; /* amber */
-    --ring: 24 95% 54%;
+    --ring: 24 95% 54% / 0.7;
   }
 
   :root[data-theme="african-sunset"] {
     --primary: 10 88% 55%; /* sunset red */
     --secondary: 28 92% 54%; /* warm orange */
     --accent: 40 92% 58%; /* amber */
-    --ring: 10 88% 55%;
+    --ring: 10 88% 55% / 0.7;
   }
 
   :root[data-theme="township-green"] {
     --primary: 142 70% 45%; /* vibrant green */
     --secondary: 156 72% 40%; /* teal green */
     --accent: 120 60% 45%; /* forest */
-    --ring: 142 70% 45%;
+    --ring: 142 70% 45% / 0.7;
   }
 
   :root[data-theme="kwazulu-gold"] {
     --primary: 42 96% 56%; /* gold */
     --secondary: 36 90% 52%; /* warm gold */
     --accent: 25 95% 53%; /* orange */
-    --ring: 42 96% 56%;
+    --ring: 42 96% 56% / 0.7;
   }
 
   :root[data-theme="cape-blue"] {
     --primary: 217 92% 55%; /* ocean blue */
     --secondary: 199 89% 48%; /* sea teal */
     --accent: 222 84% 57%; /* sky */
-    --ring: 217 92% 55%;
+    --ring: 217 92% 55% / 0.7;
   }
 
   :root[data-theme="pretoria-purple"] {
     --primary: 262 83% 58%; /* violet */
     --secondary: 270 80% 55%; /* purple */
     --accent: 286 75% 60%; /* accent violet */
-    --ring: 262 83% 58%;
+    --ring: 262 83% 58% / 0.7;
   }
 
   :root[data-theme="mandela"] {
     --primary: 0 0% 15%; /* near black */
     --secondary: 0 0% 35%; /* dark gray */
     --accent: 42 96% 56%; /* gold accent */
-    --ring: 0 0% 15%;
+    --ring: 0 0% 15% / 0.7;
   }
 }
+
+
+
+
+
