@@ -13,6 +13,7 @@ interface Medication {
   form: string | null;
   pills_remaining: number | null;
   image_url: string | null;
+  images?: string[];
 }
 
 interface Schedule {
@@ -71,7 +72,13 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
       <CardHeader className="pb-3 sm:pb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex items-center gap-2 sm:gap-3 flex-1">
-            {dose.medication.image_url ? (
+            {(dose.medication.images && dose.medication.images.length > 0) ? (
+              <img 
+                src={dose.medication.images[0]} 
+                alt={dose.medication.name}
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
+              />
+            ) : dose.medication.image_url ? (
               <img 
                 src={dose.medication.image_url} 
                 alt={dose.medication.name}
@@ -142,6 +149,13 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
         </div>
       </CardHeader>
       <CardContent className="pt-0">
+        {dose.medication.images && dose.medication.images.length > 1 && (
+          <div className="flex gap-2 mb-3 sm:mb-4 overflow-x-auto">
+            {dose.medication.images.slice(0, 5).map((src, idx) => (
+              <img key={idx} src={src} alt={`${dose.medication.name} ${idx+1}`} className="w-12 h-12 rounded object-cover border" />
+            ))}
+          </div>
+        )}
         <div className="flex flex-wrap gap-2 sm:gap-4 mb-3 sm:mb-4 text-sm sm:text-lg">
           {dose.schedule.with_food && (
             <span className="text-muted-foreground bg-muted/50 px-2 sm:px-3 py-1 rounded-full">🍽️ With food</span>

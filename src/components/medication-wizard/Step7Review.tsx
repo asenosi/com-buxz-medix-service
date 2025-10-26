@@ -14,6 +14,7 @@ interface Step7ReviewProps {
     selectedDays: number[];
     medicationIcon: string;
     medicationColor: string;
+    imagePreviews?: string[];
   };
 }
 
@@ -40,14 +41,26 @@ export const Step7Review = ({ data }: Step7ReviewProps) => {
         </div>
 
         <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center bg-${data.medicationColor}-500`}>
-            <Icon className="w-8 h-8 text-white" />
-          </div>
+          {data.imagePreviews && data.imagePreviews.length > 0 ? (
+            <img src={data.imagePreviews[0]} alt={data.name} className="w-16 h-16 rounded-lg object-cover border" />
+          ) : (
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center bg-${data.medicationColor}-500`}>
+              <Icon className="w-8 h-8 text-white" />
+            </div>
+          )}
           <div className="flex-1">
             <h3 className="text-xl font-bold">{data.name}</h3>
             <p className="text-muted-foreground">{data.dosage}</p>
           </div>
         </div>
+
+        {data.imagePreviews && data.imagePreviews.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            {data.imagePreviews.slice(1).map((src, idx) => (
+              <img key={idx} src={src} alt={`${data.name} ${idx+2}`} className="w-16 h-16 rounded-lg object-cover border" />
+            ))}
+          </div>
+        )}
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

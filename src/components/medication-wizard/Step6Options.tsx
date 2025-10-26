@@ -23,6 +23,9 @@ interface Step6OptionsProps {
   setMedicationColor: (value: string) => void;
   medicationIcon: string;
   setMedicationIcon: (value: string) => void;
+  imagePreviews: string[];
+  onAddImages: (files: FileList | File[]) => void;
+  onRemoveImage: (index: number) => void;
 }
 
 const iconOptions = [
@@ -60,6 +63,9 @@ export const Step6Options = ({
   setMedicationColor,
   medicationIcon,
   setMedicationIcon,
+  imagePreviews,
+  onAddImages,
+  onRemoveImage,
 }: Step6OptionsProps) => {
   return (
     <Card>
@@ -92,6 +98,46 @@ export const Step6Options = ({
                 placeholder="e.g., 30"
                 className="h-12"
               />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold">Medication Images</h3>
+          <p className="text-sm text-muted-foreground">Select up to 5 images. Existing images remain; new ones will be added.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="space-y-2">
+              <Label htmlFor="images">Upload Images</Label>
+              <Input
+                id="images"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => e.target.files && onAddImages(e.target.files)}
+                className="h-12"
+              />
+              <p className="text-xs text-muted-foreground">PNG or JPG up to ~5MB each</p>
+            </div>
+            <div>
+              {imagePreviews.length === 0 ? (
+                <div className="w-24 h-24 rounded-lg border bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                  No images selected
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  {imagePreviews.map((src, idx) => (
+                    <div key={idx} className="relative">
+                      <img src={src} alt={`Selected ${idx+1}`} className="w-20 h-20 rounded-lg object-cover border" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => onRemoveImage(idx)}
+                        aria-label={`Remove image ${idx+1}`}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

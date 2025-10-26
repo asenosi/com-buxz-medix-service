@@ -50,6 +50,8 @@ const Medications = () => {
   const [instructions, setInstructions] = useState("");
   const [medicationColor, setMedicationColor] = useState("blue");
   const [medicationIcon, setMedicationIcon] = useState("pill");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -116,6 +118,7 @@ const Medications = () => {
           setTreatmentDays(med.treatment_duration_days?.toString?.() ?? "");
           setMedicationColor(med.medication_color ?? medicationColor);
           setMedicationIcon(med.medication_icon ?? medicationIcon);
+          if (med.image_url) setImagePreviews([med.image_url]);
         }
 
         const { data: scheds } = await supabase
@@ -202,7 +205,25 @@ const Medications = () => {
 
       // Create or update medication
       let medId = editId as string | null;
+      let uploadedImageUrls: string[] = [];
       if (editId) {
+        // If images are selected in edit mode, upload first so we can persist first URL in the update
+        if (imageFiles.length > 0 && session?.user?.id) {
+          const uploaded: string[] = [];
+          for (const file of imageFiles.slice(0, 5)) {
+            const path = `${session.user.id}/${editId}/${Date.now()}-${file.name}`;
+            const { error: uploadErr } = await supabase.storage
+              .from("medication-images")
+              .upload(path, file, { upsert: true, cacheControl: "3600" });
+            if (uploadErr) throw uploadErr;
+            const { data: pub } = supabase.storage
+              .from("medication-images")
+              .getPublicUrl(path);
+            uploaded.push(pub.publicUrl);
+          }
+          uploadedImageUrls = uploaded;
+        }
+
         const { error: updErr } = await supabase
           .from("medications")
           .update({
@@ -220,6 +241,7 @@ const Medications = () => {
             treatment_duration_days: treatmentDays ? parseInt(treatmentDays) : null,
             medication_color: medicationColor,
             medication_icon: medicationIcon,
+            ...(uploadedImageUrls.length > 0 ? { image_url: uploadedImageUrls[0] } : {}),
           })
           .eq("id", editId);
         if (updErr) throw updErr;
@@ -251,6 +273,30 @@ const Medications = () => {
           .single();
         if (medError) throw medError;
         medId = medData.id;
+
+        // If images are selected in create mode, upload and patch the record with the first URL
+        if (imageFiles.length > 0 && session?.user?.id && medId) {
+          const uploaded: string[] = [];
+          for (const file of imageFiles.slice(0, 5)) {
+            const path = `${session.user.id}/${medId}/${Date.now()}-${file.name}`;
+            const { error: uploadErr } = await supabase.storage
+              .from("medication-images")
+              .upload(path, file, { upsert: true, cacheControl: "3600" });
+            if (uploadErr) throw uploadErr;
+            const { data: pub } = supabase.storage
+              .from("medication-images")
+              .getPublicUrl(path);
+            uploaded.push(pub.publicUrl);
+          }
+          uploadedImageUrls = uploaded;
+          if (uploadedImageUrls.length > 0) {
+            const { error: patchErr } = await supabase
+              .from("medications")
+              .update({ image_url: uploadedImageUrls[0] })
+              .eq("id", medId);
+            if (patchErr) throw patchErr;
+          }
+        }
       }
 
       // Create schedules based on frequency type
@@ -359,6 +405,23 @@ const Medications = () => {
             setMedicationColor={setMedicationColor}
             medicationIcon={medicationIcon}
             setMedicationIcon={setMedicationIcon}
+            imagePreviews={imagePreviews}
+            onAddImages={(files) => {
+              const arr = Array.from(files);
+              const remaining = Math.max(0, 5 - imagePreviews.length);
+              const toAdd = arr.slice(0, remaining);
+              if (toAdd.length === 0) return;
+              setImageFiles(prev => [...prev, ...toAdd]);
+              toAdd.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = () => setImagePreviews(prev => [...prev, reader.result as string]);
+                reader.readAsDataURL(file);
+              });
+            }}
+            onRemoveImage={(index) => {
+              setImagePreviews(prev => prev.filter((_, i) => i !== index));
+              setImageFiles(prev => prev.filter((_, i) => i !== index));
+            }}
           />
         );
       case 7:
@@ -375,6 +438,7 @@ const Medications = () => {
               selectedDays,
               medicationIcon,
               medicationColor,
+              imagePreviews,
             }}
           />
         );

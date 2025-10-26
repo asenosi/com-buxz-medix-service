@@ -22,6 +22,8 @@ interface Medication {
   pills_remaining: number | null;
   active: boolean;
   image_url: string | null;
+  user_id: string;
+  images?: string[];
 }
 
 interface Schedule {
@@ -171,11 +173,24 @@ const Dashboard = () => {
         .order("name");
 
       if (medsError) throw medsError;
+      
+      // Attach up to 5 storage images per medication
+      const medsWithImages: Medication[] = await (async () => {
+        const listForMed = async (med: any): Promise<string[]> => {
+          const base = `${med.user_id}/${med.id}`;
+          const { data: files } = await supabase.storage
+            .from("medication-images")
+            .list(base, { limit: 10, sortBy: { column: "updated_at", order: "desc" } });
+          const names = (files || []).slice(0, 5).map(f => `${base}/${f.name}`);
+          return names.map(n => supabase.storage.from("medication-images").getPublicUrl(n).data.publicUrl);
+        };
+        return Promise.all((medsData || []).map(async (m: any) => ({ ...m, images: await listForMed(m) })));
+      })();
 
-      setMedications(medsData || []);
+      setMedications(medsWithImages || []);
 
-      if (medsData && medsData.length > 0) {
-        const medIds = medsData.map(m => m.id);
+      if (medsWithImages && medsWithImages.length > 0) {
+        const medIds = medsWithImages.map(m => m.id);
         const { data: schedulesData, error: schedError } = await supabase
           .from("medication_schedules")
           .select("*")
@@ -200,7 +215,7 @@ const Dashboard = () => {
         const now = new Date();
         const currentDay = now.getDay();
 
-        medsData.forEach(med => {
+        medsWithImages.forEach(med => {
           const medSchedules = schedulesData?.filter(s => s.medication_id === med.id) || [];
           
           medSchedules.forEach(schedule => {
@@ -691,13 +706,19 @@ const Dashboard = () => {
                   >
                     <CardHeader>
                       <div className="flex items-center gap-3 mb-2">
-                        {med.image_url && (
+                        {(med.images && med.images.length > 0) ? (
+                          <img 
+                            src={med.images[0]} 
+                            alt={med.name}
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
+                          />
+                        ) : med.image_url ? (
                           <img 
                             src={med.image_url} 
                             alt={med.name}
                             className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
                           />
-                        )}
+                        ) : null}
                         <div className="flex-1">
                           <CardTitle className="text-lg sm:text-xl">{med.name}</CardTitle>
                           <CardDescription className="text-base sm:text-lg">
@@ -708,6 +729,13 @@ const Dashboard = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
+                      {med.images && med.images.length > 1 && (
+                        <div className="flex gap-2 mb-2 overflow-x-auto">
+                          {med.images.slice(0,5).map((src, idx) => (
+                            <img key={idx} src={src} alt={`${med.name} ${idx+1}`} className="w-10 h-10 rounded object-cover border" />
+                          ))}
+                        </div>
+                      )}
                       {med.pills_remaining !== null && (
                         <p className="text-base sm:text-lg text-muted-foreground">
                           {med.pills_remaining} remaining
