@@ -3,17 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3 } from "lucide-react";
+import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock } from "lucide-react";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { DoseCard } from "@/components/DoseCard";
+import { SimpleDoseCard } from "@/components/SimpleDoseCard";
 import { AdherenceStats } from "@/components/AdherenceStats";
+import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { DoseActionDialog } from "@/components/DoseActionDialog";
 import { useTheme } from "@/hooks/use-theme";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SplitMediaCard } from "@/components/SplitMediaCard";
+import { cn } from "@/lib/utils";
 
 interface Medication {
   id: string;
@@ -27,6 +31,8 @@ interface Medication {
   images?: string[];
   reason_for_taking?: string | null;
   instructions?: string | null;
+  medication_color?: string | null;
+  medication_icon?: string | null;
 }
 
 interface Schedule {
@@ -62,6 +68,8 @@ const Dashboard = () => {
   const scheduledRef = useRef<Set<string>>(new Set());
   const timersRef = useRef<Map<string, number>>(new Map());
   const [showStats, setShowStats] = useState(false);
+  const [selectedDose, setSelectedDose] = useState<TodayDose | null>(null);
+  const [showDoseDialog, setShowDoseDialog] = useState(false);
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -497,6 +505,23 @@ const Dashboard = () => {
     navigate(`/medications?edit=${medicationId}`);
   };
 
+  const handleDoseClick = (dose: TodayDose) => {
+    setSelectedDose(dose);
+    setShowDoseDialog(true);
+  };
+
+  const groupDosesByTime = (doses: TodayDose[]) => {
+    const groups: { [key: string]: TodayDose[] } = {};
+    doses.forEach((dose) => {
+      const timeStr = dose.nextDoseTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      if (!groups[timeStr]) {
+        groups[timeStr] = [];
+      }
+      groups[timeStr].push(dose);
+    });
+    return groups;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -682,7 +707,9 @@ const Dashboard = () => {
             </Card>
 
             <div className="mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">Today's Schedule</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
+              <h2 className="text-2xl font-bold mb-4 sm:hidden text-primary">Today, {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</h2>
+              
               {todayDoses.length === 0 ? (
                 <Card className="text-center py-6 sm:py-8 animate-fade-in">
                   <CardContent>
@@ -692,23 +719,52 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid gap-3 sm:gap-4">
-                  {(filteredDoses.length === 0 ? [] : filteredDoses).map((dose, idx) => (
-                    <div 
-                      key={`${dose.schedule.id}-${idx}`}
-                      className="animate-slide-in-right"
-                      style={{ animationDelay: `${idx * 0.1}s` }}
-                    >
-                      <DoseCard
-                        dose={dose}
-                        onMarkTaken={markAsTaken}
-                        onMarkSkipped={markAsSkipped}
-                        onMarkSnoozed={markAsSnoozed}
-                        onEdit={handleEditMedication}
-                        onOpenDetails={(id) => navigate(`/medications/${id}`)}
-                      />
-                    </div>
-                  ))}
+                <>
+                  {/* Mobile: Time-grouped layout */}
+                  <div className="sm:hidden space-y-6">
+                    {Object.entries(groupDosesByTime(filteredDoses.length === 0 ? [] : filteredDoses)).map(([timeStr, doses], groupIdx) => (
+                      <div key={timeStr} className="animate-fade-in" style={{ animationDelay: `${groupIdx * 0.1}s` }}>
+                        <h3 className="text-3xl font-bold mb-3 text-primary">{timeStr}</h3>
+                        <div className="space-y-2">
+                          {doses.map((dose, idx) => (
+                            <SimpleDoseCard
+                              key={`${dose.schedule.id}-${idx}`}
+                              medication={dose.medication}
+                              schedule={dose.schedule}
+                              onClick={() => handleDoseClick(dose)}
+                              className={cn(
+                                dose.isTaken && "bg-success/5 border-l-success",
+                                (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
+                                !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "overdue" && "bg-destructive/5 border-l-destructive",
+                                !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "due" && "bg-accent/5 border-l-accent"
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop: Original DoseCard layout */}
+                  <div className="hidden sm:grid gap-3 sm:gap-4">
+                    {(filteredDoses.length === 0 ? [] : filteredDoses).map((dose, idx) => (
+                      <div 
+                        key={`${dose.schedule.id}-${idx}`}
+                        className="animate-slide-in-right"
+                        style={{ animationDelay: `${idx * 0.1}s` }}
+                      >
+                        <DoseCard
+                          dose={dose}
+                          onMarkTaken={markAsTaken}
+                          onMarkSkipped={markAsSkipped}
+                          onMarkSnoozed={markAsSnoozed}
+                          onEdit={handleEditMedication}
+                          onOpenDetails={(id) => navigate(`/medications/${id}`)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
                   {filteredDoses.length === 0 && (
                     <Card className="text-center py-6 sm:py-8 animate-fade-in">
                       <CardContent>
@@ -716,7 +772,7 @@ const Dashboard = () => {
                       </CardContent>
                     </Card>
                   )}
-                </div>
+                </>
               )}
             </div>
 
@@ -753,6 +809,53 @@ const Dashboard = () => {
           </>
         )}
       </main>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        actions={[
+          {
+            label: "Add Medication",
+            icon: <Pill className="h-6 w-6" />,
+            onClick: () => navigate("/medications"),
+            color: "bg-primary hover:bg-primary/90",
+          },
+          {
+            label: "Add Tracker Entry",
+            icon: <Activity className="h-6 w-6" />,
+            onClick: () => navigate("/calendar"),
+            color: "bg-blue-500 hover:bg-blue-600",
+          },
+          {
+            label: "Add Dose",
+            icon: <Clock className="h-6 w-6" />,
+            onClick: () => navigate("/medications"),
+            color: "bg-purple-500 hover:bg-purple-600",
+          },
+        ]}
+      />
+
+      {/* Dose Action Dialog */}
+      {selectedDose && (
+        <DoseActionDialog
+          open={showDoseDialog}
+          onOpenChange={setShowDoseDialog}
+          medication={selectedDose.medication}
+          schedule={selectedDose.schedule}
+          scheduledTime={selectedDose.nextDoseTime}
+          dosage={selectedDose.medication.dosage}
+          onTake={() => markAsTaken(selectedDose)}
+          onSkip={() => markAsSkipped(selectedDose)}
+          onReschedule={() => {
+            markAsSnoozed(selectedDose, 15);
+          }}
+          onEdit={() => handleEditMedication(selectedDose.medication.id)}
+          onDelete={() => {
+            // TODO: Implement delete functionality
+            toast.info("Delete functionality coming soon");
+          }}
+          onInfo={() => navigate(`/medications/${selectedDose.medication.id}`)}
+        />
+      )}
     </div>
   );
 };
