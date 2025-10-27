@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PageLoader from "@/components/PageLoader";
+import AppLayout from "@/components/AppLayout";
 
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -29,13 +30,17 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/medications" element={<Medications />} />
-            <Route path="/medications/:id" element={<MedicationDetails />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/calendar/day" element={<CalendarDay />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/profile" element={<Profile />} />
+
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/medications" element={<Medications />} />
+              <Route path="/medications/:id" element={<MedicationDetails />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/calendar/day" element={<CalendarDay />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
