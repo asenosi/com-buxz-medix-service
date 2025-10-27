@@ -5,6 +5,7 @@ import { Clock, CheckCircle2, XCircle, Pill, AlarmClock, Edit } from "lucide-rea
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useCountdown } from "@/hooks/use-countdown";
+import { Badge } from "@/components/ui/badge";
 
 interface Medication {
   id: string;
@@ -74,95 +75,71 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
     <Card
       onClick={handleCardClick}
       className={cn(
-        "border-l-4 transition-all duration-500 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]",
-        dose.isTaken && "opacity-60 bg-success/5 border-l-success animate-fade-in",
-        (dose.isSkipped || dose.isSnoozed) && "bg-warning/20 border-l-warning opacity-75 animate-fade-in",
-        !isCompleted && dose.status === "overdue" && "border-l-destructive animate-pulse-slow shadow-destructive/30 shadow-xl",
-        !isCompleted && dose.status === "due" && "border-l-accent shadow-accent/30 shadow-xl animate-bounce-subtle",
-        !isCompleted && dose.status === "upcoming" && "border-l-primary hover:border-l-primary/80"
+        "rounded-2xl border px-4 py-4 transition-all duration-300 hover:shadow-lg",
+        dose.isTaken && "bg-success/5 border-success/30",
+        (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-warning/30",
+        !isCompleted && dose.status === "overdue" && "bg-destructive/5 border-destructive/30",
+        !isCompleted && dose.status === "due" && "bg-accent/5 border-accent/30"
       )}
     >
-      <CardHeader className="pb-3 sm:pb-4">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 flex-1">
+      <CardHeader className="pb-2">
+        <div className="flex items-start gap-4">
+          <div className="shrink-0">
             {primaryImage ? (
-              <img 
-                src={primaryImage} 
-                alt={dose.medication.name}
-                className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
-              />
+              <div className="relative">
+                <img
+                  src={primaryImage}
+                  alt={dose.medication.name}
+                  className="w-16 h-16 rounded-xl object-cover border"
+                />
+                {Array.isArray(dose.medication.images) && dose.medication.images.length > 1 && (
+                  <Badge className="absolute -bottom-2 -right-2 text-[10px] sm:text-xs px-2 py-0.5 rounded-full shadow-md">
+                    {dose.medication.images.length}
+                  </Badge>
+                )}
+              </div>
             ) : (
-              <div className={cn(
-                "p-2 sm:p-3 rounded-full transition-all duration-300",
-                dose.isTaken && "bg-success/20 animate-scale-in",
-                (dose.isSkipped || dose.isSnoozed) && "bg-warning/20 animate-scale-in",
-                !isCompleted && "bg-primary/20 animate-pulse-slow"
-              )}>
-                <Pill className={cn(
-                  "w-5 h-5 sm:w-6 sm:h-6",
-                  dose.isTaken && "text-success",
-                  (dose.isSkipped || dose.isSnoozed) && "text-warning",
-                  !isCompleted && "text-primary"
-                )} />
+              <div className={cn("p-3 rounded-xl border bg-muted")}> 
+                <Pill className="w-6 h-6 text-primary" />
               </div>
             )}
-            <div>
-              <CardTitle className="text-lg sm:text-2xl">{dose.medication.name}</CardTitle>
-              <CardDescription className="text-base sm:text-lg mt-1 sm:mt-2">
-                {dose.medication.dosage}
-                {dose.medication.form && ` • ${dose.medication.form}`}
-              </CardDescription>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-xl truncate">{dose.medication.name}</CardTitle>
+              <Badge variant="warning" className="rounded-full">
+                {dose.status === 'overdue' ? 'Overdue' : dose.status === 'due' ? 'Due' : 'Active'}
+              </Badge>
+            </div>
+            <CardDescription className="text-base mt-1">
+              {dose.medication.dosage}
+              {dose.medication.form && ` • ${dose.medication.form}`}
+            </CardDescription>
+            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                {dose.nextDoseTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+              {showCountdown && (
+                <div>
+                  in {countdown.hours > 0 ? `${countdown.hours}h ` : ''}{countdown.minutes}m {countdown.seconds}s
+                </div>
+              )}
+              {dose.isSnoozed && dose.snoozeUntil && (
+                <div>
+                  resumes in {snoozeCountdown.hours > 0 ? `${snoozeCountdown.hours}h ` : ''}{snoozeCountdown.minutes}m {snoozeCountdown.seconds}s
+                </div>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => onEdit(dose.medication.id)}
-              size="sm"
-              variant="ghost"
-              className="hover:scale-110 transition-transform duration-200"
-            >
+          <div className="self-start">
+            <Button onClick={() => onEdit(dose.medication.id)} size="sm" variant="ghost" className="rounded-full">
               <Edit className="w-4 h-4" />
             </Button>
           </div>
-          <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 sm:px-4 sm:py-2 self-start">
-            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground animate-pulse-slow" />
-            <span className="text-lg sm:text-2xl font-semibold">
-              {dose.nextDoseTime.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-            {showCountdown && (
-              <span className="ml-2 text-xs sm:text-sm text-muted-foreground">
-                in {countdown.days > 0 ? `${countdown.days}d ` : ""}
-                {countdown.hours > 0 ? `${countdown.hours}h ` : ""}
-                {countdown.minutes}m {countdown.seconds}s
-              </span>
-            )}
-            {dose.isSnoozed && dose.snoozeUntil && (
-              <span className="ml-2 text-xs sm:text-sm text-muted-foreground">
-                resumes in {snoozeCountdown.days > 0 ? `${snoozeCountdown.days}d ` : ""}
-                {snoozeCountdown.hours > 0 ? `${snoozeCountdown.hours}h ` : ""}
-                {snoozeCountdown.minutes}m {snoozeCountdown.seconds}s
-              </span>
-            )}
-            {!isCompleted && dose.status === "due" && (
-              <span className="ml-2 text-xs sm:text-sm text-warning font-medium">Due now</span>
-            )}
-            {!isCompleted && dose.status === "overdue" && (
-              <span className="ml-2 text-xs sm:text-sm text-destructive font-medium">Overdue</span>
-            )}
-          </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        {dose.medication.images && dose.medication.images.length > 1 && (
-          <div className="flex gap-2 mb-3 sm:mb-4 overflow-x-auto">
-            {dose.medication.images.slice(0, 5).map((src, idx) => (
-              <img key={idx} src={src} alt={`${dose.medication.name} ${idx+1}`} className="w-12 h-12 rounded object-cover border" />
-            ))}
-          </div>
-        )}
+      <CardContent className="pt-2">
         <div className="flex flex-wrap gap-2 sm:gap-4 mb-3 sm:mb-4 text-sm sm:text-lg">
           {dose.schedule.with_food && (
             <span className="text-muted-foreground bg-muted/50 px-2 sm:px-3 py-1 rounded-full">🍽️ With food</span>
@@ -191,33 +168,29 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
         </div>
         {!isCompleted && (
           <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Button
                 onClick={() => onMarkTaken(dose)}
                 size="lg"
-                className="flex-1 text-base sm:text-xl hover:scale-105 active:scale-95 transition-all duration-200 hover:shadow-xl animate-fade-in"
-                variant="default"
+                className="rounded-2xl h-12 text-base shadow-sm"
               >
-                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                I Took This
+                <CheckCircle2 className="w-5 h-5 mr-2" /> Take
               </Button>
               <Button 
                 onClick={() => setShowSnoozeOptions(!showSnoozeOptions)}
                 size="lg" 
                 variant="outline" 
-                className="text-base sm:text-xl hover:scale-105 active:scale-95 transition-all duration-200 hover:border-accent hover:text-accent hover:bg-accent/5"
+                className="rounded-2xl h-12 text-base"
               >
-                <AlarmClock className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                Snooze
+                <AlarmClock className="w-5 h-5 mr-2" /> Snooze
               </Button>
               <Button 
                 onClick={() => onMarkSkipped(dose)}
                 size="lg" 
                 variant="outline" 
-                className="text-base sm:text-xl hover:scale-105 active:scale-95 transition-all duration-200 hover:border-warning hover:text-warning hover:bg-warning/5"
+                className="rounded-2xl h-12 text-base border-destructive text-destructive hover:bg-destructive/5"
               >
-                <XCircle className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                Skip
+                <XCircle className="w-5 h-5 mr-2" /> Skip
               </Button>
             </div>
             
@@ -243,7 +216,7 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
                     setShowSnoozeOptions(false);
                   }}
                   size="lg"
-                  className="flex-1 sm:flex-initial hover:scale-105 transition-transform duration-200"
+                  className="flex-1 sm:flex-initial rounded-2xl"
                 >
                   Confirm Snooze
                 </Button>
