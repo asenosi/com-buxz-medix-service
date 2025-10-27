@@ -51,6 +51,19 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
   const showCountdown = !isCompleted && dose.status === "upcoming";
   const countdown = useCountdown(showCountdown ? dose.nextDoseTime : null);
   const snoozeCountdown = useCountdown(dose.isSnoozed && dose.snoozeUntil ? dose.snoozeUntil : null);
+  const getDefaultImage = (form: string | null): string | null => {
+    if (!form) return null;
+    const f = form.toLowerCase();
+    if (f.includes("pill")) return "/images/meds/pill.svg";
+    if (f.includes("inhaler")) return "/images/meds/inhaler.svg";
+    if (f.includes("cream")) return "/images/meds/cream.svg";
+    if (f.includes("drop") || f.includes("solution")) return "/images/meds/drop.svg";
+    if (f.includes("injection") || f.includes("syringe")) return "/images/meds/syringe.svg";
+    if (f.includes("spray")) return "/images/meds/spray.svg";
+    if (f.includes("powder") || f.includes("strip") || f.includes("insert") || f.includes("other") || f.includes("stick")) return "/images/meds/pill.svg";
+    return null;
+  };
+  const primaryImage = (dose.medication.images && dose.medication.images[0]) || dose.medication.image_url || getDefaultImage(dose.medication.form);
   const handleCardClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest("button,[role=button],a,input,select,textarea")) return;
@@ -72,15 +85,9 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
       <CardHeader className="pb-3 sm:pb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div className="flex items-center gap-2 sm:gap-3 flex-1">
-            {(dose.medication.images && dose.medication.images.length > 0) ? (
+            {primaryImage ? (
               <img 
-                src={dose.medication.images[0]} 
-                alt={dose.medication.name}
-                className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
-              />
-            ) : dose.medication.image_url ? (
-              <img 
-                src={dose.medication.image_url} 
+                src={primaryImage} 
                 alt={dose.medication.name}
                 className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
               />
