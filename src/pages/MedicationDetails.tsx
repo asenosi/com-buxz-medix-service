@@ -42,6 +42,18 @@ const MedicationDetails = () => {
   const [med, setMed] = useState<Medication | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [images, setImages] = useState<string[]>([]);
+  const defaultImageForForm = (form?: string | null) => {
+    if (!form) return "";
+    const f = (form || "").toLowerCase();
+    if (f.includes("pill")) return "/images/meds/pill.svg";
+    if (f.includes("inhaler")) return "/images/meds/inhaler.svg";
+    if (f.includes("cream")) return "/images/meds/cream.svg";
+    if (f.includes("drop") || f.includes("solution")) return "/images/meds/drop.svg";
+    if (f.includes("injection") || f.includes("syringe")) return "/images/meds/syringe.svg";
+    if (f.includes("spray")) return "/images/meds/spray.svg";
+    if (f.includes("powder") || f.includes("strip") || f.includes("insert") || f.includes("other") || f.includes("stick")) return "/images/meds/pill.svg";
+    return "";
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -149,27 +161,29 @@ const MedicationDetails = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {images.length > 0 && (
+        {(images.length > 0 || med.image_url) && (
           <Card>
             <CardHeader>
               <CardTitle>Images</CardTitle>
               <CardDescription>Medication photos</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-3">
-                {images.map((src, idx) => (
-                  <img key={idx} src={src} alt={`${med.name} ${idx+1}`} className="w-28 h-28 rounded-lg object-cover border" />
-                ))}
-              </div>
+              {images.length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  {images.map((src, idx) => (
+                    <img key={idx} src={src} alt={`${med.name} ${idx+1}`} className="w-28 h-28 rounded-lg object-cover border" />
+                  ))}
+                </div>
+              ) : (
+                <img src={med.image_url || defaultImageForForm(med.form)} alt={med.name} className="w-28 h-28 rounded-lg object-cover border" />
+              )}
             </CardContent>
           </Card>
         )}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
-              {(images[0] || med.image_url) && (
-                <img src={images[0] || med.image_url || ''} alt={med.name} className="w-16 h-16 rounded-lg object-cover border" />
-              )}
+              <img src={(images[0] || med.image_url || defaultImageForForm(med.form))} alt={med.name} className="w-16 h-16 rounded-lg object-cover border" />
               <div>
                 <CardTitle className="text-2xl">{med.name}</CardTitle>
                 <CardDescription>

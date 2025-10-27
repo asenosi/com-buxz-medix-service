@@ -13,6 +13,7 @@ import { AdherenceStats } from "@/components/AdherenceStats";
 import { useTheme } from "@/hooks/use-theme";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SplitMediaCard } from "@/components/SplitMediaCard";
 
 interface Medication {
   id: string;
@@ -24,6 +25,8 @@ interface Medication {
   image_url: string | null;
   user_id: string;
   images?: string[];
+  reason_for_taking?: string | null;
+  instructions?: string | null;
 }
 
 interface Schedule {
@@ -59,6 +62,30 @@ const Dashboard = () => {
   const scheduledRef = useRef<Set<string>>(new Set());
   const timersRef = useRef<Map<string, number>>(new Map());
   const [showStats, setShowStats] = useState(false);
+  const defaultImageForForm = useCallback((form?: string | null) => {
+    if (!form) return "";
+    const f = form.toLowerCase();
+    if (f.includes("pill")) return "/images/meds/pill.svg";
+    if (f.includes("inhaler")) return "/images/meds/inhaler.svg";
+    if (f.includes("cream")) return "/images/meds/cream.svg";
+    if (f.includes("drop") || f.includes("solution")) return "/images/meds/drop.svg";
+    if (f.includes("injection") || f.includes("syringe")) return "/images/meds/syringe.svg";
+    if (f.includes("spray")) return "/images/meds/spray.svg";
+    if (f.includes("powder") || f.includes("strip") || f.includes("insert") || f.includes("other") || f.includes("stick")) return "/images/meds/pill.svg";
+    return "";
+  }, []);
+
+  const borderColorClass = useCallback((color?: string | null) => {
+    switch ((color || '').toLowerCase()) {
+      case 'blue': return 'border-l-primary';
+      case 'green': return 'border-l-success';
+      case 'orange': return 'border-l-warning';
+      case 'red': return 'border-l-destructive';
+      case 'purple': return 'border-l-purple-500';
+      case 'pink': return 'border-l-pink-500';
+      default: return 'border-l-primary';
+    }
+  }, []);
 
   // Search & Filters for Today's Schedule
   type StatusFilter = "all" | "upcoming" | "due" | "overdue" | "taken" | "skipped" | "snoozed";
@@ -695,54 +722,32 @@ const Dashboard = () => {
 
             <div>
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">All Medications</h2>
-              <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {medications.map((med, idx) => (
-                  <Card 
-                    key={med.id} 
-                    className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 animate-scale-in cursor-pointer"
-                    style={{ animationDelay: `${idx * 0.1}s` }}
-                    onClick={() => navigate(`/medications/${med.id}`)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center gap-3 mb-2">
-                        {(med.images && med.images.length > 0) ? (
-                          <img 
-                            src={med.images[0]} 
-                            alt={med.name}
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
-                          />
-                        ) : med.image_url ? (
-                          <img 
-                            src={med.image_url} 
-                            alt={med.name}
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover border-2 border-border"
-                          />
-                        ) : null}
-                        <div className="flex-1">
-                          <CardTitle className="text-lg sm:text-xl">{med.name}</CardTitle>
-                          <CardDescription className="text-base sm:text-lg">
-                            {med.dosage}
-                            {med.form && ` - ${med.form}`}
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {med.images && med.images.length > 1 && (
-                        <div className="flex gap-2 mb-2 overflow-x-auto">
-                          {med.images.slice(0,5).map((src, idx) => (
-                            <img key={idx} src={src} alt={`${med.name} ${idx+1}`} className="w-10 h-10 rounded object-cover border" />
-                          ))}
-                        </div>
-                      )}
-                      {med.pills_remaining !== null && (
-                        <p className="text-base sm:text-lg text-muted-foreground">
-                          {med.pills_remaining} remaining
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {medications.map((med, idx) => {
+                  const img = (med.images && med.images[0]) || med.image_url || defaultImageForForm(med.form || undefined);
+                  const descParts = [
+                    med.dosage ? `${med.dosage}${med.form ? ` · ${med.form}` : ""}` : undefined,
+                    med.reason_for_taking || undefined,
+                  ].filter(Boolean);
+                  return (
+                    <div key={med.id} className="animate-scale-in" style={{ animationDelay: `${idx * 0.08}s` }}>
+                      <SplitMediaCard
+                        imageSrc={img}
+                        imageAlt={med.name}
+                        title={med.name}
+                        description={descParts.join(" — ")}
+                        buttonLabel="View Details"
+                        onButtonClick={() => navigate(`/medications/${med.id}`)}
+                        orientation={idx % 2 === 0 ? "imageLeft" : "imageRight"}
+                        className={"hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-l-4 " + borderColorClass(med.medication_color)}
+                      >
+                        {typeof med.pills_remaining === "number" && (
+                          <div className="text-sm text-muted-foreground">{med.pills_remaining} remaining</div>
+                        )}
+                      </SplitMediaCard>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </>
