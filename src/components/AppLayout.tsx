@@ -1,16 +1,21 @@
 import { Outlet, useLocation } from "react-router-dom";
 import AppHeader from "@/components/AppHeader";
+import DesktopSidebar from "@/components/DesktopSidebar";
 
 // Minimal shell that injects the mobile-first top bar
 export default function AppLayout() {
   const location = useLocation();
-  // Optionally hide header on marketing/auth routes if needed later
   return (
     <div className="min-h-dvh bg-background">
       <AppHeader />
-      <main className="mx-auto max-w-screen-sm px-3 pb-8 pt-4">
-        <Outlet />
-      </main>
+      <div className="mx-auto max-w-screen-2xl px-4 pb-8 pt-4 lg:flex lg:gap-6">
+        <aside className="hidden lg:block w-64 shrink-0">
+          <DesktopSidebar />
+        </aside>
+        <main className="flex-1">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

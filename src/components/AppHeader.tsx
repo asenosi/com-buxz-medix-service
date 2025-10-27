@@ -1,4 +1,3 @@
-import { ComponentType } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,28 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import ThemePicker from "@/components/ThemePicker";
-import { Bell, Menu, LogOut, Settings, SunMedium, Moon, Monitor, Search, Calendar as CalendarIcon, Pill, Home, User as UserIcon } from "lucide-react";
+import { Bell, LogOut, Settings, Monitor, Pill, Menu, SunMedium, Moon, Home, Calendar as CalendarIcon, Search, User as UserIcon } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 
 const brand = {
   name: "MedTracker",
 };
 
-type IconProps = { className?: string };
-const NavLink = ({ to, icon: Icon, label, onNavigate }: { to: string; icon: ComponentType<IconProps>; label: string; onNavigate: (to: string) => void }) => (
-  <button onClick={() => onNavigate(to)} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent">
-    <Icon className="h-4 w-4" />
-    <span className="text-sm font-medium">{label}</span>
-  </button>
-);
-
 export default function AppHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, setMode } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [medCount, setMedCount] = useState<number>(0);
 
   const [email, setEmail] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -44,6 +37,15 @@ export default function AppHeader() {
       setFullName(fn ?? null);
       const avatar = typeof meta.avatar_url === "string" ? meta.avatar_url : undefined;
       setAvatarUrl(avatar ?? null);
+
+      if (user?.id) {
+        const { count } = await supabase
+          .from("medications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("active", true);
+        setMedCount(count ?? 0);
+      }
     };
     load();
   }, []);
@@ -64,46 +66,103 @@ export default function AppHeader() {
 
   const setTheme = (next: "light" | "dark" | "system") => setMode(next);
 
+  const go = (to: string) => {
+    navigate(to);
+    setMenuOpen(false);
+  };
+
+  const profileIncomplete = !avatarUrl || !(fullName && fullName.trim().length > 0);
+  const itemBase = "flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors";
+  const itemActive = "bg-primary/10 text-primary";
+  const itemHover = "hover:bg-muted";
+  const badgeCls = "ml-auto inline-flex items-center justify-center min-w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] px-1.5 leading-none";
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-14 max-w-screen-sm items-center gap-2 px-3">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Open menu">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80">
-            <SheetHeader>
-              <SheetTitle className="flex items-center gap-2">
-                <Pill className="h-5 w-5 text-primary" />
-                <span>{brand.name}</span>
-              </SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 space-y-1">
-              <NavLink to="/dashboard" icon={Home} label="Dashboard" onNavigate={navigate} />
-              <NavLink to="/medications" icon={Pill} label="Medications" onNavigate={navigate} />
-              <NavLink to="/calendar" icon={CalendarIcon} label="Calendar" onNavigate={navigate} />
-              <NavLink to="/search" icon={Search} label="Search" onNavigate={navigate} />
-              <NavLink to="/profile" icon={UserIcon} label="Profile" onNavigate={navigate} />
-            </div>
-            <Separator className="my-3" />
-            <div className="space-y-1">
-              <button onClick={() => setTheme("light")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent ${mode === "light" ? "bg-accent" : ""}`}>
-                <SunMedium className="h-4 w-4" /> <span className="text-sm font-medium">Light</span>
-              </button>
-              <button onClick={() => setTheme("dark")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent ${mode === "dark" ? "bg-accent" : ""}`}>
-                <Moon className="h-4 w-4" /> <span className="text-sm font-medium">Dark</span>
-              </button>
-              <button onClick={() => setTheme("system")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent ${mode === "system" ? "bg-accent" : ""}`}>
-                <Monitor className="h-4 w-4" /> <span className="text-sm font-medium">System</span>
-              </button>
-            </div>
-            <Separator className="my-3" />
-            <Button variant="outline" className="w-full justify-start gap-2" onClick={onSignOut}>
-              <LogOut className="h-4 w-4" /> Sign Out
-            </Button>
-          </SheetContent>
+      <div className="mx-auto flex h-14 max-w-screen-sm items-center gap-2 px-3 lg:max-w-screen-2xl lg:px-6">
+        {/* Mobile: hamburger opens overlay sheet; hidden on large screens */}
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <div className="lg:hidden">
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Open menu">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Pill className="h-5 w-5 text-primary" />
+                  <span>{brand.name}</span>
+                </SheetTitle>
+              </SheetHeader>
+              {(() => {
+                const isActive = (path: string, startsWith = false) =>
+                  startsWith ? location.pathname.startsWith(path) : location.pathname === path;
+                return (
+                  <div className="mt-4 space-y-1">
+                    <button
+                      onClick={() => go("/dashboard")}
+                      className={`${itemBase} ${isActive("/dashboard") ? itemActive : itemHover}`}
+                      aria-current={isActive("/dashboard") ? "page" : undefined}
+                    >
+                      <Home className="h-4 w-4" />
+                      <span className="text-sm font-medium">Dashboard</span>
+                    </button>
+                    <button
+                      onClick={() => go("/medications")}
+                      className={`${itemBase} ${isActive("/medications", true) ? itemActive : itemHover}`}
+                      aria-current={isActive("/medications", true) ? "page" : undefined}
+                    >
+                      <Pill className="h-4 w-4" />
+                      <span className="text-sm font-medium">Medications</span>
+                      {medCount > 0 && <span className={badgeCls}>{medCount}</span>}
+                    </button>
+                    <button
+                      onClick={() => go("/calendar")}
+                      className={`${itemBase} ${isActive("/calendar", true) ? itemActive : itemHover}`}
+                      aria-current={isActive("/calendar", true) ? "page" : undefined}
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                      <span className="text-sm font-medium">Calendar</span>
+                    </button>
+                    <button
+                      onClick={() => go("/search")}
+                      className={`${itemBase} ${isActive("/search") ? itemActive : itemHover}`}
+                      aria-current={isActive("/search") ? "page" : undefined}
+                    >
+                      <Search className="h-4 w-4" />
+                      <span className="text-sm font-medium">Search</span>
+                    </button>
+                    <button
+                      onClick={() => go("/profile")}
+                      className={`${itemBase} ${isActive("/profile") ? itemActive : itemHover}`}
+                      aria-current={isActive("/profile") ? "page" : undefined}
+                    >
+                      <UserIcon className="h-4 w-4" />
+                      <span className="text-sm font-medium">Profile</span>
+                      {profileIncomplete && <span className={badgeCls}>!</span>}
+                    </button>
+                  </div>
+                );
+              })()}
+              <Separator className="my-3" />
+              <div className="space-y-1">
+                <button onClick={() => setTheme("light")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent ${mode === "light" ? "bg-accent" : ""}`}>
+                  <SunMedium className="h-4 w-4" /> <span className="text-sm font-medium">Light</span>
+                </button>
+                <button onClick={() => setTheme("dark")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent ${mode === "dark" ? "bg-accent" : ""}`}>
+                  <Moon className="h-4 w-4" /> <span className="text-sm font-medium">Dark</span>
+                </button>
+                <button onClick={() => setTheme("system")} className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent ${mode === "system" ? "bg-accent" : ""}`}>
+                  <Monitor className="h-4 w-4" /> <span className="text-sm font-medium">System</span>
+                </button>
+              </div>
+              <Separator className="my-3" />
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={onSignOut}>
+                <LogOut className="h-4 w-4" /> Sign Out
+              </Button>
+            </SheetContent>
+          </div>
         </Sheet>
 
         <div className="flex min-w-0 items-center gap-2">
@@ -154,7 +213,8 @@ export default function AppHeader() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/profile")}> <Settings className="mr-2 h-4 w-4" /> Settings </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              {/* Prevent dropdown from closing so the Dialog doesn't unmount */}
+              <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
                 <div className="w-full">
                   <ThemePicker trigger={<div className="flex w-full cursor-pointer items-center"><Monitor className="mr-2 h-4 w-4" /> Choose Theme</div>} />
                 </div>
