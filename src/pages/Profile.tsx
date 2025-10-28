@@ -239,15 +239,15 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 w-full overflow-x-hidden">
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3 w-full max-w-full">
-          <Card className="lg:col-span-1 animate-fade-in w-full max-w-full overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg p-4 sm:p-6 w-full">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-1 animate-fade-in">
+            <CardHeader className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg p-4 sm:p-6">
               <CardTitle className="text-base sm:text-lg">Account</CardTitle>
               <CardDescription className="text-sm">Identity and contact</CardDescription>
             </CardHeader>
-            <CardContent className="pt-4 sm:pt-6 space-y-4 sm:space-y-6 p-4 sm:p-6 w-full max-w-full overflow-hidden">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full max-w-full overflow-hidden">
+            <CardContent className="pt-4 sm:pt-6 space-y-4 sm:space-y-6 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                 <Avatar className="h-20 w-20 sm:h-16 sm:w-16 border-2 shrink-0">
                   {avatarUrl ? (
                     <AvatarImage src={avatarUrl} alt="Avatar" />
@@ -257,13 +257,13 @@ const Profile = () => {
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div className="text-center sm:text-left flex-1 w-full sm:w-auto overflow-hidden min-w-0">
+                <div className="text-center sm:text-left flex-1 min-w-0">
                   <div className="text-lg sm:text-xl font-semibold break-words">{fullName || "Unnamed User"}</div>
                   <div className="text-sm text-muted-foreground break-words">{session?.user?.email}</div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full max-w-full">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
                 <Button variant="outline" onClick={handleFilePick} className="hover:scale-105 transition-transform w-full sm:w-auto touch-manipulation">Upload Avatar</Button>
                 {avatarUrl && (
@@ -273,8 +273,8 @@ const Profile = () => {
 
               <Separator />
 
-              <div className="space-y-3 sm:space-y-4 w-full max-w-full">
-                <div className="grid gap-2 w-full max-w-full">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="grid gap-2">
                   <Label htmlFor="fullName" className="flex items-center gap-2 text-sm sm:text-base">
                     <UserIcon className="w-4 h-4 text-muted-foreground shrink-0" /> Full name
                   </Label>
@@ -283,11 +283,11 @@ const Profile = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Jane Doe"
-                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation w-full"
+                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
                   />
                 </div>
 
-                <div className="grid gap-2 w-full max-w-full">
+                <div className="grid gap-2">
                   <Label htmlFor="phone" className="flex items-center gap-2 text-sm sm:text-base">
                     <Phone className="w-4 h-4 text-muted-foreground shrink-0" /> Phone number
                   </Label>
@@ -296,11 +296,11 @@ const Profile = () => {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="e.g. +1 555 123 4567"
-                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation w-full"
+                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
                   />
                 </div>
 
-                <div className="grid gap-2 w-full max-w-full">
+                <div className="grid gap-2">
                   <Label htmlFor="dob" className="flex items-center gap-2 text-sm sm:text-base">
                     <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" /> Date of birth
                   </Label>
@@ -309,11 +309,11 @@ const Profile = () => {
                     type="date"
                     value={dob ?? ""}
                     onChange={(e) => setDob(e.target.value)}
-                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation w-full"
+                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-3 sm:p-3 gap-3 w-full max-w-full">
+                <div className="flex items-center justify-between rounded-lg border p-3 sm:p-3 gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-sm sm:text-base">Caregiver mode</div>
                     <div className="text-xs sm:text-sm text-muted-foreground">Helps manage someone else's medications</div>
@@ -322,7 +322,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 w-full max-w-full">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                 <Button onClick={handleSave} className="w-full sm:flex-1 h-11 sm:h-10 hover:scale-[1.02] transition-transform touch-manipulation">Save changes</Button>
                 <Button variant="outline" className="w-full sm:flex-1 h-11 sm:h-10 touch-manipulation" onClick={() => navigate("/dashboard")}>Dashboard</Button>
               </div>
