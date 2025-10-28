@@ -202,7 +202,7 @@ const Dashboard = () => {
 
   const fetchMedications = useCallback(async () => {
     try {
-      setLoadingData(true);
+      setLoading(true);
       const { data: sess } = await supabase.auth.getSession();
       const userId = sess.session?.user?.id;
       if (!userId) throw new Error("Not authenticated");
@@ -329,7 +329,7 @@ const Dashboard = () => {
       toast.error("Failed to load medications");
       console.error(error);
     } finally {
-      setLoadingData(false);
+      setLoading(false);
     }
   }, [fetchGamificationStats]);
 
@@ -730,7 +730,7 @@ const Dashboard = () => {
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
               <h2 className="text-2xl font-bold mb-4 sm:hidden text-primary">Today, {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</h2>
               
-              {loadingData ? (
+              {loading ? (
                 <DoseItemSkeleton count={3} />
               ) : todayDoses.length === 0 ? (
                 <Card className="text-center py-6 sm:py-8 animate-fade-in">
@@ -800,7 +800,7 @@ const Dashboard = () => {
 
             <div>
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">All Medications</h2>
-              {loadingData ? (
+              {loading ? (
                 <MedCardGridSkeleton count={4} />
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
