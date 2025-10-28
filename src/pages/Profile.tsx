@@ -244,9 +244,9 @@ const Profile = () => {
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div className="text-center sm:text-left min-w-0 flex-1">
-                  <div className="text-lg sm:text-xl font-semibold truncate">{fullName || "Unnamed User"}</div>
-                  <div className="text-sm text-muted-foreground truncate">{session?.user?.email}</div>
+                <div className="text-center sm:text-left flex-1 w-full sm:w-auto overflow-hidden">
+                  <div className="text-lg sm:text-xl font-semibold break-words">{fullName || "Unnamed User"}</div>
+                  <div className="text-sm text-muted-foreground break-words">{session?.user?.email}</div>
                 </div>
               </div>
 
