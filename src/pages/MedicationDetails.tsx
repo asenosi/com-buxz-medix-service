@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Edit, Trash2, Pill } from "lucide-react";
+import { MedicationDetailsSkeleton } from "@/components/LoadingSkeletons";
 
 type Medication = {
   id: string;
@@ -119,14 +120,7 @@ const MedicationDetails = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Pill className="w-16 h-16 animate-pulse text-primary mx-auto mb-4" />
-          <p className="text-xl text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <MedicationDetailsSkeleton />;
   }
 
   if (!med) {

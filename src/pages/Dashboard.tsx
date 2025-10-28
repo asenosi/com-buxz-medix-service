@@ -353,8 +353,6 @@ const Dashboard = () => {
         fetchMedications();
       }
 
-      setLoading(false);
-
       return () => subscription.unsubscribe();
     };
 
@@ -544,11 +542,18 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Pill className="w-16 h-16 animate-pulse text-primary mx-auto mb-4" />
-          <p className="text-xl text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-card/95">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6" />
+        </header>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
+            <DoseItemSkeleton count={5} />
+          </div>
+          <div className="mt-8">
+            <MedCardGridSkeleton count={4} />
+          </div>
+        </main>
       </div>
     );
   }
@@ -629,7 +634,7 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {medications.length === 0 ? (
+        {!loading && medications.length === 0 ? (
           <Card className="text-center py-12 sm:py-16 animate-fade-in">
             <CardContent>
               <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
@@ -638,7 +643,7 @@ const Dashboard = () => {
                 Get started by adding your first medication
               </p>
               <Button 
-                onClick={() => navigate("/medications")} 
+                onClick={() => navigate("/medications")}
                 size="lg" 
                 className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-transform"
               >

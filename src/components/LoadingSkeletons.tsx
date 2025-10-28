@@ -94,6 +94,56 @@ export function ProfilePageSkeleton() {
   );
 }
 
+export function MedicationDetailsSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b border-border shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-10 w-24" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-10 w-24" />
+            </div>
+          </div>
+        </div>
+      </header>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="rounded-lg border p-6">
+          <Skeleton className="h-6 w-32 mb-4" />
+          <div className="flex flex-wrap gap-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="w-28 h-28 rounded-lg" />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <Skeleton className="w-16 h-16 rounded-lg" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-5 w-32" />
+            </div>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-full" />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border p-6">
+          <Skeleton className="h-6 w-32 mb-4" />
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-md" />
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export function CalendarSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
