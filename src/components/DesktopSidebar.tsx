@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Pill, Calendar as CalendarIcon, Search, User as UserIcon, SunMedium, Moon, Monitor, LogOut, Home } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DesktopSidebar() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function DesktopSidebar() {
   const { mode, setMode } = useTheme();
   const [medCount, setMedCount] = useState<number>(0);
   const [profileIncomplete, setProfileIncomplete] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const run = async () => {
@@ -30,6 +32,7 @@ export default function DesktopSidebar() {
           .eq("active", true);
         setMedCount(count ?? 0);
       }
+      setLoading(false);
     };
     run();
   }, []);
@@ -71,7 +74,11 @@ export default function DesktopSidebar() {
         >
           <Pill className="h-4 w-4" />
           <span className="text-sm font-medium">Medications</span>
-          {medCount > 0 && <span className={badgeCls}>{medCount}</span>}
+          {loading ? (
+            <Skeleton className="ml-auto h-4 w-6 rounded" />
+          ) : (
+            medCount > 0 && <span className={badgeCls}>{medCount}</span>
+          )}
         </button>
         <button
           onClick={() => navigate("/calendar")}
@@ -96,7 +103,11 @@ export default function DesktopSidebar() {
         >
           <UserIcon className="h-4 w-4" />
           <span className="text-sm font-medium">Profile</span>
-          {profileIncomplete && <span className={badgeCls}>!</span>}
+          {loading ? (
+            <Skeleton className="ml-auto h-4 w-4 rounded" />
+          ) : (
+            profileIncomplete && <span className={badgeCls}>!</span>
+          )}
         </button>
       </div>
       <Separator className="my-3" />
