@@ -45,6 +45,18 @@ export default function AppHeader() {
         
         setFullName(profile?.full_name ?? null);
 
+        // Load avatar from storage
+        const { data: files } = await supabase.storage
+          .from("avatars")
+          .list(user.id, { limit: 1, sortBy: { column: "created_at", order: "desc" } });
+        
+        if (files && files.length > 0) {
+          const { data: urlData } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(`${user.id}/${files[0].name}`);
+          setAvatarUrl(urlData.publicUrl);
+        }
+
         const { count } = await supabase
           .from("medications")
           .select("id", { count: "exact", head: true })
@@ -55,6 +67,11 @@ export default function AppHeader() {
       setLoadingNav(false);
     };
     load();
+
+    // Listen for navigation to refresh avatar
+    const handleFocus = () => load();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const initials = useMemo(() => {
