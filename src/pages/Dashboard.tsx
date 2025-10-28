@@ -544,11 +544,18 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Pill className="w-16 h-16 animate-pulse text-primary mx-auto mb-4" />
-          <p className="text-xl text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-card/95">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6" />
+        </header>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
+            <DoseItemSkeleton count={5} />
+          </div>
+          <div className="mt-8">
+            <MedCardGridSkeleton count={4} />
+          </div>
+        </main>
       </div>
     );
   }
