@@ -636,7 +636,7 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {medications.length === 0 ? (
+        {!loading && medications.length === 0 ? (
           <Card className="text-center py-12 sm:py-16 animate-fade-in">
             <CardContent>
               <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
@@ -645,7 +645,7 @@ const Dashboard = () => {
                 Get started by adding your first medication
               </p>
               <Button 
-                onClick={() => navigate("/medications")} 
+                onClick={() => navigate("/medications")}
                 size="lg" 
                 className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-transform"
               >
