@@ -353,8 +353,6 @@ const Dashboard = () => {
         fetchMedications();
       }
 
-      setLoading(false);
-
       return () => subscription.unsubscribe();
     };
 
