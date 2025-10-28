@@ -70,7 +70,20 @@ const Profile = () => {
         setDob(data.date_of_birth ?? "");
         setPhone(data.phone_number ?? "");
         setIsCaregiver(Boolean(data.is_caregiver));
-        // Avatar URL is managed through storage and state
+        
+        // Load avatar from storage if it exists
+        if (userId) {
+          const { data: files } = await supabase.storage
+            .from("avatars")
+            .list(userId, { limit: 1, sortBy: { column: "created_at", order: "desc" } });
+          
+          if (files && files.length > 0) {
+            const { data: urlData } = supabase.storage
+              .from("avatars")
+              .getPublicUrl(`${userId}/${files[0].name}`);
+            setAvatarUrl(urlData.publicUrl);
+          }
+        }
       }
     } catch (e) {
       console.error(e);
@@ -226,14 +239,14 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-1 animate-fade-in">
+      <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 overflow-x-hidden">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3 w-full">
+          <Card className="lg:col-span-1 animate-fade-in w-full overflow-hidden">
             <CardHeader className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg p-4 sm:p-6">
               <CardTitle className="text-base sm:text-lg">Account</CardTitle>
               <CardDescription className="text-sm">Identity and contact</CardDescription>
             </CardHeader>
-            <CardContent className="pt-4 sm:pt-6 space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <CardContent className="pt-4 sm:pt-6 space-y-4 sm:space-y-6 p-4 sm:p-6 w-full overflow-hidden">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                 <Avatar className="h-20 w-20 sm:h-16 sm:w-16 border-2 shrink-0">
                   {avatarUrl ? (
