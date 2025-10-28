@@ -11,9 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Calendar as CalendarIcon, Phone, ShieldCheck, User as UserIcon } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type ProfileRow = {
   id?: string;
@@ -121,6 +122,23 @@ const Profile = () => {
     } catch (e) {
       console.error(e);
       toast.error("Failed to save profile");
+    }
+  };
+
+  const handleDeleteAllMedications = async () => {
+    if (!session) return;
+    try {
+      // Delete all medications for the user (cascades to schedules and dose_logs)
+      const { error } = await supabase
+        .from("medications")
+        .delete()
+        .eq("user_id", session.user.id);
+      
+      if (error) throw error;
+      toast.success("All medication data deleted successfully");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to delete medication data");
     }
   };
 
@@ -331,6 +349,47 @@ const Profile = () => {
                     <div className="font-medium mb-1 text-sm sm:text-base">Animations</div>
                     <p className="text-xs sm:text-sm text-muted-foreground">Smooth, accessible animations with reduced motion support.</p>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="animate-fade-in border-destructive/50" style={{ animationDelay: "0.15s" }}>
+              <CardHeader className="p-4 sm:p-6 bg-destructive/5">
+                <CardTitle className="text-base sm:text-lg text-destructive flex items-center gap-2">
+                  <Trash2 className="w-5 h-5" />
+                  Danger Zone
+                </CardTitle>
+                <CardDescription className="text-sm">Irreversible actions that affect your account data.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+                  <div className="font-medium mb-2 text-sm sm:text-base">Delete All Medications</div>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-4">
+                    This will permanently delete all your medications, schedules, and dose logs. This action cannot be undone.
+                  </p>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="w-full sm:w-auto">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete All Medication Data
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete all your medications, medication schedules, and dose logs. 
+                          This action cannot be undone and all data will be lost forever.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAllMedications} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Yes, delete everything
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>
