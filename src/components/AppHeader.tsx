@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import ThemePicker from "@/components/ThemePicker";
 import { Bell, LogOut, Settings, Monitor, Pill, Menu, SunMedium, Moon, Home, Calendar as CalendarIcon, Search, User as UserIcon } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const brand = {
   name: "MedTracker",
@@ -26,6 +27,7 @@ export default function AppHeader() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
   const [hasUnread, setHasUnread] = useState(true);
+  const [loadingNav, setLoadingNav] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -46,6 +48,7 @@ export default function AppHeader() {
           .eq("active", true);
         setMedCount(count ?? 0);
       }
+      setLoadingNav(false);
     };
     load();
   }, []);
@@ -115,7 +118,11 @@ export default function AppHeader() {
                     >
                       <Pill className="h-4 w-4" />
                       <span className="text-sm font-medium">Medications</span>
-                      {medCount > 0 && <span className={badgeCls}>{medCount}</span>}
+                      {loadingNav ? (
+                        <Skeleton className="ml-auto h-4 w-6 rounded" />
+                      ) : (
+                        medCount > 0 && <span className={badgeCls}>{medCount}</span>
+                      )}
                     </button>
                     <button
                       onClick={() => go("/calendar")}
@@ -140,7 +147,11 @@ export default function AppHeader() {
                     >
                       <UserIcon className="h-4 w-4" />
                       <span className="text-sm font-medium">Profile</span>
-                      {profileIncomplete && <span className={badgeCls}>!</span>}
+                      {loadingNav ? (
+                        <Skeleton className="ml-auto h-4 w-4 rounded" />
+                      ) : (
+                        profileIncomplete && <span className={badgeCls}>!</span>
+                      )}
                     </button>
                   </div>
                 );

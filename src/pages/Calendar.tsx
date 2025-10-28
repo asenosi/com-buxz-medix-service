@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
 import { DayDetailsDialog } from "@/components/DayDetailsDialog";
+import { CalendarSkeleton } from "@/components/LoadingSkeletons";
 
 interface DoseLog {
   id: string;
@@ -66,9 +67,13 @@ const Calendar = () => {
 
   const fetchMedications = useCallback(async () => {
     try {
+      const { data: sess } = await supabase.auth.getSession();
+      const userId = sess.session?.user?.id;
+      if (!userId) throw new Error("Not authenticated");
       const { data, error } = await supabase
         .from("medications")
         .select("id, name, image_url")
+        .eq("user_id", userId)
         .eq("active", true)
         .order("name");
 
@@ -187,9 +192,12 @@ const Calendar = () => {
     try {
       let meds = medications;
       if (meds.length === 0) {
+        const { data: sess } = await supabase.auth.getSession();
+        const userId = sess.session?.user?.id;
         const { data: medsData } = await supabase
           .from("medications")
           .select("id, name, image_url, active")
+          .eq("user_id", userId!)
           .eq("active", true);
         meds = medsData || [];
         setMedications(meds);
@@ -220,10 +228,22 @@ const Calendar = () => {
         return allowed.includes((v as DoseStatus)) ? (v as DoseStatus) : "pending";
       };
 
+      const parseTime = (t?: unknown): [number, number] | null => {
+        if (typeof t !== "string") return null;
+        const parts = t.split(":");
+        if (parts.length < 2) return null;
+        const hours = Number(parts[0]);
+        const minutes = Number(parts[1]);
+        if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+        return [hours, minutes];
+      };
+
       (schedulesData || []).forEach((s: Schedule) => {
         if (selectedMedication && s.medication_id !== selectedMedication) return;
         if (s.days_of_week && !s.days_of_week.includes(dayOfWeek)) return;
-        const [h, m] = s.time_of_day.split(":").map(Number);
+        const parsed = parseTime(s.time_of_day);
+        if (!parsed) return;
+        const [h, m] = parsed;
         const t = new Date(date); t.setHours(h, m, 0, 0);
         const log = logsData?.find(l => l.schedule_id === s.id && new Date(l.scheduled_time).getHours() === h && new Date(l.scheduled_time).getMinutes() === m);
         const med = meds.find(mm => mm.id === s.medication_id)!;
@@ -311,8 +331,11 @@ const Calendar = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-xl text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-card/95">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6" />
+        </header>
+        <CalendarSkeleton />
       </div>
     );
   }

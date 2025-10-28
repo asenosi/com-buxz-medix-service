@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import ThemeToggle from "@/components/ThemeToggle";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Menu, LogOut } from "lucide-react";
@@ -91,6 +90,19 @@ const Profile = () => {
     };
     init();
   }, [navigate, loadProfile]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/80">
+          <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="h-8" />
+          </div>
+        </header>
+        <ProfilePageSkeleton />
+      </div>
+    );
+  }
 
   const handleSave = async () => {
     if (!session) return;
@@ -330,3 +342,4 @@ const Profile = () => {
 };
 
 export default Profile;
+import { ProfilePageSkeleton } from "@/components/LoadingSkeletons";

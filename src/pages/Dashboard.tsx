@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SplitMediaCard } from "@/components/SplitMediaCard";
 import { cn } from "@/lib/utils";
+import { DoseItemSkeleton, MedCardGridSkeleton } from "@/components/LoadingSkeletons";
 
 interface Medication {
   id: string;
@@ -201,9 +202,14 @@ const Dashboard = () => {
 
   const fetchMedications = useCallback(async () => {
     try {
+      setLoading(true);
+      const { data: sess } = await supabase.auth.getSession();
+      const userId = sess.session?.user?.id;
+      if (!userId) throw new Error("Not authenticated");
       const { data: medsData, error: medsError } = await supabase
         .from("medications")
         .select("*")
+        .eq("user_id", userId)
         .eq("active", true)
         .order("name");
 
@@ -250,6 +256,16 @@ const Dashboard = () => {
         const now = new Date();
         const currentDay = now.getDay();
 
+        const parseTime = (t?: unknown): [number, number] | null => {
+          if (typeof t !== "string") return null;
+          const parts = t.split(":");
+          if (parts.length < 2) return null;
+          const hours = Number(parts[0]);
+          const minutes = Number(parts[1]);
+          if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+          return [hours, minutes];
+        };
+
         medsWithImages.forEach(med => {
           const medSchedules = schedulesData?.filter(s => s.medication_id === med.id) || [];
           
@@ -259,7 +275,9 @@ const Dashboard = () => {
               return; // Skip this schedule if today is not in the recurring days
             }
 
-            const [hours, minutes] = schedule.time_of_day.split(":").map(Number);
+            const parsed = parseTime(schedule.time_of_day);
+            if (!parsed) return; // Skip invalid times
+            const [hours, minutes] = parsed;
             const doseTime = new Date();
             doseTime.setHours(hours, minutes, 0, 0);
 
@@ -310,6 +328,8 @@ const Dashboard = () => {
     } catch (error: unknown) {
       toast.error("Failed to load medications");
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   }, [fetchGamificationStats]);
 
@@ -710,7 +730,9 @@ const Dashboard = () => {
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
               <h2 className="text-2xl font-bold mb-4 sm:hidden text-primary">Today, {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</h2>
               
-              {todayDoses.length === 0 ? (
+              {loading ? (
+                <DoseItemSkeleton count={3} />
+              ) : todayDoses.length === 0 ? (
                 <Card className="text-center py-6 sm:py-8 animate-fade-in">
                   <CardContent>
                     <p className="text-lg sm:text-xl text-muted-foreground px-4">
@@ -778,7 +800,10 @@ const Dashboard = () => {
 
             <div>
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">All Medications</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              {loading ? (
+                <MedCardGridSkeleton count={4} />
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
                 {medications.map((med, idx) => {
                   const img = (med.images && med.images[0]) || med.image_url || defaultImageForForm(med.form || undefined);
                   const descParts = [
@@ -805,7 +830,8 @@ const Dashboard = () => {
                   );
                 })}
               </div>
-            </div>
+              )}
+              </div>
           </>
         )}
       </main>
