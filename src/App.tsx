@@ -16,6 +16,7 @@ const Calendar = lazy(() => import("./pages/Calendar"));
 const CalendarDay = lazy(() => import("./pages/CalendarDay"));
 const Search = lazy(() => import("./pages/Search"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Alerts = lazy(() => import("./pages/Alerts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/calendar/day" element={<CalendarDay />} />
               <Route path="/search" element={<Search />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/alerts" element={<Alerts />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

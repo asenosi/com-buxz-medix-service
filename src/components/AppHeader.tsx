@@ -133,6 +133,14 @@ export default function AppHeader() {
                       <span className="text-sm font-medium">Dashboard</span>
                     </button>
                     <button
+                      onClick={() => go("/alerts")}
+                      className={`${itemBase} ${isActive("/alerts") ? itemActive : itemHover}`}
+                      aria-current={isActive("/alerts") ? "page" : undefined}
+                    >
+                      <Bell className="h-4 w-4" />
+                      <span className="text-sm font-medium">Alerts</span>
+                    </button>
+                    <button
                       onClick={() => go("/medications")}
                       className={`${itemBase} ${isActive("/medications", true) ? itemActive : itemHover}`}
                       aria-current={isActive("/medications", true) ? "page" : undefined}

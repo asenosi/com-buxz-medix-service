@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Pill, Calendar as CalendarIcon, Search, User as UserIcon, SunMedium, Moon, Monitor, LogOut, Home } from "lucide-react";
+import { Pill, Calendar as CalendarIcon, Search, User as UserIcon, SunMedium, Moon, Monitor, LogOut, Home, Bell } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,6 +66,14 @@ export default function DesktopSidebar() {
         >
           <Home className="h-4 w-4" />
           <span className="text-sm font-medium">Dashboard</span>
+        </button>
+        <button
+          onClick={() => navigate("/alerts")}
+          className={`${itemBase} ${isActive("/alerts") ? itemActive : itemHover}`}
+          aria-current={isActive("/alerts") ? "page" : undefined}
+        >
+          <Bell className="h-4 w-4" />
+          <span className="text-sm font-medium">Alerts</span>
         </button>
         <button
           onClick={() => navigate("/medications")}
