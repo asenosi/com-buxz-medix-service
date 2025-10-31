@@ -34,13 +34,29 @@ export default function AppHeader() {
       const { data } = await supabase.auth.getUser();
       const user = data.user;
       setEmail(user?.email ?? null);
-      const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
-      const fn = typeof meta.full_name === "string" ? meta.full_name : undefined;
-      setFullName(fn ?? null);
-      const avatar = typeof meta.avatar_url === "string" ? meta.avatar_url : undefined;
-      setAvatarUrl(avatar ?? null);
 
       if (user?.id) {
+        // Load full name from profiles table
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        
+        setFullName(profile?.full_name ?? null);
+
+        // Load avatar from storage
+        const { data: files } = await supabase.storage
+          .from("avatars")
+          .list(user.id, { limit: 1, sortBy: { column: "created_at", order: "desc" } });
+        
+        if (files && files.length > 0) {
+          const { data: urlData } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(`${user.id}/${files[0].name}`);
+          setAvatarUrl(urlData.publicUrl);
+        }
+
         const { count } = await supabase
           .from("medications")
           .select("id", { count: "exact", head: true })
@@ -51,6 +67,11 @@ export default function AppHeader() {
       setLoadingNav(false);
     };
     load();
+
+    // Listen for navigation to refresh avatar
+    const handleFocus = () => load();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const initials = useMemo(() => {
@@ -110,6 +131,14 @@ export default function AppHeader() {
                     >
                       <Home className="h-4 w-4" />
                       <span className="text-sm font-medium">Dashboard</span>
+                    </button>
+                    <button
+                      onClick={() => go("/alerts")}
+                      className={`${itemBase} ${isActive("/alerts") ? itemActive : itemHover}`}
+                      aria-current={isActive("/alerts") ? "page" : undefined}
+                    >
+                      <Bell className="h-4 w-4" />
+                      <span className="text-sm font-medium">Alerts</span>
                     </button>
                     <button
                       onClick={() => go("/medications")}
@@ -216,9 +245,9 @@ export default function AppHeader() {
                     {avatarUrl ? <AvatarImage src={avatarUrl} alt="avatar" /> : null}
                     <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{fullName || initials}</div>
-                    <div className="truncate text-xs text-muted-foreground">{email}</div>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="text-sm font-medium break-words">{fullName || initials}</div>
+                    <div className="text-xs text-muted-foreground break-words">{email}</div>
                   </div>
                 </div>
               </DropdownMenuLabel>

@@ -70,7 +70,20 @@ const Profile = () => {
         setDob(data.date_of_birth ?? "");
         setPhone(data.phone_number ?? "");
         setIsCaregiver(Boolean(data.is_caregiver));
-        // Avatar URL is managed through storage and state
+        
+        // Load avatar from storage if it exists
+        if (userId) {
+          const { data: files } = await supabase.storage
+            .from("avatars")
+            .list(userId, { limit: 1, sortBy: { column: "created_at", order: "desc" } });
+          
+          if (files && files.length > 0) {
+            const { data: urlData } = supabase.storage
+              .from("avatars")
+              .getPublicUrl(`${userId}/${files[0].name}`);
+            setAvatarUrl(urlData.publicUrl);
+          }
+        }
       }
     } catch (e) {
       console.error(e);
@@ -226,7 +239,7 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-1 animate-fade-in">
             <CardHeader className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg p-4 sm:p-6">
@@ -244,9 +257,9 @@ const Profile = () => {
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div className="text-center sm:text-left min-w-0 flex-1">
-                  <div className="text-lg sm:text-xl font-semibold truncate">{fullName || "Unnamed User"}</div>
-                  <div className="text-sm text-muted-foreground truncate">{session?.user?.email}</div>
+                <div className="text-center sm:text-left flex-1 min-w-0">
+                  <div className="text-lg sm:text-xl font-semibold break-words">{fullName || "Unnamed User"}</div>
+                  <div className="text-sm text-muted-foreground break-words">{session?.user?.email}</div>
                 </div>
               </div>
 
