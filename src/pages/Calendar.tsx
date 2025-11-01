@@ -578,26 +578,25 @@ const Calendar = () => {
               )}
 
               {view === "week" && (
-                <div className="space-y-3">
-                  {getWeekDays().map((day, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleDayClick(day)}
-                      className={`w-full rounded-xl p-4 transition-all ${getDayColor(day)} text-left`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-semibold">{day.date.toLocaleDateString(undefined, { weekday: 'long' })}</div>
-                          <div className="text-sm opacity-75">{day.date.toLocaleDateString()}</div>
-                        </div>
-                        {day.logs.length > 0 && (
-                          <Badge variant="secondary" className="text-sm">
-                            {day.logs.length} doses
-                          </Badge>
-                        )}
+                <div className="space-y-2">
+                  <div className="grid grid-cols-7 gap-2">
+                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                      <div key={d} className="text-center text-sm text-muted-foreground p-2">
+                        {d}
                       </div>
-                    </button>
-                  ))}
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-2">
+                    {getWeekDays().map((day, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleDayClick(day)}
+                        className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-2 transition-all ${getDayColor(day)} ${selectedDate && day.date.toDateString() === selectedDate.toDateString() ? 'ring-2 ring-white ring-offset-2 ring-offset-background' : ''}`}
+                      >
+                        <div className="text-base font-medium">{day.date.getDate()}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
