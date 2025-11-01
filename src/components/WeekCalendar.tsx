@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns";
 
 interface WeekCalendarProps {
@@ -14,34 +12,35 @@ export const WeekCalendar = ({ onDateSelect, selectedDate }: WeekCalendarProps) 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
 
   return (
-    <div className="grid grid-cols-7 gap-2 mb-6">
-      {weekDays.map((day) => {
-        const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
-        const isCurrentDay = isToday(day);
+    <div className="w-full mb-6">
+      <div className="grid grid-cols-7 gap-2">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+          <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+            {day}
+          </div>
+        ))}
         
-        return (
-          <Card
-            key={day.toISOString()}
-            className={cn(
-              "p-3 cursor-pointer transition-all hover:scale-105 hover:shadow-lg text-center",
-              isSelected && "bg-primary text-primary-foreground border-primary shadow-md",
-              isCurrentDay && !isSelected && "border-primary/50 bg-primary/5",
-              !isSelected && "hover:border-primary/30"
-            )}
-            onClick={() => onDateSelect(day)}
-          >
-            <div className="text-xs font-medium mb-1">
-              {format(day, "EEE")}
-            </div>
-            <div className={cn(
-              "text-2xl font-bold",
-              isSelected && "text-primary-foreground"
-            )}>
+        {weekDays.map((day) => {
+          const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
+          const isCurrentDay = isToday(day);
+          
+          return (
+            <button
+              key={day.toISOString()}
+              onClick={() => onDateSelect(day)}
+              className={`
+                aspect-square flex items-center justify-center rounded-lg text-sm font-medium
+                transition-colors relative
+                ${isCurrentDay ? 'ring-2 ring-primary ring-offset-2' : ''}
+                ${isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}
+                ${!isSelected && !isCurrentDay ? 'text-foreground' : ''}
+              `}
+            >
               {format(day, "d")}
-            </div>
-          </Card>
-        );
-      })}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
