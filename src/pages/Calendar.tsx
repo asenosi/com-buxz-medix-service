@@ -425,7 +425,7 @@ const Calendar = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-card/95">
+      <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-card/95 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <Button onClick={() => navigate("/dashboard")} variant="ghost" size="lg" className="mb-4">
             <ArrowLeft className="w-5 h-5 mr-2" />
