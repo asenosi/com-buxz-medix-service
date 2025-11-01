@@ -74,6 +74,13 @@ const Calendar = () => {
   const [selectedDoses, setSelectedDoses] = useState<SelectedDoseItem[]>([]);
   const [view, setView] = useState<"month" | "week" | "day">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [adherenceStats, setAdherenceStats] = useState({
+    taken: 0,
+    missed: 0,
+    skipped: 0,
+    total: 0,
+    percentage: 0
+  });
 
   const fetchMedications = useCallback(async () => {
     try {
@@ -167,6 +174,21 @@ const Calendar = () => {
       const days: CalendarDay[] = [];
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+
+      // Calculate adherence stats for the current month
+      const pastLogs = logs?.filter(log => {
+        const logDate = new Date(log.scheduled_time);
+        logDate.setHours(0, 0, 0, 0);
+        return logDate <= today;
+      }) || [];
+
+      const taken = pastLogs.filter(log => log.status === 'taken').length;
+      const missed = pastLogs.filter(log => log.status === 'missed').length;
+      const skipped = pastLogs.filter(log => log.status === 'skipped').length;
+      const total = pastLogs.length;
+      const percentage = total > 0 ? Math.round((taken / total) * 100) : 0;
+
+      setAdherenceStats({ taken, missed, skipped, total, percentage });
 
       for (let d = new Date(startOfMonth); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
         const dayStart = new Date(d);
@@ -497,11 +519,42 @@ const Calendar = () => {
                 </Button>
               </div>
               
-              <div className="flex items-center justify-center gap-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg">
-                <Flame className="w-8 h-8 text-orange-500" />
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-primary">{streak}</p>
-                  <p className="text-sm text-muted-foreground">Day Streak</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg">
+                <div className="flex items-center justify-center gap-3">
+                  <Flame className="w-8 h-8 text-orange-500" />
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">{streak}</p>
+                    <p className="text-xs text-muted-foreground">Day Streak</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-center gap-3 border-l border-primary/20 pl-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">{adherenceStats.percentage}%</p>
+                    <p className="text-xs text-muted-foreground">Adherence</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-center gap-3 border-l border-primary/20 pl-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">{adherenceStats.taken}/{adherenceStats.total}</p>
+                    <p className="text-xs text-muted-foreground">Doses Taken</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
+                <div className="text-center p-2 bg-primary/10 rounded-lg">
+                  <p className="font-semibold text-primary">{adherenceStats.taken}</p>
+                  <p className="text-muted-foreground">Taken</p>
+                </div>
+                <div className="text-center p-2 bg-destructive/10 rounded-lg">
+                  <p className="font-semibold text-destructive">{adherenceStats.missed}</p>
+                  <p className="text-muted-foreground">Missed</p>
+                </div>
+                <div className="text-center p-2 bg-warning/10 rounded-lg">
+                  <p className="font-semibold text-warning">{adherenceStats.skipped}</p>
+                  <p className="text-muted-foreground">Skipped</p>
                 </div>
               </div>
             </CardHeader>
