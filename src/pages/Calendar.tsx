@@ -519,42 +519,35 @@ const Calendar = () => {
                 </Button>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg">
-                <div className="flex items-center justify-center gap-3">
-                  <Flame className="w-8 h-8 text-orange-500" />
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-primary">{streak}</p>
+              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-orange-500" />
+                  <div>
+                    <p className="text-lg font-bold text-primary">{streak}</p>
                     <p className="text-xs text-muted-foreground">Day Streak</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-center gap-3 border-l border-primary/20 pl-4">
+                <div className="flex items-center gap-4 text-sm">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-primary">{adherenceStats.percentage}%</p>
-                    <p className="text-xs text-muted-foreground">Adherence</p>
+                    <p className="font-bold text-primary">{adherenceStats.percentage}%</p>
+                    <p className="text-xs text-muted-foreground">Rate</p>
                   </div>
-                </div>
-                
-                <div className="flex items-center justify-center gap-3 border-l border-primary/20 pl-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-primary">{adherenceStats.taken}/{adherenceStats.total}</p>
-                    <p className="text-xs text-muted-foreground">Doses Taken</p>
+                  
+                  <div className="flex gap-3 text-xs">
+                    <div className="text-center">
+                      <p className="font-semibold text-primary">{adherenceStats.taken}</p>
+                      <p className="text-muted-foreground">✓</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold text-destructive">{adherenceStats.missed}</p>
+                      <p className="text-muted-foreground">✕</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold text-warning">{adherenceStats.skipped}</p>
+                      <p className="text-muted-foreground">−</p>
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
-                <div className="text-center p-2 bg-primary/10 rounded-lg">
-                  <p className="font-semibold text-primary">{adherenceStats.taken}</p>
-                  <p className="text-muted-foreground">Taken</p>
-                </div>
-                <div className="text-center p-2 bg-destructive/10 rounded-lg">
-                  <p className="font-semibold text-destructive">{adherenceStats.missed}</p>
-                  <p className="text-muted-foreground">Missed</p>
-                </div>
-                <div className="text-center p-2 bg-warning/10 rounded-lg">
-                  <p className="font-semibold text-warning">{adherenceStats.skipped}</p>
-                  <p className="text-muted-foreground">Skipped</p>
                 </div>
               </div>
             </CardHeader>
