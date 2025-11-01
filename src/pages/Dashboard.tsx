@@ -617,12 +617,12 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="mb-6">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-            <TabsTrigger value="list" className="text-base sm:text-lg">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 pointer-events-auto relative z-10">
+            <TabsTrigger value="list" className="text-base sm:text-lg cursor-pointer">
               <List className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               List View
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="text-base sm:text-lg">
+            <TabsTrigger value="calendar" className="text-base sm:text-lg cursor-pointer">
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Calendar View
             </TabsTrigger>
