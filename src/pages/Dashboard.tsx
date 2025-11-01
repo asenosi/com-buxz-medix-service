@@ -627,39 +627,41 @@ const Dashboard = () => {
               Calendar View
             </TabsTrigger>
           </TabsList>
-        </Tabs>
 
-        {viewMode === "calendar" ? (
-          <Card className="text-center py-12 sm:py-16 animate-fade-in">
-            <CardContent>
-              <Calendar className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6" />
-              <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">Calendar View</h2>
-              <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
-                View your medication history and track your progress
-              </p>
-              <Button 
-                onClick={() => navigate("/calendar")}
-                size="lg" 
-                className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-transform"
-              >
-                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                Open Full Calendar
-              </Button>
-            </CardContent>
-          </Card>
-        ) : !loading && medications.length === 0 ? (
-          <Card className="text-center py-12 sm:py-16 animate-fade-in">
-            <CardContent>
-              <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
-              <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
-              <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
-                Get started by adding your first medication
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {showStats && (
+          <TabsContent value="calendar">
+            <Card className="text-center py-12 sm:py-16 animate-fade-in">
+              <CardContent>
+                <Calendar className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6" />
+                <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">Calendar View</h2>
+                <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
+                  View your medication history and track your progress
+                </p>
+                <Button 
+                  onClick={() => navigate("/calendar")}
+                  size="lg" 
+                  className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-transform"
+                >
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                  Open Full Calendar
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="list">
+            {!loading && medications.length === 0 ? (
+              <Card className="text-center py-12 sm:py-16 animate-fade-in">
+                <CardContent>
+                  <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
+                  <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
+                  <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
+                    Get started by adding your first medication
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {showStats && (
               <AdherenceStats
                 streak={streak}
                 todayProgress={todayProgress}
@@ -841,9 +843,11 @@ const Dashboard = () => {
                 })}
               </div>
               )}
-              </div>
-          </>
-        )}
+            </div>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Floating Action Button */}
