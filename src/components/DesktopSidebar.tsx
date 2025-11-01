@@ -104,19 +104,6 @@ export default function DesktopSidebar() {
           <Search className="h-4 w-4" />
           <span className="text-sm font-medium">Search</span>
         </button>
-        <button
-          onClick={() => navigate("/profile")}
-          className={`${itemBase} ${isActive("/profile") ? itemActive : itemHover}`}
-          aria-current={isActive("/profile") ? "page" : undefined}
-        >
-          <UserIcon className="h-4 w-4" />
-          <span className="text-sm font-medium">Profile</span>
-          {loading ? (
-            <Skeleton className="ml-auto h-4 w-4 rounded" />
-          ) : (
-            profileIncomplete && <span className={badgeCls}>!</span>
-          )}
-        </button>
       </div>
       <Separator className="my-3" />
       <div className="space-y-1">

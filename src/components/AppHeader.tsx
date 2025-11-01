@@ -169,19 +169,6 @@ export default function AppHeader() {
                       <Search className="h-4 w-4" />
                       <span className="text-sm font-medium">Search</span>
                     </button>
-                    <button
-                      onClick={() => go("/profile")}
-                      className={`${itemBase} ${isActive("/profile") ? itemActive : itemHover}`}
-                      aria-current={isActive("/profile") ? "page" : undefined}
-                    >
-                      <UserIcon className="h-4 w-4" />
-                      <span className="text-sm font-medium">Profile</span>
-                      {loadingNav ? (
-                        <Skeleton className="ml-auto h-4 w-4 rounded" />
-                      ) : (
-                        profileIncomplete && <span className={badgeCls}>!</span>
-                      )}
-                    </button>
                   </div>
                 );
               })()}
@@ -252,7 +239,10 @@ export default function AppHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}> <Settings className="mr-2 h-4 w-4" /> Settings </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <UserIcon className="mr-2 h-4 w-4" /> Profile
+                {profileIncomplete && <span className="ml-auto inline-flex items-center justify-center min-w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] px-1.5 leading-none">!</span>}
+              </DropdownMenuItem>
               {/* Prevent dropdown from closing so the Dialog doesn't unmount */}
               <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
                 <div className="w-full">
