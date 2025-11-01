@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock } from "lucide-react";
+import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, List } from "lucide-react";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SplitMediaCard } from "@/components/SplitMediaCard";
 import { cn } from "@/lib/utils";
 import { DoseItemSkeleton, MedCardGridSkeleton } from "@/components/LoadingSkeletons";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface Medication {
   id: string;
@@ -71,6 +72,7 @@ const Dashboard = () => {
   const [showStats, setShowStats] = useState(false);
   const [selectedDose, setSelectedDose] = useState<TodayDose | null>(null);
   const [showDoseDialog, setShowDoseDialog] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -614,47 +616,58 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="mb-6 sm:mb-8 animate-fade-in flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <Button 
-            onClick={() => navigate("/medications")} 
-            size="lg" 
-            className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-all duration-300 hover:shadow-xl animate-bounce-subtle"
-          >
-            <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-            Add Medication
-          </Button>
-          <Button 
-            onClick={() => navigate("/calendar")} 
-            size="lg" 
-            variant="outline"
-            className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-all duration-300"
-          >
-            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-            View Calendar
-          </Button>
-        </div>
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="mb-6">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-muted">
+            <TabsTrigger 
+              value="list" 
+              className="text-base sm:text-lg flex items-center justify-center gap-2"
+            >
+              <List className="w-4 h-4 sm:w-5 sm:h-5" />
+              List View
+            </TabsTrigger>
+            <TabsTrigger 
+              value="calendar" 
+              className="text-base sm:text-lg flex items-center justify-center gap-2"
+            >
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+              Calendar View
+            </TabsTrigger>
+          </TabsList>
 
-        {!loading && medications.length === 0 ? (
-          <Card className="text-center py-12 sm:py-16 animate-fade-in">
-            <CardContent>
-              <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
-              <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
-              <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
-                Get started by adding your first medication
-              </p>
-              <Button 
-                onClick={() => navigate("/medications")}
-                size="lg" 
-                className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-transform"
-              >
-                <Plus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                Add Your First Medication
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {showStats && (
+          <TabsContent value="calendar">
+            <Card className="text-center py-12 sm:py-16 animate-fade-in">
+              <CardContent>
+                <Calendar className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6" />
+                <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">Calendar View</h2>
+                <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
+                  View your medication history and track your progress
+                </p>
+                <Button 
+                  onClick={() => navigate("/calendar")}
+                  size="lg" 
+                  className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-transform"
+                >
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                  Open Full Calendar
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="list">
+            {!loading && medications.length === 0 ? (
+              <Card className="text-center py-12 sm:py-16 animate-fade-in">
+                <CardContent>
+                  <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
+                  <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
+                  <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
+                    Get started by adding your first medication
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {showStats && (
               <AdherenceStats
                 streak={streak}
                 todayProgress={todayProgress}
@@ -836,9 +849,11 @@ const Dashboard = () => {
                 })}
               </div>
               )}
-              </div>
-          </>
-        )}
+            </div>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Floating Action Button */}
