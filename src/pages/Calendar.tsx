@@ -3,20 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, ArrowLeft, Flame, Filter, LayoutGrid, List, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as CalendarIcon, ArrowLeft, Flame, LayoutGrid, List } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
-import { Badge } from "@/components/ui/badge";
-import { DayDetailsDialog } from "@/components/DayDetailsDialog";
 import { CalendarSkeleton } from "@/components/LoadingSkeletons";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WeekCalendar } from "@/components/WeekCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { DoseCard } from "@/components/DoseCard";
@@ -75,8 +66,6 @@ const Calendar = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [selectedMedication, setSelectedMedication] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
-  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
-  const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDoses, setSelectedDoses] = useState<SelectedDoseItem[]>([]);
   const [view, setView] = useState<"month" | "week">("week");
@@ -346,69 +335,6 @@ const Calendar = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
-  const getDayColor = (day: CalendarDay) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dayDate = new Date(day.date);
-    dayDate.setHours(0, 0, 0, 0);
-    const isToday = dayDate.getTime() === today.getTime();
-
-    if (isToday) return 'bg-primary text-primary-foreground hover:bg-primary/90';
-    if (dayDate > today) return 'bg-background text-muted-foreground hover:bg-muted/50';
-    if (day.hasTaken) return 'bg-primary/20 text-foreground hover:bg-primary/30';
-    if (day.hasSkipped || day.hasSnoozed) return 'bg-warning/20 text-foreground hover:bg-warning/30';
-    if (day.logs.length > 0) return 'bg-destructive/20 text-foreground hover:bg-destructive/30';
-    return 'bg-background text-foreground hover:bg-muted/50';
-  };
-
-  const getWeekDays = () => {
-    const startOfWeek = new Date(currentDate);
-    const day = startOfWeek.getDay();
-    startOfWeek.setDate(startOfWeek.getDate() - day);
-    
-    const days: CalendarDay[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      const dayData = calendarDays.find(d => 
-        d.date.toDateString() === date.toDateString()
-      );
-      if (dayData) {
-        days.push(dayData);
-      } else {
-        days.push({ date, logs: [], hasTaken: false, hasSkipped: false, hasSnoozed: false });
-      }
-    }
-    return days;
-  };
-
-  const navigateView = (direction: 'prev' | 'next') => {
-    if (view === 'month') {
-      if (direction === 'prev') previousMonth();
-      else nextMonth();
-    } else {
-      const newDate = new Date(currentDate);
-      newDate.setDate(newDate.getDate() + (direction === 'prev' ? -7 : 7));
-      setCurrentDate(newDate);
-    }
-  };
-
-  const getViewTitle = () => {
-    if (view === 'month') {
-      return `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
-    } else {
-      const weekDays = getWeekDays();
-      if (weekDays.length > 0) {
-        const first = weekDays[0].date;
-        const last = weekDays[6].date;
-        return `${monthNames[first.getMonth()]} ${first.getDate()} - ${
-          first.getMonth() !== last.getMonth() ? monthNames[last.getMonth()] + ' ' : ''
-        }${last.getDate()}, ${last.getFullYear()}`;
-      }
-    }
-    return '';
-  };
-
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
     setCurrentDate(date);
@@ -493,12 +419,6 @@ const Calendar = () => {
       </div>
     );
   }
-
-  const monthNames = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"];
-
-  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
-  const emptyDays = Array(firstDayOfMonth).fill(null);
 
   return (
     <div className="min-h-screen bg-background">
