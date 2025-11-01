@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { DoseItemSkeleton, MedCardGridSkeleton } from "@/components/LoadingSkeletons";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeekCalendar } from "@/components/WeekCalendar";
+import { MonthCalendar } from "@/components/MonthCalendar";
 
 interface Medication {
   id: string;
@@ -76,6 +77,7 @@ const Dashboard = () => {
   const [showDoseDialog, setShowDoseDialog] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
+  const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -639,10 +641,32 @@ const Dashboard = () => {
 
           <TabsContent value="calendar">
             <div className="animate-fade-in">
-              <WeekCalendar 
-                selectedDate={selectedCalendarDate}
-                onDateSelect={setSelectedCalendarDate}
-              />
+              <div className="mb-4">
+                <Tabs value={calendarViewType} onValueChange={(v) => setCalendarViewType(v as "week" | "month")} className="w-full">
+                  <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+                    <TabsTrigger value="week" className="flex items-center gap-2">
+                      <List className="w-4 h-4" />
+                      Week
+                    </TabsTrigger>
+                    <TabsTrigger value="month" className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Month
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {calendarViewType === "week" ? (
+                <WeekCalendar 
+                  selectedDate={selectedCalendarDate}
+                  onDateSelect={setSelectedCalendarDate}
+                />
+              ) : (
+                <MonthCalendar
+                  selectedDate={selectedCalendarDate}
+                  onDateSelect={setSelectedCalendarDate}
+                />
+              )}
               
               <div className="mb-6">
                 <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
