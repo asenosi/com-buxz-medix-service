@@ -686,12 +686,19 @@ const Dashboard = () => {
                     return doseDate >= selectedDayStart && doseDate <= selectedDayEnd;
                   });
                   
+                  const todayStart = new Date();
+                  todayStart.setHours(0, 0, 0, 0);
+                  const isPastDate = selectedDayStart < todayStart;
+
                   if (dosesForDay.length === 0) {
                     return (
                       <Card className="text-center py-6 sm:py-8">
                         <CardContent>
                           <p className="text-lg sm:text-xl text-muted-foreground px-4">
-                            No medications scheduled for this day
+                            {isPastDate 
+                              ? "No medications were scheduled for this day"
+                              : "No medications scheduled for this day"
+                            }
                           </p>
                         </CardContent>
                       </Card>
@@ -708,6 +715,7 @@ const Dashboard = () => {
                         >
                           <DoseCard
                             dose={dose}
+                            isPastDate={isPastDate}
                             onMarkTaken={markAsTaken}
                             onMarkSkipped={markAsSkipped}
                             onMarkSnoozed={markAsSnoozed}

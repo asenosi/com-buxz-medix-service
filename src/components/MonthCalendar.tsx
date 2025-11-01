@@ -78,6 +78,7 @@ export const MonthCalendar = ({ selectedDate, onDateSelect, highlightDates = [] 
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
           const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
           date.setHours(0, 0, 0, 0);
+          const isPast = date < today;
           
           return (
             <button
@@ -86,9 +87,10 @@ export const MonthCalendar = ({ selectedDate, onDateSelect, highlightDates = [] 
               className={`
                 aspect-square flex items-center justify-center rounded-lg text-sm font-medium
                 transition-colors relative
+                ${isPast ? 'text-muted-foreground opacity-50' : ''}
                 ${isToday(date) ? 'ring-2 ring-primary ring-offset-2' : ''}
                 ${isSelected(date) ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}
-                ${!isSelected(date) && !isToday(date) ? 'text-foreground' : ''}
+                ${!isSelected(date) && !isToday(date) && !isPast ? 'text-foreground' : ''}
               `}
             >
               {day}

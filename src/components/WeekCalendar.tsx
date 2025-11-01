@@ -23,6 +23,7 @@ export const WeekCalendar = ({ onDateSelect, selectedDate }: WeekCalendarProps) 
         {weekDays.map((day) => {
           const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
           const isCurrentDay = isToday(day);
+          const isPastDay = day < new Date(new Date().setHours(0, 0, 0, 0));
           
           return (
             <button
@@ -31,9 +32,10 @@ export const WeekCalendar = ({ onDateSelect, selectedDate }: WeekCalendarProps) 
               className={`
                 aspect-square flex items-center justify-center rounded-lg text-sm font-medium
                 transition-colors relative
+                ${isPastDay ? 'text-muted-foreground opacity-50' : ''}
                 ${isCurrentDay ? 'ring-2 ring-primary ring-offset-2' : ''}
                 ${isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}
-                ${!isSelected && !isCurrentDay ? 'text-foreground' : ''}
+                ${!isSelected && !isCurrentDay && !isPastDay ? 'text-foreground' : ''}
               `}
             >
               {format(day, "d")}
