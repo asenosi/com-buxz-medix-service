@@ -3,20 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, ArrowLeft, Flame, Filter, LayoutGrid, List, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as CalendarIcon, ArrowLeft, Flame, LayoutGrid, List } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
-import { Badge } from "@/components/ui/badge";
-import { DayDetailsDialog } from "@/components/DayDetailsDialog";
 import { CalendarSkeleton } from "@/components/LoadingSkeletons";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WeekCalendar } from "@/components/WeekCalendar";
+import { MonthCalendar } from "@/components/MonthCalendar";
+import { DoseCard } from "@/components/DoseCard";
 
 interface DoseLog {
   id: string;
@@ -29,7 +23,11 @@ interface DoseLog {
 interface Medication {
   id: string;
   name: string;
+  dosage: string;
+  form: string | null;
+  pills_remaining: number | null;
   image_url: string | null;
+  images?: string[];
 }
 
 interface Schedule {
@@ -44,11 +42,15 @@ interface Schedule {
 
 type DoseStatus = "pending" | "taken" | "skipped" | "snoozed" | "missed";
 
-interface SelectedDoseItem {
+interface TodayDose {
   medication: Medication;
   schedule: Schedule;
-  time: Date;
-  status: DoseStatus;
+  nextDoseTime: Date;
+  status: "upcoming" | "due" | "overdue";
+  isTaken?: boolean;
+  isSkipped?: boolean;
+  isSnoozed?: boolean;
+  snoozeUntil?: Date;
 }
 
 interface CalendarDay {
@@ -68,11 +70,9 @@ const Calendar = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [selectedMedication, setSelectedMedication] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
-  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
-  const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedDoses, setSelectedDoses] = useState<SelectedDoseItem[]>([]);
-  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [selectedDoses, setSelectedDoses] = useState<TodayDose[]>([]);
+  const [view, setView] = useState<"month" | "week">("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [adherenceStats, setAdherenceStats] = useState({
     taken: 0,
@@ -89,7 +89,7 @@ const Calendar = () => {
       if (!userId) throw new Error("Not authenticated");
       const { data, error } = await supabase
         .from("medications")
-        .select("id, name, image_url")
+        .select("id, name, dosage, form, pills_remaining, image_url")
         .eq("user_id", userId)
         .eq("active", true)
         .order("name");
@@ -228,7 +228,7 @@ const Calendar = () => {
         const userId = sess.session?.user?.id;
         const { data: medsData } = await supabase
           .from("medications")
-          .select("id, name, image_url, active")
+          .select("id, name, dosage, form, pills_remaining, image_url, active")
           .eq("user_id", userId!)
           .eq("active", true);
         meds = medsData || [];
@@ -254,7 +254,7 @@ const Calendar = () => {
         .lte("scheduled_time", endOfDay.toISOString());
 
       const dayOfWeek = date.getDay();
-      const items: SelectedDoseItem[] = [];
+      const items: TodayDose[] = [];
       const toStatus = (v?: string): DoseStatus => {
         const allowed: DoseStatus[] = ["pending", "taken", "skipped", "snoozed", "missed"];
         return allowed.includes((v as DoseStatus)) ? (v as DoseStatus) : "pending";
@@ -279,10 +279,18 @@ const Calendar = () => {
         const t = new Date(date); t.setHours(h, m, 0, 0);
         const log = logsData?.find(l => l.schedule_id === s.id && new Date(l.scheduled_time).getHours() === h && new Date(l.scheduled_time).getMinutes() === m);
         const med = meds.find(mm => mm.id === s.medication_id)!;
-        items.push({ medication: med, schedule: s, time: t, status: toStatus(log?.status) });
+        items.push({ 
+          medication: med, 
+          schedule: s, 
+          nextDoseTime: t, 
+          status: "upcoming",
+          isTaken: toStatus(log?.status) === "taken",
+          isSkipped: toStatus(log?.status) === "skipped",
+          isSnoozed: toStatus(log?.status) === "snoozed"
+        });
       });
 
-      items.sort((a,b) => a.time.getTime() - b.time.getTime());
+      items.sort((a,b) => a.nextDoseTime.getTime() - b.nextDoseTime.getTime());
       setSelectedDoses(items);
     } catch (e) {
       console.error(e);
@@ -326,10 +334,10 @@ const Calendar = () => {
   }, [currentMonth, selectedMedication, session, fetchCalendarData]);
 
   useEffect(() => {
-    if (view === 'day') {
-      computeDosesForDate(currentDate);
+    if (selectedDate) {
+      computeDosesForDate(selectedDate);
     }
-  }, [view, currentDate, computeDosesForDate]);
+  }, [selectedDate, computeDosesForDate]);
 
   const previousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
@@ -339,93 +347,78 @@ const Calendar = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
-  const getDayColor = (day: CalendarDay) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dayDate = new Date(day.date);
-    dayDate.setHours(0, 0, 0, 0);
-    const isToday = dayDate.getTime() === today.getTime();
-
-    if (isToday) return 'bg-primary text-primary-foreground hover:bg-primary/90';
-    if (dayDate > today) return 'bg-background text-muted-foreground hover:bg-muted/50';
-    if (day.hasTaken) return 'bg-primary/20 text-foreground hover:bg-primary/30';
-    if (day.hasSkipped || day.hasSnoozed) return 'bg-warning/20 text-foreground hover:bg-warning/30';
-    if (day.logs.length > 0) return 'bg-destructive/20 text-foreground hover:bg-destructive/30';
-    return 'bg-background text-foreground hover:bg-muted/50';
-  };
-
-  const getWeekDays = () => {
-    const startOfWeek = new Date(currentDate);
-    const day = startOfWeek.getDay();
-    startOfWeek.setDate(startOfWeek.getDate() - day);
-    
-    const days: CalendarDay[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      const dayData = calendarDays.find(d => 
-        d.date.toDateString() === date.toDateString()
-      );
-      if (dayData) {
-        days.push(dayData);
-      } else {
-        days.push({ date, logs: [], hasTaken: false, hasSkipped: false, hasSnoozed: false });
-      }
-    }
-    return days;
-  };
-
-  const navigateView = (direction: 'prev' | 'next') => {
-    if (view === 'month') {
-      if (direction === 'prev') previousMonth();
-      else nextMonth();
-    } else if (view === 'week') {
-      const newDate = new Date(currentDate);
-      newDate.setDate(newDate.getDate() + (direction === 'prev' ? -7 : 7));
-      setCurrentDate(newDate);
-    } else {
-      const newDate = new Date(currentDate);
-      newDate.setDate(newDate.getDate() + (direction === 'prev' ? -1 : 1));
-      setCurrentDate(newDate);
-    }
-  };
-
-  const getViewTitle = () => {
-    if (view === 'month') {
-      return `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
-    } else if (view === 'week') {
-      const weekDays = getWeekDays();
-      if (weekDays.length > 0) {
-        const first = weekDays[0].date;
-        const last = weekDays[6].date;
-        return `${monthNames[first.getMonth()]} ${first.getDate()} - ${
-          first.getMonth() !== last.getMonth() ? monthNames[last.getMonth()] + ' ' : ''
-        }${last.getDate()}, ${last.getFullYear()}`;
-      }
-    } else {
-      return currentDate.toLocaleDateString(undefined, { 
-        weekday: 'long', 
-        month: 'long', 
-        day: 'numeric',
-        year: 'numeric'
-      });
-    }
-    return '';
-  };
-
-  const handleDayClick = (day: CalendarDay) => {
-    const date = day.date;
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-    if (isMobile) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth()+1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      navigate(`/calendar/day?date=${y}-${m}-${d}`);
-      return;
-    }
-    setSelectedDay(day);
+  const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
+    setCurrentDate(date);
     computeDosesForDate(date);
+  };
+
+  const markAsTaken = async (dose: TodayDose) => {
+    try {
+      const { error } = await supabase.from("dose_logs").insert([
+        {
+          medication_id: dose.medication.id,
+          schedule_id: dose.schedule.id,
+          scheduled_time: dose.nextDoseTime.toISOString(),
+          taken_at: new Date().toISOString(),
+          status: "taken",
+        },
+      ]);
+      if (error) throw error;
+      toast.success(`Marked ${dose.medication.name} as taken`);
+      if (selectedDate) computeDosesForDate(selectedDate);
+      fetchCalendarData();
+    } catch (error: unknown) {
+      toast.error("Failed to mark dose as taken");
+      console.error(error);
+    }
+  };
+
+  const markAsSkipped = async (dose: TodayDose) => {
+    try {
+      const { error } = await supabase.from("dose_logs").insert([
+        {
+          medication_id: dose.medication.id,
+          schedule_id: dose.schedule.id,
+          scheduled_time: dose.nextDoseTime.toISOString(),
+          status: "skipped",
+        },
+      ]);
+      if (error) throw error;
+      toast.info(`Marked ${dose.medication.name} as skipped`);
+      if (selectedDate) computeDosesForDate(selectedDate);
+      fetchCalendarData();
+    } catch (error: unknown) {
+      toast.error("Failed to mark dose as skipped");
+      console.error(error);
+    }
+  };
+
+  const markAsSnoozed = async (dose: TodayDose, minutes: number) => {
+    try {
+      const snoozeUntil = new Date(dose.nextDoseTime);
+      snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
+      const { error } = await supabase.from("dose_logs").insert([
+        {
+          medication_id: dose.medication.id,
+          schedule_id: dose.schedule.id,
+          scheduled_time: dose.nextDoseTime.toISOString(),
+          status: "snoozed",
+          snooze_until: snoozeUntil.toISOString(),
+        },
+      ]);
+      if (error) throw error;
+      toast.info(`Snoozed ${dose.medication.name} for ${minutes} minutes`);
+      if (selectedDate) computeDosesForDate(selectedDate);
+      fetchCalendarData();
+    } catch (error: unknown) {
+      toast.error("Failed to snooze dose");
+      console.error(error);
+    }
+  };
+
+  const handleEditMedication = (medicationId: string) => {
+    navigate(`/medications/${medicationId}`);
   };
 
   if (loading) {
@@ -438,12 +431,6 @@ const Calendar = () => {
       </div>
     );
   }
-
-  const monthNames = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"];
-
-  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
-  const emptyDays = Array(firstDayOfMonth).fill(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -467,231 +454,146 @@ const Calendar = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filter and View Selector */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex items-center gap-2 flex-1">
-            <Filter className="w-5 h-5 text-muted-foreground" />
-            <Select value={selectedMedication || "all"} onValueChange={(val) => setSelectedMedication(val === "all" ? null : val)}>
-              <SelectTrigger className="w-full sm:w-[280px]">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Medications</SelectItem>
-                {medications.map(med => (
-                  <SelectItem key={med.id} value={med.id}>
-                    {med.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week")} className="w-full mb-6">
+          <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
+              <List className="w-4 h-4" />
+              Week
+            </TabsTrigger>
+            <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
+              <LayoutGrid className="w-4 h-4" />
+              Month
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-          <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week" | "day")} className="w-full sm:w-auto">
-            <TabsList className="grid h-auto w-full grid-cols-3">
-              <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
-                <LayoutGrid className="w-4 h-4" />
-                Month
-              </TabsTrigger>
-              <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
-                <List className="w-4 h-4" />
-                Week
-              </TabsTrigger>
-              <TabsTrigger value="day" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
-                <CalendarDays className="w-4 h-4" />
-                Day
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <div>
+                  <p className="text-lg font-bold text-primary">{streak}</p>
+                  <p className="text-xs text-muted-foreground">Day Streak</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 text-sm">
+                <div className="text-center">
+                  <p className="font-bold text-primary">{adherenceStats.percentage}%</p>
+                  <p className="text-xs text-muted-foreground">Rate</p>
+                </div>
+                
+                <div className="flex gap-3 text-xs">
+                  <div className="text-center">
+                    <p className="font-semibold text-primary">{adherenceStats.taken}</p>
+                    <p className="text-muted-foreground">✓</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-destructive">{adherenceStats.missed}</p>
+                    <p className="text-muted-foreground">✕</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-warning">{adherenceStats.skipped}</p>
+                    <p className="text-muted-foreground">−</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between mb-4">
-                <Button onClick={() => navigateView('prev')} variant="ghost" size="icon" className="rounded-full">
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5" />
-                  <CardTitle className="text-xl">{getViewTitle()}</CardTitle>
-                </div>
-                <Button onClick={() => navigateView('next')} variant="ghost" size="icon" className="rounded-full">
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-5 h-5 text-orange-500" />
-                  <div>
-                    <p className="text-lg font-bold text-primary">{streak}</p>
-                    <p className="text-xs text-muted-foreground">Day Streak</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="text-center">
-                    <p className="font-bold text-primary">{adherenceStats.percentage}%</p>
-                    <p className="text-xs text-muted-foreground">Rate</p>
-                  </div>
-                  
-                  <div className="flex gap-3 text-xs">
-                    <div className="text-center">
-                      <p className="font-semibold text-primary">{adherenceStats.taken}</p>
-                      <p className="text-muted-foreground">✓</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-semibold text-destructive">{adherenceStats.missed}</p>
-                      <p className="text-muted-foreground">✕</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-semibold text-warning">{adherenceStats.skipped}</p>
-                      <p className="text-muted-foreground">−</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent>
+            <CardContent className="pt-6">
               {view === "month" && (
-                <div className="grid grid-cols-7 gap-2">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                    <div key={day} className="text-center font-medium text-sm text-muted-foreground p-2">
-                      {day}
-                    </div>
-                  ))}
-                  
-                  {emptyDays.map((_, idx) => (
-                    <div key={`empty-${idx}`} className="aspect-square"></div>
-                  ))}
-                  
-                  {calendarDays.map((day, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleDayClick(day)}
-                      className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-2 transition-all font-semibold ${getDayColor(day)}`}
-                    >
-                      <div className="text-base">{day.date.getDate()}</div>
-                    </button>
-                  ))}
-                </div>
+                <MonthCalendar
+                  selectedDate={selectedDate || new Date()}
+                  onDateSelect={handleDateSelect}
+                />
               )}
 
               {view === "week" && (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-7 gap-2">
-                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                      <div key={d} className="text-center text-sm text-muted-foreground p-2">
-                        {d}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-2">
-                    {getWeekDays().map((day, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleDayClick(day)}
-                        className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-2 transition-all ${getDayColor(day)} ${selectedDate && day.date.toDateString() === selectedDate.toDateString() ? 'ring-2 ring-white ring-offset-2 ring-offset-background' : ''}`}
-                      >
-                        <div className="text-base font-medium">{day.date.getDate()}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {view === "day" && (
-                <div className="space-y-4">
-                  {selectedDoses.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No medications scheduled for this day</p>
-                  ) : (
-                    selectedDoses.map((it, idx) => (
-                      <div key={`${it.schedule.id}-${idx}`} className="p-4 border rounded-xl hover:shadow-md transition-all bg-card">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            {it.medication.image_url && (
-                              <img 
-                                src={it.medication.image_url} 
-                                alt={it.medication.name} 
-                                className="w-12 h-12 rounded-lg object-cover" 
-                              />
-                            )}
-                            <div>
-                              <div className="font-semibold">{it.medication.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {it.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                              </div>
-                            </div>
-                          </div>
-                          <Badge
-                            variant={
-                              it.status === 'taken' ? 'default' : 
-                              it.status === 'snoozed' ? 'secondary' : 
-                              it.status === 'skipped' ? 'destructive' : 
-                              'outline'
-                            }
-                            className="capitalize"
-                          >
-                            {it.status}
-                          </Badge>
-                        </div>
-                        {it.schedule.special_instructions && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {it.schedule.special_instructions}
-                          </p>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
+                <WeekCalendar
+                  selectedDate={selectedDate || new Date()}
+                  onDateSelect={handleDateSelect}
+                />
               )}
             </CardContent>
           </Card>
 
-        <Card className="hidden lg:block h-fit sticky top-24">
-          <CardHeader>
-            <CardTitle>{selectedDate ? selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "Pick a date"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!selectedDate ? (
-              <p className="text-muted-foreground">Select a date to see your schedule.</p>
-            ) : selectedDoses.length === 0 ? (
-              <p className="text-muted-foreground">No medications scheduled.</p>
-            ) : (
+          <Card className="h-fit sticky top-24">
+            <CardHeader>
+              <CardTitle>
+                {selectedDate 
+                  ? selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
+                  : "Select a date"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-3">
-                {selectedDoses.map((it, idx) => (
-                  <div key={`${it.schedule.id}-${idx}`} className="p-3 border rounded-lg hover:shadow-sm transition-all">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {it.medication.image_url && <img src={it.medication.image_url} alt={it.medication.name} className="w-10 h-10 rounded object-cover" />}
-                        <div>
-                          <div className="font-medium">{it.medication.name}</div>
-                          <div className="text-sm text-muted-foreground">{it.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                {(() => {
+                  if (!selectedDate) {
+                    return (
+                      <Card className="text-center py-8 animate-fade-in">
+                        <CardContent>
+                          <p className="text-muted-foreground">
+                            Select a date to see your schedule
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
+
+                  const dosesForDay = selectedDoses;
+
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const isPastDate = selectedDate < today;
+
+                  if (dosesForDay.length === 0) {
+                    return (
+                      <Card className="text-center py-8 animate-fade-in">
+                        <CardContent>
+                          <p className="text-muted-foreground">
+                            {isPastDate 
+                              ? "No medications were scheduled for this day"
+                              : "No medications scheduled for this day"
+                            }
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
+                  
+                  return (
+                    <div className="grid gap-3 sm:gap-4">
+                      {dosesForDay.map((dose, idx) => (
+                        <div 
+                          key={`${dose.schedule.id}-${idx}`}
+                          className="animate-slide-in-right"
+                          style={{ animationDelay: `${idx * 0.1}s` }}
+                        >
+                          <DoseCard
+                            dose={dose}
+                            isPastDate={isPastDate}
+                            onMarkTaken={markAsTaken}
+                            onMarkSkipped={markAsSkipped}
+                            onMarkSnoozed={markAsSnoozed}
+                            onEdit={handleEditMedication}
+                            onOpenDetails={(id) => navigate(`/medications/${id}`)}
+                          />
                         </div>
-                      </div>
-                      <Badge
-                        variant={it.status === 'taken' ? 'success' : it.status === 'snoozed' ? 'warning' : it.status === 'skipped' ? 'destructive' : 'secondary'}
-                        className="capitalize"
-                      >
-                        {it.status}
-                      </Badge>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  );
+                })()}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
-      <DayDetailsDialog
-        open={isDayDialogOpen}
-        onOpenChange={setIsDayDialogOpen}
-        date={selectedDay?.date || null}
-        logs={selectedDay?.logs || []}
-        medications={medications}
-      />
     </div>
   );
 };
