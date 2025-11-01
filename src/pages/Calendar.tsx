@@ -535,43 +535,45 @@ const Calendar = () => {
           </TabsList>
         </Tabs>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg mb-4">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-5 h-5 text-orange-500" />
-                  <div>
-                    <p className="text-lg font-bold text-primary">{streak}</p>
-                    <p className="text-xs text-muted-foreground">Day Streak</p>
-                  </div>
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <div>
+                  <p className="text-lg font-bold text-primary">{streak}</p>
+                  <p className="text-xs text-muted-foreground">Day Streak</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 text-sm">
+                <div className="text-center">
+                  <p className="font-bold text-primary">{adherenceStats.percentage}%</p>
+                  <p className="text-xs text-muted-foreground">Rate</p>
                 </div>
                 
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex gap-3 text-xs">
                   <div className="text-center">
-                    <p className="font-bold text-primary">{adherenceStats.percentage}%</p>
-                    <p className="text-xs text-muted-foreground">Rate</p>
+                    <p className="font-semibold text-primary">{adherenceStats.taken}</p>
+                    <p className="text-muted-foreground">✓</p>
                   </div>
-                  
-                  <div className="flex gap-3 text-xs">
-                    <div className="text-center">
-                      <p className="font-semibold text-primary">{adherenceStats.taken}</p>
-                      <p className="text-muted-foreground">✓</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-semibold text-destructive">{adherenceStats.missed}</p>
-                      <p className="text-muted-foreground">✕</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-semibold text-warning">{adherenceStats.skipped}</p>
-                      <p className="text-muted-foreground">−</p>
-                    </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-destructive">{adherenceStats.missed}</p>
+                    <p className="text-muted-foreground">✕</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold text-warning">{adherenceStats.skipped}</p>
+                    <p className="text-muted-foreground">−</p>
                   </div>
                 </div>
               </div>
-            </CardHeader>
-            
-            <CardContent>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
+          <Card>
+            <CardContent className="pt-6">
               {view === "month" && (
                 <MonthCalendar
                   selectedDate={selectedDate || new Date()}
