@@ -75,130 +75,130 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
     <Card
       onClick={handleCardClick}
       className={cn(
-        "rounded-2xl border px-4 py-4 transition-all duration-300 hover:shadow-lg",
+        "rounded-lg border px-3 py-3 transition-all duration-300 hover:shadow-lg",
         dose.isTaken && "bg-success/5 border-success/30",
         (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-warning/30",
         !isCompleted && dose.status === "overdue" && "bg-destructive/5 border-destructive/30",
         !isCompleted && dose.status === "due" && "bg-accent/5 border-accent/30"
       )}
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start gap-4">
+      <CardHeader className="p-0 pb-2">
+        <div className="flex items-start gap-3">
           <div className="shrink-0">
             {primaryImage ? (
               <div className="relative">
                 <img
                   src={primaryImage}
                   alt={dose.medication.name}
-                  className="w-16 h-16 rounded-xl object-cover border"
+                  className="w-12 h-12 rounded-lg object-cover border"
                 />
                 {Array.isArray(dose.medication.images) && dose.medication.images.length > 1 && (
-                  <Badge className="absolute -bottom-2 -right-2 text-[10px] sm:text-xs px-2 py-0.5 rounded-full shadow-md">
+                  <Badge className="absolute -bottom-1 -right-1 text-[9px] px-1.5 py-0 rounded-full shadow-md h-4">
                     {dose.medication.images.length}
                   </Badge>
                 )}
               </div>
             ) : (
-              <div className={cn("p-3 rounded-xl border bg-muted")}> 
-                <Pill className="w-6 h-6 text-primary" />
+              <div className={cn("p-2 rounded-lg border bg-muted")}> 
+                <Pill className="w-5 h-5 text-primary" />
               </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-xl truncate">{dose.medication.name}</CardTitle>
-              <Badge variant="warning" className="rounded-full">
+            <div className="flex items-center gap-1.5">
+              <CardTitle className="text-base truncate">{dose.medication.name}</CardTitle>
+              <Badge variant="warning" className="rounded-full text-[10px] px-1.5 py-0">
                 {dose.status === 'overdue' ? 'Overdue' : dose.status === 'due' ? 'Due' : 'Active'}
               </Badge>
             </div>
-            <CardDescription className="text-base mt-1">
+            <CardDescription className="text-sm mt-0.5">
               {dose.medication.dosage}
               {dose.medication.form && ` • ${dose.medication.form}`}
             </CardDescription>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
+                <Clock className="w-3.5 h-3.5" />
                 {dose.nextDoseTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
               {showCountdown && (
                 <div>
-                  in {countdown.hours > 0 ? `${countdown.hours}h ` : ''}{countdown.minutes}m {countdown.seconds}s
+                  in {countdown.hours > 0 ? `${countdown.hours}h ` : ''}{countdown.minutes}m
                 </div>
               )}
               {dose.isSnoozed && dose.snoozeUntil && (
                 <div>
-                  resumes in {snoozeCountdown.hours > 0 ? `${snoozeCountdown.hours}h ` : ''}{snoozeCountdown.minutes}m {snoozeCountdown.seconds}s
+                  resumes in {snoozeCountdown.hours > 0 ? `${snoozeCountdown.hours}h ` : ''}{snoozeCountdown.minutes}m
                 </div>
               )}
             </div>
           </div>
           <div className="self-start">
-            <Button onClick={() => onEdit(dose.medication.id)} size="sm" variant="ghost" className="rounded-full">
-              <Edit className="w-4 h-4" />
+            <Button onClick={() => onEdit(dose.medication.id)} size="icon" variant="ghost" className="rounded-full h-7 w-7">
+              <Edit className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2">
-        <div className="flex flex-wrap gap-2 sm:gap-4 mb-3 sm:mb-4 text-sm sm:text-lg">
+      <CardContent className="p-0 pt-2">
+        <div className="flex flex-wrap gap-1.5 mb-2 text-xs">
           {dose.schedule.with_food && (
-            <span className="text-muted-foreground bg-muted/50 px-2 sm:px-3 py-1 rounded-full">🍽️ With food</span>
+            <span className="text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">🍽️ With food</span>
           )}
           {dose.schedule.special_instructions && (
-            <span className="text-muted-foreground bg-muted/50 px-2 sm:px-3 py-1 rounded-full">
+            <span className="text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
               {dose.schedule.special_instructions}
             </span>
           )}
           {dose.medication.pills_remaining !== null && (
-            <span className="text-muted-foreground bg-muted/50 px-2 sm:px-3 py-1 rounded-full">
-              💊 {dose.medication.pills_remaining} remaining
+            <span className="text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+              💊 {dose.medication.pills_remaining} left
             </span>
           )}
           {dose.isTaken && (
-            <span className="text-success font-semibold bg-success/10 px-2 sm:px-3 py-1 rounded-full animate-bounce-subtle">✓ Taken</span>
+            <span className="text-success font-semibold bg-success/10 px-2 py-0.5 rounded-full">✓ Taken</span>
           )}
           {dose.isSkipped && (
-            <span className="text-warning font-semibold bg-warning/10 px-2 sm:px-3 py-1 rounded-full">⚠️ Skipped</span>
+            <span className="text-warning font-semibold bg-warning/10 px-2 py-0.5 rounded-full">⚠️ Skipped</span>
           )}
           {dose.isSnoozed && dose.snoozeUntil && (
-            <span className="text-warning font-semibold bg-warning/10 px-2 sm:px-3 py-1 rounded-full">
+            <span className="text-warning font-semibold bg-warning/10 px-2 py-0.5 rounded-full text-[10px]">
               ⏰ Snoozed until {dose.snoozeUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
         </div>
         {!isCompleted && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 onClick={() => onMarkTaken(dose)}
-                size="lg"
-                className="rounded-2xl h-12 text-base shadow-sm"
+                size="sm"
+                className="rounded-lg h-9 text-xs"
               >
-                <CheckCircle2 className="w-5 h-5 mr-2" /> Take
+                <CheckCircle2 className="w-4 h-4 mr-1" /> Take
               </Button>
               <Button 
                 onClick={() => setShowSnoozeOptions(!showSnoozeOptions)}
-                size="lg" 
+                size="sm" 
                 variant="outline" 
-                className="rounded-2xl h-12 text-base"
+                className="rounded-lg h-9 text-xs"
               >
-                <AlarmClock className="w-5 h-5 mr-2" /> Snooze
+                <AlarmClock className="w-4 h-4 mr-1" /> Snooze
               </Button>
               <Button 
                 onClick={() => onMarkSkipped(dose)}
-                size="lg" 
+                size="sm" 
                 variant="outline" 
-                className="rounded-2xl h-12 text-base border-destructive text-destructive hover:bg-destructive/5"
+                className="rounded-lg h-9 text-xs border-destructive text-destructive hover:bg-destructive/5"
               >
-                <XCircle className="w-5 h-5 mr-2" /> Skip
+                <XCircle className="w-4 h-4 mr-1" /> Skip
               </Button>
             </div>
             
             {showSnoozeOptions && (
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center p-3 bg-muted/30 rounded-lg animate-fade-in">
-                <span className="text-sm sm:text-base text-muted-foreground">Remind me in:</span>
+              <div className="flex flex-col gap-2 p-2 bg-muted/30 rounded-lg animate-fade-in">
+                <span className="text-xs text-muted-foreground">Remind me in:</span>
                 <Select value={snoozeMinutes} onValueChange={setSnoozeMinutes}>
-                  <SelectTrigger className="w-full sm:w-40">
+                  <SelectTrigger className="w-full h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -215,8 +215,8 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
                     onMarkSnoozed(dose, parseInt(snoozeMinutes));
                     setShowSnoozeOptions(false);
                   }}
-                  size="lg"
-                  className="flex-1 sm:flex-initial rounded-2xl"
+                  size="sm"
+                  className="rounded-lg h-8 text-xs"
                 >
                   Confirm Snooze
                 </Button>
