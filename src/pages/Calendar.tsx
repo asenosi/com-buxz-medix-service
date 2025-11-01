@@ -486,16 +486,16 @@ const Calendar = () => {
           </div>
 
           <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week" | "day")} className="w-full sm:w-auto">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="month" className="gap-2">
+            <TabsList className="grid h-auto w-full grid-cols-3">
+              <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
                 <LayoutGrid className="w-4 h-4" />
                 Month
               </TabsTrigger>
-              <TabsTrigger value="week" className="gap-2">
+              <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
                 <List className="w-4 h-4" />
                 Week
               </TabsTrigger>
-              <TabsTrigger value="day" className="gap-2">
+              <TabsTrigger value="day" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
                 <CalendarDays className="w-4 h-4" />
                 Day
               </TabsTrigger>

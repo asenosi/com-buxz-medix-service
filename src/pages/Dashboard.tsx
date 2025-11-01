@@ -622,17 +622,17 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="mb-6">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-muted">
+          <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2 bg-muted">
             <TabsTrigger 
               value="list" 
-              className="text-base sm:text-lg flex items-center justify-center gap-2"
+              className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
             >
               <List className="w-4 h-4 sm:w-5 sm:h-5" />
               List View
             </TabsTrigger>
             <TabsTrigger 
               value="calendar" 
-              className="text-base sm:text-lg flex items-center justify-center gap-2"
+              className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
             >
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               Calendar View
@@ -643,12 +643,12 @@ const Dashboard = () => {
             <div className="animate-fade-in">
               <div className="mb-4">
                 <Tabs value={calendarViewType} onValueChange={(v) => setCalendarViewType(v as "week" | "month")} className="w-full">
-                  <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-                    <TabsTrigger value="week" className="flex items-center gap-2">
+                  <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2">
+                    <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center gap-2 justify-center">
                       <List className="w-4 h-4" />
                       Week
                     </TabsTrigger>
-                    <TabsTrigger value="month" className="flex items-center gap-2">
+                    <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center gap-2 justify-center">
                       <Calendar className="w-4 h-4" />
                       Month
                     </TabsTrigger>
