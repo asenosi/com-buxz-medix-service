@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, List } from "lucide-react";
+import { format } from "date-fns";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -20,6 +21,8 @@ import { SplitMediaCard } from "@/components/SplitMediaCard";
 import { cn } from "@/lib/utils";
 import { DoseItemSkeleton, MedCardGridSkeleton } from "@/components/LoadingSkeletons";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { WeekCalendar } from "@/components/WeekCalendar";
+import { MonthCalendar } from "@/components/MonthCalendar";
 
 interface Medication {
   id: string;
@@ -73,6 +76,8 @@ const Dashboard = () => {
   const [selectedDose, setSelectedDose] = useState<TodayDose | null>(null);
   const [showDoseDialog, setShowDoseDialog] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
+  const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -617,17 +622,17 @@ const Dashboard = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="mb-6">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-muted">
+          <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2 bg-muted">
             <TabsTrigger 
               value="list" 
-              className="text-base sm:text-lg flex items-center justify-center gap-2"
+              className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
             >
               <List className="w-4 h-4 sm:w-5 sm:h-5" />
               List View
             </TabsTrigger>
             <TabsTrigger 
               value="calendar" 
-              className="text-base sm:text-lg flex items-center justify-center gap-2"
+              className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
             >
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               Calendar View
@@ -635,23 +640,87 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="calendar">
-            <Card className="text-center py-12 sm:py-16 animate-fade-in">
-              <CardContent>
-                <Calendar className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6" />
-                <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">Calendar View</h2>
-                <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
-                  View your medication history and track your progress
-                </p>
-                <Button 
-                  onClick={() => navigate("/calendar")}
-                  size="lg" 
-                  className="w-full sm:w-auto text-lg sm:text-xl hover:scale-105 transition-transform"
-                >
-                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                  Open Full Calendar
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="animate-fade-in">
+              <div className="mb-4">
+                <Tabs value={calendarViewType} onValueChange={(v) => setCalendarViewType(v as "week" | "month")} className="w-full">
+                  <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2">
+                    <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center gap-2 justify-center">
+                      <List className="w-4 h-4" />
+                      Week
+                    </TabsTrigger>
+                    <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center gap-2 justify-center">
+                      <Calendar className="w-4 h-4" />
+                      Month
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {calendarViewType === "week" ? (
+                <WeekCalendar 
+                  selectedDate={selectedCalendarDate}
+                  onDateSelect={setSelectedCalendarDate}
+                />
+              ) : (
+                <MonthCalendar
+                  selectedDate={selectedCalendarDate}
+                  onDateSelect={setSelectedCalendarDate}
+                />
+              )}
+              
+              <div className="mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
+                  {format(selectedCalendarDate, "EEEE, MMMM d, yyyy")}
+                </h2>
+                
+                {loading ? (
+                  <DoseItemSkeleton count={3} />
+                ) : (() => {
+                  const selectedDayStart = new Date(selectedCalendarDate);
+                  selectedDayStart.setHours(0, 0, 0, 0);
+                  const selectedDayEnd = new Date(selectedCalendarDate);
+                  selectedDayEnd.setHours(23, 59, 59, 999);
+                  
+                  const dosesForDay = todayDoses.filter(dose => {
+                    const doseDate = new Date(dose.nextDoseTime);
+                    return doseDate >= selectedDayStart && doseDate <= selectedDayEnd;
+                  });
+                  
+                  if (dosesForDay.length === 0) {
+                    return (
+                      <Card className="text-center py-6 sm:py-8">
+                        <CardContent>
+                          <p className="text-lg sm:text-xl text-muted-foreground px-4">
+                            No medications scheduled for this day
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
+                  
+                  return (
+                    <div className="grid gap-3 sm:gap-4">
+                      {dosesForDay.map((dose, idx) => (
+                        <div 
+                          key={`${dose.schedule.id}-${idx}`}
+                          className="animate-slide-in-right"
+                          style={{ animationDelay: `${idx * 0.1}s` }}
+                        >
+                          <DoseCard
+                            dose={dose}
+                            onMarkTaken={markAsTaken}
+                            onMarkSkipped={markAsSkipped}
+                            onMarkSnoozed={markAsSnoozed}
+                            onEdit={handleEditMedication}
+                            onOpenDetails={(id) => navigate(`/medications/${id}`)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="list">
