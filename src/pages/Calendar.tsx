@@ -17,6 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { WeekCalendar } from "@/components/WeekCalendar";
+import { MonthCalendar } from "@/components/MonthCalendar";
+import { DoseCard } from "@/components/DoseCard";
 
 interface DoseLog {
   id: string;
@@ -29,7 +32,11 @@ interface DoseLog {
 interface Medication {
   id: string;
   name: string;
+  dosage: string;
+  form: string | null;
+  pills_remaining: number | null;
   image_url: string | null;
+  images?: string[];
 }
 
 interface Schedule {
@@ -72,7 +79,7 @@ const Calendar = () => {
   const [isDayDialogOpen, setIsDayDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDoses, setSelectedDoses] = useState<SelectedDoseItem[]>([]);
-  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [view, setView] = useState<"month" | "week">("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [adherenceStats, setAdherenceStats] = useState({
     taken: 0,
@@ -89,7 +96,7 @@ const Calendar = () => {
       if (!userId) throw new Error("Not authenticated");
       const { data, error } = await supabase
         .from("medications")
-        .select("id, name, image_url")
+        .select("id, name, dosage, form, pills_remaining, image_url")
         .eq("user_id", userId)
         .eq("active", true)
         .order("name");
@@ -228,7 +235,7 @@ const Calendar = () => {
         const userId = sess.session?.user?.id;
         const { data: medsData } = await supabase
           .from("medications")
-          .select("id, name, image_url, active")
+          .select("id, name, dosage, form, pills_remaining, image_url, active")
           .eq("user_id", userId!)
           .eq("active", true);
         meds = medsData || [];
@@ -326,10 +333,10 @@ const Calendar = () => {
   }, [currentMonth, selectedMedication, session, fetchCalendarData]);
 
   useEffect(() => {
-    if (view === 'day') {
-      computeDosesForDate(currentDate);
+    if (selectedDate) {
+      computeDosesForDate(selectedDate);
     }
-  }, [view, currentDate, computeDosesForDate]);
+  }, [selectedDate, computeDosesForDate]);
 
   const previousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
@@ -379,13 +386,9 @@ const Calendar = () => {
     if (view === 'month') {
       if (direction === 'prev') previousMonth();
       else nextMonth();
-    } else if (view === 'week') {
-      const newDate = new Date(currentDate);
-      newDate.setDate(newDate.getDate() + (direction === 'prev' ? -7 : 7));
-      setCurrentDate(newDate);
     } else {
       const newDate = new Date(currentDate);
-      newDate.setDate(newDate.getDate() + (direction === 'prev' ? -1 : 1));
+      newDate.setDate(newDate.getDate() + (direction === 'prev' ? -7 : 7));
       setCurrentDate(newDate);
     }
   };
@@ -393,7 +396,7 @@ const Calendar = () => {
   const getViewTitle = () => {
     if (view === 'month') {
       return `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
-    } else if (view === 'week') {
+    } else {
       const weekDays = getWeekDays();
       if (weekDays.length > 0) {
         const first = weekDays[0].date;
@@ -402,30 +405,82 @@ const Calendar = () => {
           first.getMonth() !== last.getMonth() ? monthNames[last.getMonth()] + ' ' : ''
         }${last.getDate()}, ${last.getFullYear()}`;
       }
-    } else {
-      return currentDate.toLocaleDateString(undefined, { 
-        weekday: 'long', 
-        month: 'long', 
-        day: 'numeric',
-        year: 'numeric'
-      });
     }
     return '';
   };
 
-  const handleDayClick = (day: CalendarDay) => {
-    const date = day.date;
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-    if (isMobile) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth()+1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      navigate(`/calendar/day?date=${y}-${m}-${d}`);
-      return;
-    }
-    setSelectedDay(day);
+  const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
+    setCurrentDate(date);
     computeDosesForDate(date);
+  };
+
+  const markAsTaken = async (dose: any) => {
+    try {
+      const { error } = await supabase.from("dose_logs").insert([
+        {
+          medication_id: dose.medication.id,
+          schedule_id: dose.schedule.id,
+          scheduled_time: dose.time.toISOString(),
+          taken_at: new Date().toISOString(),
+          status: "taken",
+        },
+      ]);
+      if (error) throw error;
+      toast.success(`Marked ${dose.medication.name} as taken`);
+      if (selectedDate) computeDosesForDate(selectedDate);
+      fetchCalendarData();
+    } catch (error: unknown) {
+      toast.error("Failed to mark dose as taken");
+      console.error(error);
+    }
+  };
+
+  const markAsSkipped = async (dose: any) => {
+    try {
+      const { error } = await supabase.from("dose_logs").insert([
+        {
+          medication_id: dose.medication.id,
+          schedule_id: dose.schedule.id,
+          scheduled_time: dose.time.toISOString(),
+          status: "skipped",
+        },
+      ]);
+      if (error) throw error;
+      toast.info(`Marked ${dose.medication.name} as skipped`);
+      if (selectedDate) computeDosesForDate(selectedDate);
+      fetchCalendarData();
+    } catch (error: unknown) {
+      toast.error("Failed to mark dose as skipped");
+      console.error(error);
+    }
+  };
+
+  const markAsSnoozed = async (dose: any, minutes: number) => {
+    try {
+      const snoozeUntil = new Date(dose.time);
+      snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
+      const { error } = await supabase.from("dose_logs").insert([
+        {
+          medication_id: dose.medication.id,
+          schedule_id: dose.schedule.id,
+          scheduled_time: dose.time.toISOString(),
+          status: "snoozed",
+          snooze_until: snoozeUntil.toISOString(),
+        },
+      ]);
+      if (error) throw error;
+      toast.info(`Snoozed ${dose.medication.name} for ${minutes} minutes`);
+      if (selectedDate) computeDosesForDate(selectedDate);
+      fetchCalendarData();
+    } catch (error: unknown) {
+      toast.error("Failed to snooze dose");
+      console.error(error);
+    }
+  };
+
+  const handleEditMedication = (medicationId: string) => {
+    navigate(`/medications/${medicationId}`);
   };
 
   if (loading) {
@@ -467,59 +522,23 @@ const Calendar = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filter and View Selector */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex items-center gap-2 flex-1">
-            <Filter className="w-5 h-5 text-muted-foreground" />
-            <Select value={selectedMedication || "all"} onValueChange={(val) => setSelectedMedication(val === "all" ? null : val)}>
-              <SelectTrigger className="w-full sm:w-[280px]">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Medications</SelectItem>
-                {medications.map(med => (
-                  <SelectItem key={med.id} value={med.id}>
-                    {med.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week" | "day")} className="w-full sm:w-auto">
-            <TabsList className="grid h-auto w-full grid-cols-3">
-              <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
-                <LayoutGrid className="w-4 h-4" />
-                Month
-              </TabsTrigger>
-              <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
-                <List className="w-4 h-4" />
-                Week
-              </TabsTrigger>
-              <TabsTrigger value="day" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
-                <CalendarDays className="w-4 h-4" />
-                Day
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week")} className="w-full mb-6">
+          <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
+              <List className="w-4 h-4" />
+              Week
+            </TabsTrigger>
+            <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
+              <LayoutGrid className="w-4 h-4" />
+              Month
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between mb-4">
-                <Button onClick={() => navigateView('prev')} variant="ghost" size="icon" className="rounded-full">
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5" />
-                  <CardTitle className="text-xl">{getViewTitle()}</CardTitle>
-                </div>
-                <Button onClick={() => navigateView('next')} variant="ghost" size="icon" className="rounded-full">
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg mb-4">
                 <div className="flex items-center gap-2">
                   <Flame className="w-5 h-5 text-orange-500" />
                   <div>
@@ -554,144 +573,101 @@ const Calendar = () => {
             
             <CardContent>
               {view === "month" && (
-                <div className="grid grid-cols-7 gap-2">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                    <div key={day} className="text-center font-medium text-sm text-muted-foreground p-2">
-                      {day}
-                    </div>
-                  ))}
-                  
-                  {emptyDays.map((_, idx) => (
-                    <div key={`empty-${idx}`} className="aspect-square"></div>
-                  ))}
-                  
-                  {calendarDays.map((day, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleDayClick(day)}
-                      className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-2 transition-all font-semibold ${getDayColor(day)}`}
-                    >
-                      <div className="text-base">{day.date.getDate()}</div>
-                    </button>
-                  ))}
-                </div>
+                <MonthCalendar
+                  selectedDate={selectedDate || new Date()}
+                  onDateSelect={handleDateSelect}
+                />
               )}
 
               {view === "week" && (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-7 gap-2">
-                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                      <div key={d} className="text-center text-sm text-muted-foreground p-2">
-                        {d}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-2">
-                    {getWeekDays().map((day, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleDayClick(day)}
-                        className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-2 transition-all ${getDayColor(day)} ${selectedDate && day.date.toDateString() === selectedDate.toDateString() ? 'ring-2 ring-white ring-offset-2 ring-offset-background' : ''}`}
-                      >
-                        <div className="text-base font-medium">{day.date.getDate()}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {view === "day" && (
-                <div className="space-y-4">
-                  {selectedDoses.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No medications scheduled for this day</p>
-                  ) : (
-                    selectedDoses.map((it, idx) => (
-                      <div key={`${it.schedule.id}-${idx}`} className="p-4 border rounded-xl hover:shadow-md transition-all bg-card">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            {it.medication.image_url && (
-                              <img 
-                                src={it.medication.image_url} 
-                                alt={it.medication.name} 
-                                className="w-12 h-12 rounded-lg object-cover" 
-                              />
-                            )}
-                            <div>
-                              <div className="font-semibold">{it.medication.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {it.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                              </div>
-                            </div>
-                          </div>
-                          <Badge
-                            variant={
-                              it.status === 'taken' ? 'default' : 
-                              it.status === 'snoozed' ? 'secondary' : 
-                              it.status === 'skipped' ? 'destructive' : 
-                              'outline'
-                            }
-                            className="capitalize"
-                          >
-                            {it.status}
-                          </Badge>
-                        </div>
-                        {it.schedule.special_instructions && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {it.schedule.special_instructions}
-                          </p>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
+                <WeekCalendar
+                  selectedDate={selectedDate || new Date()}
+                  onDateSelect={handleDateSelect}
+                />
               )}
             </CardContent>
           </Card>
 
-        <Card className="hidden lg:block h-fit sticky top-24">
-          <CardHeader>
-            <CardTitle>{selectedDate ? selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "Pick a date"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!selectedDate ? (
-              <p className="text-muted-foreground">Select a date to see your schedule.</p>
-            ) : selectedDoses.length === 0 ? (
-              <p className="text-muted-foreground">No medications scheduled.</p>
-            ) : (
+          <Card className="h-fit sticky top-24">
+            <CardHeader>
+              <CardTitle>
+                {selectedDate 
+                  ? selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
+                  : "Select a date"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-3">
-                {selectedDoses.map((it, idx) => (
-                  <div key={`${it.schedule.id}-${idx}`} className="p-3 border rounded-lg hover:shadow-sm transition-all">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {it.medication.image_url && <img src={it.medication.image_url} alt={it.medication.name} className="w-10 h-10 rounded object-cover" />}
-                        <div>
-                          <div className="font-medium">{it.medication.name}</div>
-                          <div className="text-sm text-muted-foreground">{it.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                {(() => {
+                  if (!selectedDate) {
+                    return (
+                      <Card className="text-center py-8 animate-fade-in">
+                        <CardContent>
+                          <p className="text-muted-foreground">
+                            Select a date to see your schedule
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
+
+                  const dosesForDay = selectedDoses.map(item => ({
+                    medication: item.medication,
+                    schedule: item.schedule,
+                    nextDoseTime: item.time,
+                    status: "upcoming" as const,
+                    isTaken: item.status === "taken",
+                    isSkipped: item.status === "skipped",
+                    isSnoozed: item.status === "snoozed",
+                  }));
+
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const isPastDate = selectedDate < today;
+
+                  if (dosesForDay.length === 0) {
+                    return (
+                      <Card className="text-center py-8 animate-fade-in">
+                        <CardContent>
+                          <p className="text-muted-foreground">
+                            {isPastDate 
+                              ? "No medications were scheduled for this day"
+                              : "No medications scheduled for this day"
+                            }
+                          </p>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
+                  
+                  return (
+                    <div className="grid gap-3 sm:gap-4">
+                      {dosesForDay.map((dose, idx) => (
+                        <div 
+                          key={`${dose.schedule.id}-${idx}`}
+                          className="animate-slide-in-right"
+                          style={{ animationDelay: `${idx * 0.1}s` }}
+                        >
+                          <DoseCard
+                            dose={dose}
+                            isPastDate={isPastDate}
+                            onMarkTaken={markAsTaken}
+                            onMarkSkipped={markAsSkipped}
+                            onMarkSnoozed={markAsSnoozed}
+                            onEdit={handleEditMedication}
+                            onOpenDetails={(id) => navigate(`/medications/${id}`)}
+                          />
                         </div>
-                      </div>
-                      <Badge
-                        variant={it.status === 'taken' ? 'success' : it.status === 'snoozed' ? 'warning' : it.status === 'skipped' ? 'destructive' : 'secondary'}
-                        className="capitalize"
-                      >
-                        {it.status}
-                      </Badge>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  );
+                })()}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
-      <DayDetailsDialog
-        open={isDayDialogOpen}
-        onOpenChange={setIsDayDialogOpen}
-        date={selectedDay?.date || null}
-        logs={selectedDay?.logs || []}
-        medications={medications}
-      />
     </div>
   );
 };
