@@ -42,11 +42,15 @@ interface Schedule {
 
 type DoseStatus = "pending" | "taken" | "skipped" | "snoozed" | "missed";
 
-interface SelectedDoseItem {
+interface TodayDose {
   medication: Medication;
   schedule: Schedule;
-  time: Date;
-  status: DoseStatus;
+  nextDoseTime: Date;
+  status: "upcoming" | "due" | "overdue";
+  isTaken?: boolean;
+  isSkipped?: boolean;
+  isSnoozed?: boolean;
+  snoozeUntil?: Date;
 }
 
 interface CalendarDay {
@@ -67,7 +71,7 @@ const Calendar = () => {
   const [selectedMedication, setSelectedMedication] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedDoses, setSelectedDoses] = useState<SelectedDoseItem[]>([]);
+  const [selectedDoses, setSelectedDoses] = useState<TodayDose[]>([]);
   const [view, setView] = useState<"month" | "week">("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [adherenceStats, setAdherenceStats] = useState({
@@ -250,7 +254,7 @@ const Calendar = () => {
         .lte("scheduled_time", endOfDay.toISOString());
 
       const dayOfWeek = date.getDay();
-      const items: SelectedDoseItem[] = [];
+      const items: TodayDose[] = [];
       const toStatus = (v?: string): DoseStatus => {
         const allowed: DoseStatus[] = ["pending", "taken", "skipped", "snoozed", "missed"];
         return allowed.includes((v as DoseStatus)) ? (v as DoseStatus) : "pending";
@@ -275,10 +279,18 @@ const Calendar = () => {
         const t = new Date(date); t.setHours(h, m, 0, 0);
         const log = logsData?.find(l => l.schedule_id === s.id && new Date(l.scheduled_time).getHours() === h && new Date(l.scheduled_time).getMinutes() === m);
         const med = meds.find(mm => mm.id === s.medication_id)!;
-        items.push({ medication: med, schedule: s, time: t, status: toStatus(log?.status) });
+        items.push({ 
+          medication: med, 
+          schedule: s, 
+          nextDoseTime: t, 
+          status: "upcoming",
+          isTaken: toStatus(log?.status) === "taken",
+          isSkipped: toStatus(log?.status) === "skipped",
+          isSnoozed: toStatus(log?.status) === "snoozed"
+        });
       });
 
-      items.sort((a,b) => a.time.getTime() - b.time.getTime());
+      items.sort((a,b) => a.nextDoseTime.getTime() - b.nextDoseTime.getTime());
       setSelectedDoses(items);
     } catch (e) {
       console.error(e);
@@ -341,13 +353,13 @@ const Calendar = () => {
     computeDosesForDate(date);
   };
 
-  const markAsTaken = async (dose: any) => {
+  const markAsTaken = async (dose: TodayDose) => {
     try {
       const { error } = await supabase.from("dose_logs").insert([
         {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
-          scheduled_time: dose.time.toISOString(),
+          scheduled_time: dose.nextDoseTime.toISOString(),
           taken_at: new Date().toISOString(),
           status: "taken",
         },
@@ -362,13 +374,13 @@ const Calendar = () => {
     }
   };
 
-  const markAsSkipped = async (dose: any) => {
+  const markAsSkipped = async (dose: TodayDose) => {
     try {
       const { error } = await supabase.from("dose_logs").insert([
         {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
-          scheduled_time: dose.time.toISOString(),
+          scheduled_time: dose.nextDoseTime.toISOString(),
           status: "skipped",
         },
       ]);
@@ -382,15 +394,15 @@ const Calendar = () => {
     }
   };
 
-  const markAsSnoozed = async (dose: any, minutes: number) => {
+  const markAsSnoozed = async (dose: TodayDose, minutes: number) => {
     try {
-      const snoozeUntil = new Date(dose.time);
+      const snoozeUntil = new Date(dose.nextDoseTime);
       snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
       const { error } = await supabase.from("dose_logs").insert([
         {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
-          scheduled_time: dose.time.toISOString(),
+          scheduled_time: dose.nextDoseTime.toISOString(),
           status: "snoozed",
           snooze_until: snoozeUntil.toISOString(),
         },
@@ -533,15 +545,7 @@ const Calendar = () => {
                     );
                   }
 
-                  const dosesForDay = selectedDoses.map(item => ({
-                    medication: item.medication,
-                    schedule: item.schedule,
-                    nextDoseTime: item.time,
-                    status: "upcoming" as const,
-                    isTaken: item.status === "taken",
-                    isSkipped: item.status === "skipped",
-                    isSnoozed: item.status === "snoozed",
-                  }));
+                  const dosesForDay = selectedDoses;
 
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
