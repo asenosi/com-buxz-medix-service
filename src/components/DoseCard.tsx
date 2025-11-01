@@ -38,6 +38,7 @@ interface TodayDose {
 
 interface DoseCardProps {
   dose: TodayDose;
+  isPastDate?: boolean;
   onMarkTaken: (dose: TodayDose) => void;
   onMarkSkipped: (dose: TodayDose) => void;
   onMarkSnoozed: (dose: TodayDose, minutes: number) => void;
@@ -45,7 +46,7 @@ interface DoseCardProps {
   onOpenDetails: (medicationId: string) => void;
 }
 
-export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEdit, onOpenDetails }: DoseCardProps) => {
+export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEdit, onOpenDetails }: DoseCardProps) => {
   const [snoozeMinutes, setSnoozeMinutes] = useState("15");
   const [showSnoozeOptions, setShowSnoozeOptions] = useState(false);
   const isCompleted = dose.isTaken || dose.isSkipped || dose.isSnoozed;
@@ -166,7 +167,7 @@ export const DoseCard = ({ dose, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEd
             </span>
           )}
         </div>
-        {!isCompleted && (
+        {!isCompleted && !isPastDate && (
           <div className="space-y-2">
             <div className="grid grid-cols-3 gap-2">
               <Button
