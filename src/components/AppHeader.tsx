@@ -227,7 +227,10 @@ export default function AppHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72">
               <DropdownMenuLabel>
-                <div className="flex items-center gap-3">
+                <div 
+                  className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => navigate("/profile")}
+                >
                   <Avatar className="h-9 w-9">
                     {avatarUrl ? <AvatarImage src={avatarUrl} alt="avatar" /> : null}
                     <AvatarFallback>{initials}</AvatarFallback>
