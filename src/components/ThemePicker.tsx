@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Palette } from "lucide-react";
@@ -54,9 +55,15 @@ const ThemeCard = ({ themeId, title, colors, selected, onSelect }: {
 
 const ThemePicker = ({ trigger }: { trigger?: React.ReactNode }) => {
   const { palette, setPalette } = useTheme();
+  const [open, setOpen] = useState(false);
+
+  const handleSelect = (themeId: ThemeName) => {
+    setPalette(themeId);
+    setOpen(false);
+  };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? (
           <Button variant="outline" className="hover:scale-105 transition-transform" aria-label="Choose theme">
@@ -71,7 +78,7 @@ const ThemePicker = ({ trigger }: { trigger?: React.ReactNode }) => {
         <ScrollArea className="max-h-[60vh]">
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 pr-4">
             {themes.map(t => (
-              <ThemeCard key={t.id} themeId={t.id} title={t.title} colors={t.colors} selected={palette === t.id} onSelect={setPalette} />
+              <ThemeCard key={t.id} themeId={t.id} title={t.title} colors={t.colors} selected={palette === t.id} onSelect={handleSelect} />
             ))}
           </div>
         </ScrollArea>
