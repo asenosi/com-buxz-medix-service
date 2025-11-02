@@ -50,6 +50,32 @@ const FREQUENCY_CONFIG = {
 };
 
 /**
+ * Reminder object structure
+ */
+interface Reminder {
+  id: string;
+  medication_id: string;
+  medication_name: string;
+  dosage: string;
+  form: string | null;
+  schedule_id: string;
+  scheduled_time: string;
+  time_of_day: string;
+  with_food: boolean | null;
+  special_instructions: string | null;
+  status: string;
+  dose_status: string;
+  taken_at: string | null;
+  snooze_until: string | null;
+  notes: string | null;
+  grace_period_minutes: number;
+  reminder_window_minutes: number;
+  missed_dose_cutoff_minutes: number;
+  should_send_reminder: boolean;
+  frequency_type: string;
+}
+
+/**
  * Determines the dose status based on grace period rules
  * @param scheduledTime - When the dose was scheduled
  * @param takenAt - When the dose was actually taken (null if not taken)
@@ -163,7 +189,7 @@ serve(async (req) => {
     );
 
     // Generate reminders for each medication schedule
-    const reminders: any[] = [];
+    const reminders: Reminder[] = [];
 
     for (const medication of medications || []) {
       const config = FREQUENCY_CONFIG[medication.frequency_type as keyof typeof FREQUENCY_CONFIG] || {
