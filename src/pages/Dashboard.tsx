@@ -901,7 +901,7 @@ const Dashboard = () => {
 
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
-              <h2 className="text-2xl font-bold mb-4 sm:hidden text-primary">Today, {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</h2>
+              <h2 className="text-2xl font-bold mb-4 sm:hidden text-gray-600">Today, {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</h2>
               
               {loading ? (
                 <DoseItemSkeleton count={3} />
