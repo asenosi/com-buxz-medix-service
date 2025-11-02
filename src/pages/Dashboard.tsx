@@ -600,14 +600,27 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Welcome Message */}
         <div className="mb-6 animate-fade-in">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-            {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground">
-            {todayDoses.length > 0 
-              ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
-              : "Great job staying on top of your medications! Keep up the excellent work."}
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+                {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
+              </h2>
+              <p className="text-base sm:text-lg text-muted-foreground">
+                {todayDoses.length > 0 
+                  ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
+                  : "Great job staying on top of your medications! Keep up the excellent work."}
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowStats(s => !s)}
+              className="shrink-0"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              {showStats ? "Hide Stats" : "Show Stats"}
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters - Full Width */}
@@ -622,9 +635,6 @@ const Dashboard = () => {
                 className="pl-9 h-10 text-sm"
               />
             </div>
-            <Button variant="outline" className="h-10 px-3" onClick={() => setShowStats(s => !s)} title="Toggle Stats">
-              <BarChart3 className="w-4 h-4" />
-            </Button>
             <Button variant="outline" className="h-10 px-3" onClick={() => setShowFilters(s => !s)}>
               <SlidersHorizontal className="w-4 h-4" />
             </Button>
