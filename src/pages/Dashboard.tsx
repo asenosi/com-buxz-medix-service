@@ -729,29 +729,29 @@ const Dashboard = () => {
 
         {medications.length === 0 ? (
           /* Empty State */
-          <Card className="text-center py-12 sm:py-16 animate-fade-in relative">
-            <CardContent>
+          <Card className="text-center py-12 sm:py-16 animate-fade-in relative overflow-visible">
+            <CardContent className="pb-32 sm:pb-40">
               <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
               <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
-              <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 px-4 max-w-md mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground px-4 max-w-md mx-auto">
                 Start your health journey by adding your first medication. Track doses, set reminders, and never miss a dose again.
               </p>
               
               {/* Curved Arrow pointing to FAB */}
-              <div className="absolute bottom-8 right-8 sm:bottom-12 sm:right-12 flex items-start gap-3 pointer-events-none">
+              <div className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 flex items-start gap-3 pointer-events-none">
                 <div className="text-right animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                  <p className="text-base sm:text-lg font-semibold text-primary mb-1">
+                  <p className="text-sm sm:text-base font-semibold text-primary mb-1">
                     Tap here to get started! 👉
                   </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Add your first medication
                   </p>
                 </div>
                 <svg 
-                  width="100" 
-                  height="100" 
+                  width="80" 
+                  height="80" 
                   viewBox="0 0 100 100" 
-                  className="text-primary animate-bounce"
+                  className="text-primary animate-bounce flex-shrink-0"
                   style={{ animationDelay: '0.8s', animationDuration: '2s' }}
                 >
                   <defs>
