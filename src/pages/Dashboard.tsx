@@ -622,6 +622,9 @@ const Dashboard = () => {
                 className="pl-9 h-10 text-sm"
               />
             </div>
+            <Button variant="outline" className="h-10 px-3" onClick={() => setShowStats(s => !s)} title="Toggle Stats">
+              <BarChart3 className="w-4 h-4" />
+            </Button>
             <Button variant="outline" className="h-10 px-3" onClick={() => setShowFilters(s => !s)}>
               <SlidersHorizontal className="w-4 h-4" />
             </Button>
