@@ -901,7 +901,7 @@ const Dashboard = () => {
 
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
-              <h2 className="text-2xl font-bold mb-4 sm:hidden text-primary">Today, {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</h2>
+              <h2 className="text-2xl font-bold mb-4 sm:hidden text-gray-600">Today, {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</h2>
               
               {loading ? (
                 <DoseItemSkeleton count={3} />
@@ -920,8 +920,8 @@ const Dashboard = () => {
                     {Object.entries(groupDosesByTime(filteredDoses.length === 0 ? [] : filteredDoses)).map(([timeStr, doses], groupIdx) => (
                       <div key={timeStr} className="animate-fade-in" style={{ animationDelay: `${groupIdx * 0.1}s` }}>
                         <div className="flex items-center gap-2 mb-3">
-                          <Clock className="w-5 h-5 text-primary" />
-                          <h3 className="text-lg font-bold text-primary">{timeStr}</h3>
+                          <Clock className="w-5 h-5 text-gray-500" />
+                          <h3 className="text-lg font-bold text-gray-600">{timeStr}</h3>
                         </div>
                         <div className="space-y-2">
                           {doses.map((dose, idx) => (
