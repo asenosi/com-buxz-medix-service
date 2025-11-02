@@ -10,7 +10,8 @@ import AppLayout from "@/components/AppLayout";
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Medications = lazy(() => import("./pages/Medications"));
+const ManageMedications = lazy(() => import("./pages/ManageMedications"));
+const AddMedication = lazy(() => import("./pages/AddMedication"));
 const MedicationDetails = lazy(() => import("./pages/MedicationDetails"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const CalendarDay = lazy(() => import("./pages/CalendarDay"));
@@ -34,7 +35,8 @@ const App = () => (
 
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/medications" element={<Medications />} />
+              <Route path="/medications" element={<ManageMedications />} />
+              <Route path="/medications/add" element={<AddMedication />} />
               <Route path="/medications/:id" element={<MedicationDetails />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/calendar/day" element={<CalendarDay />} />

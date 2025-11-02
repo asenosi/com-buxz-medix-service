@@ -77,8 +77,8 @@ export default function DesktopSidebar() {
         </button>
         <button
           onClick={() => navigate("/medications")}
-          className={`${itemBase} ${isActive("/medications", true) ? itemActive : itemHover}`}
-          aria-current={isActive("/medications", true) ? "page" : undefined}
+          className={`${itemBase} ${isActive("/medications") ? itemActive : itemHover}`}
+          aria-current={isActive("/medications") ? "page" : undefined}
         >
           <Pill className="h-4 w-4" />
           <span className="text-sm font-medium">Medications</span>

@@ -557,7 +557,7 @@ const Dashboard = () => {
   };
 
   const handleEditMedication = (medicationId: string) => {
-    navigate(`/medications?edit=${medicationId}`);
+    navigate(`/medications/add?edit=${medicationId}`);
   };
 
   const handleDoseClick = (dose: TodayDose) => {
@@ -1018,7 +1018,7 @@ const Dashboard = () => {
           {
             label: "Add Medication",
             icon: <Pill className="h-6 w-6" />,
-            onClick: () => navigate("/medications"),
+            onClick: () => navigate("/medications/add"),
             color: "bg-primary hover:bg-primary/90",
           },
           {
@@ -1030,7 +1030,7 @@ const Dashboard = () => {
           {
             label: "Add Dose",
             icon: <Clock className="h-6 w-6" />,
-            onClick: () => navigate("/medications"),
+            onClick: () => navigate("/medications/add"),
             color: "bg-purple-500 hover:bg-purple-600",
           },
         ]}
