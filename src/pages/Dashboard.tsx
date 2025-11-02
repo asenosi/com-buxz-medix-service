@@ -81,6 +81,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
   const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
+  const [userName, setUserName] = useState<string>("");
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -104,6 +105,14 @@ const Dashboard = () => {
       case 'pink': return 'border-l-pink-500';
       default: return 'border-l-primary';
     }
+  }, []);
+
+  const getTimeGreeting = useCallback(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    if (hour < 21) return "Good evening";
+    return "Good evening";
   }, []);
 
   // Search & Filters for Today's Schedule
@@ -361,6 +370,23 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         fetchMedications();
+        // Fetch user profile
+        const fetchProfile = async () => {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("user_id", currentSession.user.id)
+              .single();
+            
+            if (profile?.full_name) {
+              setUserName(profile.full_name.split(" ")[0]);
+            }
+          } catch (error) {
+            console.error("Failed to fetch profile:", error);
+          }
+        };
+        fetchProfile();
       }
 
       return () => subscription.unsubscribe();
@@ -628,7 +654,7 @@ const Dashboard = () => {
         <Card className="mb-6 animate-fade-in bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/20">
           <CardContent className="py-4 sm:py-6">
             <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
-              Welcome back! 👋
+              {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground">
               {todayDoses.length > 0 
