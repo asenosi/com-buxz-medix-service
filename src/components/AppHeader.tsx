@@ -193,8 +193,7 @@ export default function AppHeader() {
         </Sheet>
 
         <div className="flex min-w-0 items-center gap-2">
-          <Pill className="h-5 w-5 text-primary" />
-          <div className="truncate text-sm font-semibold">{brand.name}</div>
+          {/* Brand removed */}
         </div>
 
         <div className="ml-auto flex items-center gap-1">
