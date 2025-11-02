@@ -17,20 +17,20 @@ const routeOptions = [
 export const Step3Route = ({ route, setRoute }: Step3RouteProps) => {
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">How do you take it?</h2>
-          <p className="text-muted-foreground">Select the route of administration</p>
+      <CardContent className="pt-4 space-y-3">
+        <div className="text-center mb-3">
+          <h2 className="text-xl font-bold mb-1">How do you take it?</h2>
+          <p className="text-sm text-muted-foreground">Select the route of administration</p>
         </div>
         
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 gap-2">
           {routeOptions.map((option) => (
             <Button
               key={option.value}
               type="button"
               variant={route === option.value ? "default" : "outline"}
               onClick={() => setRoute(option.value)}
-              className="h-16 text-lg"
+              className="h-12 text-base"
             >
               {option.label}
             </Button>

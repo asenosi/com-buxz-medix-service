@@ -25,13 +25,13 @@ const formOptions = [
 export const Step2Form = ({ form, setForm }: Step2FormProps) => {
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">What form is the medication?</h2>
-          <p className="text-muted-foreground">Select the medication type</p>
+      <CardContent className="pt-4 space-y-3">
+        <div className="text-center mb-3">
+          <h2 className="text-xl font-bold mb-1">What form is the medication?</h2>
+          <p className="text-sm text-muted-foreground">Select the medication type</p>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
           {formOptions.map((option) => {
             const Icon = option.icon;
             return (
@@ -40,10 +40,10 @@ export const Step2Form = ({ form, setForm }: Step2FormProps) => {
                 type="button"
                 variant={form === option.value ? "default" : "outline"}
                 onClick={() => setForm(option.value)}
-                className="h-24 flex flex-col gap-2"
+                className="h-16 flex flex-col gap-1 text-sm"
               >
-                <Icon className="w-6 h-6" />
-                <span>{option.label}</span>
+                <Icon className="w-5 h-5" />
+                <span className="text-xs">{option.label}</span>
               </Button>
             );
           })}
