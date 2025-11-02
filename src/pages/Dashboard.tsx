@@ -633,13 +633,12 @@ const Dashboard = () => {
                 className="pl-9 h-10 text-sm"
               />
             </div>
-            <Button variant="outline" size="sm" className="h-10 px-3" onClick={() => setShowFilters(s => !s)}>
+            <Button variant="outline" className="h-10 px-3" onClick={() => setShowFilters(s => !s)}>
               <SlidersHorizontal className="w-4 h-4" />
             </Button>
             {(searchText || statusFilter !== "all" || timeBucket !== "all" || withFood !== "any" || sortOpt !== "timeAsc") && (
               <Button
                 variant="ghost"
-                size="sm"
                 className="h-10 px-3"
                 onClick={() => { setSearchText(""); setStatusFilter("all"); setTimeBucket("all"); setWithFood("any"); setSortOpt("timeAsc"); setShowFilters(false); }}
               >
