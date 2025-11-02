@@ -738,38 +738,47 @@ const Dashboard = () => {
               </p>
               
               {/* Curved Arrow pointing to FAB */}
-              <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 flex items-end gap-2 animate-pulse">
-                <div className="text-right">
-                  <p className="text-sm sm:text-base font-medium text-primary mb-1">Tap here to get started!</p>
-                  <p className="text-xs text-muted-foreground hidden sm:block">Add your first medication</p>
+              <div className="absolute bottom-8 right-8 sm:bottom-12 sm:right-12 flex items-start gap-3 pointer-events-none">
+                <div className="text-right animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                  <p className="text-base sm:text-lg font-semibold text-primary mb-1">
+                    Tap here to get started! 👉
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Add your first medication
+                  </p>
                 </div>
                 <svg 
-                  width="80" 
-                  height="80" 
-                  viewBox="0 0 80 80" 
-                  className="text-primary"
-                  style={{ transform: 'scaleX(-1)' }}
+                  width="100" 
+                  height="100" 
+                  viewBox="0 0 100 100" 
+                  className="text-primary animate-bounce"
+                  style={{ animationDelay: '0.8s', animationDuration: '2s' }}
                 >
+                  <defs>
+                    <marker
+                      id="arrowhead"
+                      markerWidth="8"
+                      markerHeight="8"
+                      refX="7"
+                      refY="4"
+                      orient="auto"
+                      markerUnits="strokeWidth"
+                    >
+                      <path
+                        d="M 0 0 L 8 4 L 0 8 Z"
+                        fill="currentColor"
+                      />
+                    </marker>
+                  </defs>
                   <path
-                    d="M 10 10 Q 40 10, 60 40 T 70 70"
+                    d="M 20 15 Q 45 20, 60 45 Q 70 65, 80 85"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="3"
                     strokeLinecap="round"
+                    strokeDasharray="4 4"
                     markerEnd="url(#arrowhead)"
                   />
-                  <defs>
-                    <marker
-                      id="arrowhead"
-                      markerWidth="10"
-                      markerHeight="10"
-                      refX="9"
-                      refY="3"
-                      orient="auto"
-                    >
-                      <polygon points="0 0, 10 3, 0 6" fill="currentColor" />
-                    </marker>
-                  </defs>
                 </svg>
               </div>
             </CardContent>
