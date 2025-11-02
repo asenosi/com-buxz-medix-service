@@ -600,27 +600,14 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Welcome Message */}
         <div className="mb-6 animate-fade-in">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-                {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground">
-                {todayDoses.length > 0 
-                  ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
-                  : "Great job staying on top of your medications! Keep up the excellent work."}
-              </p>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowStats(s => !s)}
-              className="shrink-0"
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              {showStats ? "Hide Stats" : "Show Stats"}
-            </Button>
-          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+            {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground">
+            {todayDoses.length > 0 
+              ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
+              : "Great job staying on top of your medications! Keep up the excellent work."}
+          </p>
         </div>
 
         {/* Search and Filters - Full Width */}
@@ -695,24 +682,38 @@ const Dashboard = () => {
           )}
         </div>
 
-        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="mb-6">
-          <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2 bg-muted">
-            <TabsTrigger 
-              value="list" 
-              className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-            >
-              <List className="w-4 h-4 sm:w-5 sm:h-5" />
-              List View
-            </TabsTrigger>
-            <TabsTrigger 
-              value="calendar" 
-              className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-            >
-              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-              Calendar View
-            </TabsTrigger>
-          </TabsList>
+        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="flex-1">
+            <TabsList className="grid h-auto w-full max-w-md grid-cols-2 bg-muted">
+              <TabsTrigger 
+                value="list" 
+                className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+              >
+                <List className="w-4 h-4 sm:w-5 sm:h-5" />
+                List View
+              </TabsTrigger>
+              <TabsTrigger 
+                value="calendar" 
+                className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+              >
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                Calendar View
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowStats(s => !s)}
+            className="shrink-0 w-full sm:w-auto"
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            {showStats ? "Hide Stats" : "Show Stats"}
+          </Button>
+        </div>
 
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
           <TabsContent value="calendar">
             <div className="animate-fade-in">
               <div className="mb-4">
