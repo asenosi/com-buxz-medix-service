@@ -24,6 +24,8 @@ interface DoseActionDialogProps {
   scheduledTime: Date;
   dosage: string;
   lastTaken?: Date;
+  gracePeriodMinutes?: number;
+  missedDoseCutoffMinutes?: number;
   onTake: () => void;
   onSkip: () => void;
   onReschedule: () => void;
@@ -40,6 +42,8 @@ export const DoseActionDialog = ({
   scheduledTime,
   dosage,
   lastTaken,
+  gracePeriodMinutes = 60,
+  missedDoseCutoffMinutes = 180,
   onTake,
   onSkip,
   onReschedule,
@@ -47,6 +51,12 @@ export const DoseActionDialog = ({
   onDelete,
   onInfo,
 }: DoseActionDialogProps) => {
+  // Calculate time difference and dose status
+  const now = new Date();
+  const minutesLate = Math.floor((now.getTime() - scheduledTime.getTime()) / (60 * 1000));
+  const isLate = minutesLate > gracePeriodMinutes;
+  const isTooLate = minutesLate > missedDoseCutoffMinutes;
+  const isEarly = minutesLate < 0;
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
     const f = form.toLowerCase();
@@ -96,6 +106,50 @@ export const DoseActionDialog = ({
                 Scheduled for {scheduledTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}, today
               </span>
             </div>
+            
+            {/* Grace Period Warning */}
+            {isTooLate && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">⚠️</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-destructive">Critical: Dose Window Exceeded</p>
+                    <p className="text-xs text-destructive/80 mt-1">
+                      This dose is {minutesLate} minutes late (cutoff: {missedDoseCutoffMinutes} min). Taking now will be logged as MISSED.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {isLate && !isTooLate && (
+              <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">⏰</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-warning">Outside Grace Period</p>
+                    <p className="text-xs text-warning/80 mt-1">
+                      This dose is {minutesLate} minutes late (grace: {gracePeriodMinutes} min). Taking now will be logged as LATE.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isEarly && Math.abs(minutesLate) > 30 && (
+              <div className="p-3 rounded-lg bg-info/10 border border-info/30">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">ℹ️</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-info">Taking Early</p>
+                    <p className="text-xs text-info/80 mt-1">
+                      Scheduled time is in {Math.abs(minutesLate)} minutes. Consider waiting for optimal timing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="flex items-center gap-2 text-muted-foreground">
               <span className="text-lg">💊</span>
               <span>{dosage}</span>
@@ -138,12 +192,29 @@ export const DoseActionDialog = ({
               onTake();
               onOpenChange(false);
             }}
-            className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-primary/10 hover:bg-primary/20 transition-colors"
+            className={cn(
+              "flex flex-col items-center gap-2 p-4 rounded-2xl transition-colors",
+              isTooLate && "bg-destructive/10 hover:bg-destructive/20",
+              isLate && !isTooLate && "bg-warning/10 hover:bg-warning/20",
+              !isLate && !isTooLate && "bg-primary/10 hover:bg-primary/20"
+            )}
           >
-            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center">
+            <div className={cn(
+              "w-14 h-14 rounded-full flex items-center justify-center",
+              isTooLate && "bg-destructive",
+              isLate && !isTooLate && "bg-warning",
+              !isLate && !isTooLate && "bg-primary"
+            )}>
               <Check className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-sm font-medium text-primary">TAKE</span>
+            <span className={cn(
+              "text-sm font-medium",
+              isTooLate && "text-destructive",
+              isLate && !isTooLate && "text-warning",
+              !isLate && !isTooLate && "text-primary"
+            )}>
+              {isTooLate ? "TAKE (MISSED)" : isLate ? "TAKE (LATE)" : "TAKE"}
+            </span>
           </button>
 
           <button
