@@ -28,28 +28,28 @@ export function StreakCard({ streak, className, onClick }: StreakCardProps) {
   return (
     <Card 
       className={cn(
-        "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20",
+        "bg-card border-border",
         onClick && "cursor-pointer hover:border-primary/40 transition-colors",
         className
       )}
       onClick={onClick}
     >
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-muted-foreground mb-1">
+      <div className="p-3 flex items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-muted-foreground truncate">
             {getMessage()}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-background rounded-full px-4 py-2 border border-border">
-            <Flame className="h-5 w-5 text-orange-500" />
-            <div className="text-center">
-              <div className="text-2xl font-bold">{streak}</div>
-              <div className="text-xs text-muted-foreground">day streak</div>
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 bg-primary/10 rounded-lg px-3 py-1.5">
+            <Flame className="h-4 w-4 text-orange-500" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-bold">{streak}</span>
+              <span className="text-xs text-muted-foreground">day streak</span>
             </div>
           </div>
           {onClick && (
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
       </div>

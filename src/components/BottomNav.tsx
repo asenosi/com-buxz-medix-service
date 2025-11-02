@@ -22,7 +22,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-area-inset-bottom">
-      <div className="flex items-center justify-around h-16 max-w-screen-2xl mx-auto px-4">
+      <div className="grid grid-cols-4 h-16 max-w-screen-2xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -32,7 +32,7 @@ export default function BottomNav() {
               key={item.path}
               onClick={() => handleNavigation(item.path)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 min-w-[60px] min-h-[44px] transition-colors",
+                "flex flex-col items-center justify-center gap-1 min-h-[44px] transition-colors",
                 "active:scale-95 touch-manipulation",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
