@@ -605,121 +605,150 @@ const Dashboard = () => {
             {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground">
-            {todayDoses.length > 0 
-              ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
-              : "Great job staying on top of your medications! Keep up the excellent work."}
+            {medications.length === 0 
+              ? "Welcome to your medication tracker! Let's get started by adding your first medication."
+              : todayDoses.length > 0 
+                ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
+                : "Great job staying on top of your medications! Keep up the excellent work."}
           </p>
         </div>
 
-        {/* Streak Card */}
-        <div className="mb-6 animate-fade-in">
-          <StreakCard streak={streak} onClick={() => setShowStats(true)} />
-        </div>
+        {/* Streak Card - Only show if there are medications */}
+        {medications.length > 0 && (
+          <div className="mb-6 animate-fade-in">
+            <StreakCard streak={streak} onClick={() => setShowStats(true)} />
+          </div>
+        )}
 
-        {/* Search and Filters - Full Width */}
-        <div className="mb-4 space-y-3">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search doses"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                className="pl-9 h-10 text-sm"
-              />
-            </div>
-            <Button variant="outline" className="h-10 px-3" onClick={() => setShowFilters(s => !s)}>
-              <SlidersHorizontal className="w-4 h-4" />
-            </Button>
-            {(searchText || statusFilter !== "all" || timeBucket !== "all" || withFood !== "any" || sortOpt !== "timeAsc") && (
-              <Button
-                variant="ghost"
-                className="h-10 px-3"
-                onClick={() => { setSearchText(""); setStatusFilter("all"); setTimeBucket("all"); setWithFood("any"); setSortOpt("timeAsc"); setShowFilters(false); }}
-              >
-                <X className="w-4 h-4" />
+        {/* Search and Filters - Only show if there are medications */}
+        {medications.length > 0 && (
+          <div className="mb-4 space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search doses"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-9 h-10 text-sm"
+                />
+              </div>
+              <Button variant="outline" className="h-10 px-3" onClick={() => setShowFilters(s => !s)}>
+                <SlidersHorizontal className="w-4 h-4" />
               </Button>
+              {(searchText || statusFilter !== "all" || timeBucket !== "all" || withFood !== "any" || sortOpt !== "timeAsc") && (
+                <Button
+                  variant="ghost"
+                  className="h-10 px-3"
+                  onClick={() => { setSearchText(""); setStatusFilter("all"); setTimeBucket("all"); setWithFood("any"); setSortOpt("timeAsc"); setShowFilters(false); }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {showFilters && (
+              <Card>
+                <CardContent className="pt-4 pb-3">
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
+                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All statuses</SelectItem>
+                        <SelectItem value="upcoming">Upcoming</SelectItem>
+                        <SelectItem value="due">Due</SelectItem>
+                        <SelectItem value="overdue">Overdue</SelectItem>
+                        <SelectItem value="taken">Taken</SelectItem>
+                        <SelectItem value="snoozed">Snoozed</SelectItem>
+                        <SelectItem value="skipped">Skipped</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={timeBucket} onValueChange={(v: TimeBucket) => setTimeBucket(v)}>
+                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Time of day" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Any time</SelectItem>
+                        <SelectItem value="morning">Morning (5–11)</SelectItem>
+                        <SelectItem value="afternoon">Afternoon (11–17)</SelectItem>
+                        <SelectItem value="evening">Evening (17–21)</SelectItem>
+                        <SelectItem value="night">Night (21–5)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={withFood} onValueChange={(v: WithFood) => setWithFood(v)}>
+                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="With food" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="any">With or without</SelectItem>
+                        <SelectItem value="yes">With food</SelectItem>
+                        <SelectItem value="no">Without food</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={sortOpt} onValueChange={(v: SortOpt) => setSortOpt(v)}>
+                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Sort" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="timeAsc">Time ↑</SelectItem>
+                        <SelectItem value="timeDesc">Time ↓</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
-          {showFilters && (
-            <Card>
-              <CardContent className="pt-4 pb-3">
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                  <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All statuses</SelectItem>
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                      <SelectItem value="due">Due</SelectItem>
-                      <SelectItem value="overdue">Overdue</SelectItem>
-                      <SelectItem value="taken">Taken</SelectItem>
-                      <SelectItem value="snoozed">Snoozed</SelectItem>
-                      <SelectItem value="skipped">Skipped</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={timeBucket} onValueChange={(v: TimeBucket) => setTimeBucket(v)}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Time of day" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Any time</SelectItem>
-                      <SelectItem value="morning">Morning (5–11)</SelectItem>
-                      <SelectItem value="afternoon">Afternoon (11–17)</SelectItem>
-                      <SelectItem value="evening">Evening (17–21)</SelectItem>
-                      <SelectItem value="night">Night (21–5)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={withFood} onValueChange={(v: WithFood) => setWithFood(v)}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="With food" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">With or without</SelectItem>
-                      <SelectItem value="yes">With food</SelectItem>
-                      <SelectItem value="no">Without food</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={sortOpt} onValueChange={(v: SortOpt) => setSortOpt(v)}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Sort" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="timeAsc">Time ↑</SelectItem>
-                      <SelectItem value="timeDesc">Time ↓</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        )}
 
-        <div className="mb-6">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
-            <TabsList className="grid h-auto w-full max-w-3xl mx-auto grid-cols-3 bg-muted">
-              <TabsTrigger 
-                value="list" 
-                className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-              >
-                <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                List
-              </TabsTrigger>
-              <TabsTrigger 
-                value="calendar" 
-                className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-              >
-                <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-                Calendar
-              </TabsTrigger>
+        {/* Tabs - Only show if there are medications */}
+        {medications.length > 0 && (
+          <div className="mb-6">
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
+              <TabsList className="grid h-auto w-full max-w-3xl mx-auto grid-cols-3 bg-muted">
+                <TabsTrigger 
+                  value="list" 
+                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <List className="w-4 h-4 sm:w-5 sm:h-5" />
+                  List
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="calendar" 
+                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Calendar
+                </TabsTrigger>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowStats(s => !s)}
+                  className="h-auto min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Stats
+                </Button>
+              </TabsList>
+            </Tabs>
+          </div>
+        )}
+
+        {medications.length === 0 ? (
+          /* Empty State */
+          <Card className="text-center py-12 sm:py-16 animate-fade-in">
+            <CardContent>
+              <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
+              <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
+              <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 px-4 max-w-md mx-auto">
+                Start your health journey by adding your first medication. Track doses, set reminders, and never miss a dose again.
+              </p>
               <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowStats(s => !s)}
-                className="h-auto min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+                size="lg" 
+                onClick={() => navigate("/medications")}
+                className="gap-2"
               >
-                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-                Stats
+                <Pill className="w-5 h-5" />
+                Add Your First Medication
               </Button>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
-          <TabsContent value="calendar">
+            </CardContent>
+          </Card>
+        ) : (
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
+            <TabsContent value="calendar">
             <div className="animate-fade-in">
               <div className="mb-4">
                 <Tabs value={calendarViewType} onValueChange={(v) => setCalendarViewType(v as "week" | "month")} className="w-full">
@@ -943,6 +972,7 @@ const Dashboard = () => {
             )}
           </TabsContent>
         </Tabs>
+        )}
       </main>
 
       {/* Floating Action Button */}
