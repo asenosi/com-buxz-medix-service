@@ -682,34 +682,36 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="flex-1">
-            <TabsList className="grid h-auto w-full max-w-2xl mx-auto grid-cols-2 bg-muted">
-              <TabsTrigger 
-                value="list" 
-                className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-              >
-                <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                List
-              </TabsTrigger>
-              <TabsTrigger 
-                value="calendar" 
-                className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-              >
-                <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-                Calendar
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Button 
-            variant={showStats ? "secondary" : "outline"}
-            size="default"
-            onClick={() => setShowStats(s => !s)}
-            className="flex items-center gap-2"
-          >
-            <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Stats</span>
-          </Button>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 w-full max-w-3xl mx-auto p-1 bg-muted rounded-lg">
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="flex-1">
+              <TabsList className="grid h-auto w-full grid-cols-2 bg-transparent p-0 gap-1">
+                <TabsTrigger 
+                  value="list" 
+                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <List className="w-4 h-4 sm:w-5 sm:h-5" />
+                  List
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="calendar" 
+                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Calendar
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button 
+              variant={showStats ? "secondary" : "ghost"}
+              size="default"
+              onClick={() => setShowStats(s => !s)}
+              className="flex items-center gap-2 min-w-0 whitespace-normal break-words text-sm sm:text-base"
+            >
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Stats</span>
+            </Button>
+          </div>
         </div>
 
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
