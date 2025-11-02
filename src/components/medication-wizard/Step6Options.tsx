@@ -85,6 +85,7 @@ export const Step6Options = ({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
                 className="h-12"
               />
             </div>
