@@ -15,6 +15,9 @@ interface Medication {
   pills_remaining: number | null;
   image_url: string | null;
   images?: string[];
+  grace_period_minutes?: number | null;
+  reminder_window_minutes?: number | null;
+  missed_dose_cutoff_minutes?: number | null;
 }
 
 interface Schedule {
@@ -53,6 +56,15 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
   const showCountdown = !isCompleted && dose.status === "upcoming";
   const countdown = useCountdown(showCountdown ? dose.nextDoseTime : null);
   const snoozeCountdown = useCountdown(dose.isSnoozed && dose.snoozeUntil ? dose.snoozeUntil : null);
+  
+  // Calculate grace period status
+  const now = new Date();
+  const minutesLate = Math.floor((now.getTime() - dose.nextDoseTime.getTime()) / (60 * 1000));
+  const gracePeriodMinutes = dose.medication.grace_period_minutes || 60;
+  const missedDoseCutoffMinutes = dose.medication.missed_dose_cutoff_minutes || 180;
+  const isLate = minutesLate > gracePeriodMinutes && minutesLate <= missedDoseCutoffMinutes;
+  const isTooLate = minutesLate > missedDoseCutoffMinutes;
+  
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
     const f = form.toLowerCase();
@@ -106,12 +118,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <CardTitle className="text-base truncate">{dose.medication.name}</CardTitle>
-              <Badge variant="warning" className="rounded-full text-[10px] px-1.5 py-0">
-                {dose.status === 'overdue' ? 'Overdue' : dose.status === 'due' ? 'Due' : 'Active'}
-              </Badge>
-            </div>
+            <CardTitle className="text-base truncate">{dose.medication.name}</CardTitle>
             <CardDescription className="text-sm mt-0.5">
               {dose.medication.dosage}
               {dose.medication.form && ` • ${dose.medication.form}`}

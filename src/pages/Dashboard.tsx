@@ -38,6 +38,9 @@ interface Medication {
   instructions?: string | null;
   medication_color?: string | null;
   medication_icon?: string | null;
+  grace_period_minutes?: number | null;
+  reminder_window_minutes?: number | null;
+  missed_dose_cutoff_minutes?: number | null;
 }
 
 interface Schedule {
@@ -970,6 +973,8 @@ const Dashboard = () => {
           schedule={selectedDose.schedule}
           scheduledTime={selectedDose.nextDoseTime}
           dosage={selectedDose.medication.dosage}
+          gracePeriodMinutes={selectedDose.medication.grace_period_minutes || 60}
+          missedDoseCutoffMinutes={selectedDose.medication.missed_dose_cutoff_minutes || 180}
           onTake={() => markAsTaken(selectedDose)}
           onSkip={() => markAsSkipped(selectedDose)}
           onReschedule={() => {

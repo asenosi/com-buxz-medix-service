@@ -41,10 +41,12 @@ export type Database = {
       dose_logs: {
         Row: {
           created_at: string
+          dose_status: string | null
           id: string
           medication_id: string
           notes: string | null
           schedule_id: string
+          scheduled_for: string | null
           scheduled_time: string
           snooze_until: string | null
           status: string
@@ -52,10 +54,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dose_status?: string | null
           id?: string
           medication_id: string
           notes?: string | null
           schedule_id: string
+          scheduled_for?: string | null
           scheduled_time: string
           snooze_until?: string | null
           status?: string
@@ -63,10 +67,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dose_status?: string | null
           id?: string
           medication_id?: string
           notes?: string | null
           schedule_id?: string
+          scheduled_for?: string | null
           scheduled_time?: string
           snooze_until?: string | null
           status?: string
@@ -94,6 +100,7 @@ export type Database = {
           active: boolean | null
           created_at: string
           days_of_week: number[] | null
+          frequency_type: string | null
           id: string
           medication_id: string
           special_instructions: string | null
@@ -104,6 +111,7 @@ export type Database = {
           active?: boolean | null
           created_at?: string
           days_of_week?: number[] | null
+          frequency_type?: string | null
           id?: string
           medication_id: string
           special_instructions?: string | null
@@ -114,6 +122,7 @@ export type Database = {
           active?: boolean | null
           created_at?: string
           days_of_week?: number[] | null
+          frequency_type?: string | null
           id?: string
           medication_id?: string
           special_instructions?: string | null
@@ -137,17 +146,21 @@ export type Database = {
           dosage: string
           end_date: string | null
           form: string | null
+          frequency_type: string | null
+          grace_period_minutes: number | null
           id: string
           image_url: string | null
           instructions: string | null
           medication_color: string | null
           medication_icon: string | null
+          missed_dose_cutoff_minutes: number | null
           name: string
           pills_remaining: number | null
           prescribing_doctor: string | null
           reason_for_taking: string | null
           refill_reminder_threshold: number | null
           refills_remaining: number | null
+          reminder_window_minutes: number | null
           route_of_administration: string | null
           start_date: string | null
           total_pills: number | null
@@ -162,17 +175,21 @@ export type Database = {
           dosage: string
           end_date?: string | null
           form?: string | null
+          frequency_type?: string | null
+          grace_period_minutes?: number | null
           id?: string
           image_url?: string | null
           instructions?: string | null
           medication_color?: string | null
           medication_icon?: string | null
+          missed_dose_cutoff_minutes?: number | null
           name: string
           pills_remaining?: number | null
           prescribing_doctor?: string | null
           reason_for_taking?: string | null
           refill_reminder_threshold?: number | null
           refills_remaining?: number | null
+          reminder_window_minutes?: number | null
           route_of_administration?: string | null
           start_date?: string | null
           total_pills?: number | null
@@ -187,17 +204,21 @@ export type Database = {
           dosage?: string
           end_date?: string | null
           form?: string | null
+          frequency_type?: string | null
+          grace_period_minutes?: number | null
           id?: string
           image_url?: string | null
           instructions?: string | null
           medication_color?: string | null
           medication_icon?: string | null
+          missed_dose_cutoff_minutes?: number | null
           name?: string
           pills_remaining?: number | null
           prescribing_doctor?: string | null
           reason_for_taking?: string | null
           refill_reminder_threshold?: number | null
           refills_remaining?: number | null
+          reminder_window_minutes?: number | null
           route_of_administration?: string | null
           start_date?: string | null
           total_pills?: number | null
@@ -210,6 +231,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           date_of_birth: string | null
           full_name: string | null
@@ -220,6 +242,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           date_of_birth?: string | null
           full_name?: string | null
@@ -230,6 +253,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           date_of_birth?: string | null
           full_name?: string | null
