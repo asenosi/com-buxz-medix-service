@@ -1,7 +1,9 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, Check, Clock as ClockIcon, Trash2, Edit, Info } from "lucide-react";
+import { X, Check, Clock as ClockIcon, Trash2, Edit, Info, Pill, Utensils, Stethoscope, Syringe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface Medication {
   id: string;
@@ -9,11 +11,19 @@ interface Medication {
   form: string | null;
   image_url: string | null;
   images?: string[];
+  pills_remaining: number | null;
+  reason_for_taking?: string | null;
+  prescribing_doctor?: string | null;
+  route_of_administration?: string | null;
+  grace_period_minutes?: number | null;
+  reminder_window_minutes?: number | null;
+  missed_dose_cutoff_minutes?: number | null;
 }
 
 interface Schedule {
   time_of_day: string;
   special_instructions: string | null;
+  with_food: boolean;
 }
 
 interface DoseActionDialogProps {
@@ -74,165 +84,252 @@ export const DoseActionDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 gap-0 bg-card/95 backdrop-blur-sm border-2">
-        {/* Header Actions */}
-        <div className="flex items-center justify-between p-4 border-b bg-muted/30">
-          <Button size="icon" variant="ghost" onClick={onInfo} className="rounded-full hover:bg-primary/10">
-            <Info className="h-5 w-5" />
-          </Button>
-          <div className="flex gap-2">
-            <Button size="icon" variant="ghost" onClick={onDelete} className="rounded-full text-destructive hover:bg-destructive/10">
-              <Trash2 className="h-5 w-5" />
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-0 gap-0">
+        {/* Header */}
+        <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
+          <div className="flex items-center justify-between p-3">
+            <Button size="sm" variant="ghost" onClick={onInfo} className="h-8 px-2">
+              <Info className="h-4 w-4 mr-1" />
+              <span className="text-xs">Details</span>
             </Button>
-            <Button size="icon" variant="ghost" onClick={onEdit} className="rounded-full hover:bg-primary/10">
-              <Edit className="h-5 w-5" />
-            </Button>
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" onClick={onEdit} className="h-8 px-2">
+                <Edit className="h-4 w-4 mr-1" />
+                <span className="text-xs">Edit</span>
+              </Button>
+              <Button size="sm" variant="ghost" onClick={onDelete} className="h-8 px-2 text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Medication Info */}
-        <div className="flex flex-col items-center p-6 space-y-5">
-          {primaryImage && (
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-lg animate-scale-in">
-              <img src={primaryImage} alt={medication.name} className="w-16 h-16 object-contain" />
+        <div className="p-4 space-y-4">
+          {/* Image and Name */}
+          <div className="flex flex-col items-center gap-3">
+            {primaryImage && (
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center shadow-md">
+                <img src={primaryImage} alt={medication.name} className="w-14 h-14 object-contain" />
+              </div>
+            )}
+            <div className="text-center">
+              <h2 className="text-xl font-bold">{medication.name}</h2>
+              <p className="text-sm text-muted-foreground">{dosage}</p>
+            </div>
+          </div>
+
+          {/* Status Banner */}
+          {isTooLate && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-destructive text-sm">Dose Window Exceeded</p>
+                  <p className="text-xs text-destructive/80">
+                    {minutesLate} min late • Logged as MISSED
+                  </p>
+                </div>
+              </div>
             </div>
           )}
-          <h2 className="text-2xl font-bold text-center leading-tight">{medication.name}</h2>
+          
+          {isLate && !isTooLate && (
+            <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏰</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-warning-foreground text-sm">Outside Grace Period</p>
+                  <p className="text-xs text-warning-foreground/80">
+                    {minutesLate} min late • Logged as LATE
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
-          <div className="w-full space-y-3">
-            {/* Status Warnings - Most Important First */}
-            {isTooLate && (
-              <div className="p-4 rounded-xl bg-destructive/15 border-2 border-destructive/40 animate-fade-in">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">⚠️</span>
-                  <div className="flex-1 space-y-1">
-                    <p className="font-bold text-destructive text-base">Dose Window Exceeded</p>
-                    <p className="text-sm text-destructive/90">
-                      {minutesLate} min late • Will be logged as <strong>MISSED</strong>
-                    </p>
-                  </div>
+          {isEarly && Math.abs(minutesLate) > 30 && (
+            <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">ℹ️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-primary text-sm">Taking Early</p>
+                  <p className="text-xs text-primary/80">
+                    Scheduled in {Math.abs(minutesLate)} min
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Info Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-2 rounded-lg bg-muted/50 flex items-center gap-2">
+              <ClockIcon className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-xs text-muted-foreground">Scheduled</p>
+                <p className="text-sm font-medium">{scheduledTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+              </div>
+            </div>
+
+            {medication.form && (
+              <div className="p-2 rounded-lg bg-muted/50 flex items-center gap-2">
+                <Pill className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Form</p>
+                  <p className="text-sm font-medium">{medication.form}</p>
                 </div>
               </div>
             )}
+
+            {medication.pills_remaining !== null && (
+              <div className="p-2 rounded-lg bg-muted/50 flex items-center gap-2">
+                <span className="text-lg">💊</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <p className="text-sm font-medium">{medication.pills_remaining} pills</p>
+                </div>
+              </div>
+            )}
+
+            {schedule.with_food && (
+              <div className="p-2 rounded-lg bg-muted/50 flex items-center gap-2">
+                <Utensils className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Take with</p>
+                  <p className="text-sm font-medium">Food</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Detailed Information */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-muted-foreground">Details</h3>
             
-            {isLate && !isTooLate && (
-              <div className="p-4 rounded-xl bg-warning/15 border-2 border-warning/40 animate-fade-in">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">⏰</span>
-                  <div className="flex-1 space-y-1">
-                    <p className="font-bold text-warning-foreground text-base">Outside Grace Period</p>
-                    <p className="text-sm text-warning-foreground/80">
-                      {minutesLate} min late • Will be logged as <strong>LATE</strong>
-                    </p>
-                  </div>
+            {medication.reason_for_taking && (
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-accent/5">
+                <Stethoscope className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Reason</p>
+                  <p className="text-sm">{medication.reason_for_taking}</p>
                 </div>
               </div>
             )}
 
-            {isEarly && Math.abs(minutesLate) > 30 && (
-              <div className="p-4 rounded-xl bg-primary/10 border-2 border-primary/30 animate-fade-in">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">ℹ️</span>
-                  <div className="flex-1 space-y-1">
-                    <p className="font-bold text-primary text-base">Taking Early</p>
-                    <p className="text-sm text-primary/80">
-                      Scheduled in {Math.abs(minutesLate)} min • Consider waiting
-                    </p>
-                  </div>
+            {medication.route_of_administration && (
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-accent/5">
+                <Syringe className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Route</p>
+                  <p className="text-sm">{medication.route_of_administration}</p>
                 </div>
               </div>
             )}
-            
-            {/* Medication Details */}
-            <div className="pt-2 space-y-3 text-base">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <ClockIcon className="h-5 w-5 text-primary flex-shrink-0" />
-                <span className="text-foreground">
-                  {scheduledTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} today
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <span className="text-2xl">💊</span>
-                <span className="text-foreground font-medium">{dosage}</span>
-              </div>
 
-              {schedule.special_instructions && (
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/30">
-                  <span className="text-2xl">📋</span>
-                  <span className="text-foreground text-sm leading-relaxed">{schedule.special_instructions}</span>
+            {schedule.special_instructions && (
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-accent/5">
+                <span className="text-lg flex-shrink-0">📋</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Instructions</p>
+                  <p className="text-sm">{schedule.special_instructions}</p>
                 </div>
+              </div>
+            )}
+
+            {medication.prescribing_doctor && (
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-accent/5">
+                <span className="text-lg flex-shrink-0">👨‍⚕️</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Prescribed by</p>
+                  <p className="text-sm">{medication.prescribing_doctor}</p>
+                </div>
+              </div>
+            )}
+
+            {lastTaken && (
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-success/5 border border-success/20">
+                <ClockIcon className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Last taken</p>
+                  <p className="text-sm text-success-foreground">
+                    {lastTaken.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}, {lastTaken.toLocaleDateString([], { day: "numeric", month: "short" })}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Timing Settings */}
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              {medication.grace_period_minutes && (
+                <Badge variant="secondary" className="text-xs">
+                  Grace: {medication.grace_period_minutes}m
+                </Badge>
               )}
-
-              {lastTaken && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-success/10 border border-success/30">
-                  <ClockIcon className="h-5 w-5 text-success flex-shrink-0" />
-                  <span className="text-success-foreground text-sm">
-                    Last: {lastTaken.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}, {lastTaken.toLocaleDateString([], { day: "numeric", month: "short" })}
-                  </span>
-                </div>
+              {medication.reminder_window_minutes && (
+                <Badge variant="secondary" className="text-xs">
+                  Reminder: {medication.reminder_window_minutes}m
+                </Badge>
+              )}
+              {medication.missed_dose_cutoff_minutes && (
+                <Badge variant="secondary" className="text-xs">
+                  Cutoff: {medication.missed_dose_cutoff_minutes}m
+                </Badge>
               )}
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-3 p-6 pt-0 bg-muted/20">
-          <button
-            onClick={() => {
-              onSkip();
-              onOpenChange(false);
-            }}
-            className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-card hover:bg-muted/60 transition-all duration-200 border-2 border-border hover:border-muted-foreground/30 active:scale-95"
-          >
-            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
-              <X className="h-7 w-7 text-muted-foreground" />
-            </div>
-            <span className="text-sm font-semibold text-foreground">SKIP</span>
-          </button>
+        <div className="sticky bottom-0 bg-background border-t p-3">
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              onClick={() => {
+                onSkip();
+                onOpenChange(false);
+              }}
+              variant="outline"
+              size="sm"
+              className="h-auto py-3 flex flex-col gap-1"
+            >
+              <X className="h-5 w-5" />
+              <span className="text-xs font-semibold">Skip</span>
+            </Button>
 
-          <button
-            onClick={() => {
-              onTake();
-              onOpenChange(false);
-            }}
-            className={cn(
-              "flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200 border-2 active:scale-95",
-              isTooLate && "bg-destructive/20 hover:bg-destructive/30 border-destructive/40 hover:border-destructive/60",
-              isLate && !isTooLate && "bg-warning/20 hover:bg-warning/30 border-warning/40 hover:border-warning/60",
-              !isLate && !isTooLate && "bg-primary/20 hover:bg-primary/30 border-primary/40 hover:border-primary/60"
-            )}
-          >
-            <div className={cn(
-              "w-14 h-14 rounded-full flex items-center justify-center shadow-md",
-              isTooLate && "bg-destructive",
-              isLate && !isTooLate && "bg-warning",
-              !isLate && !isTooLate && "bg-primary"
-            )}>
-              <Check className="h-7 w-7 text-white" strokeWidth={3} />
-            </div>
-            <span className={cn(
-              "text-sm font-bold",
-              isTooLate && "text-destructive",
-              isLate && !isTooLate && "text-warning-foreground",
-              !isLate && !isTooLate && "text-primary"
-            )}>
-              {isTooLate ? "MISSED" : isLate ? "LATE" : "TAKE"}
-            </span>
-          </button>
+            <Button
+              onClick={() => {
+                onTake();
+                onOpenChange(false);
+              }}
+              size="sm"
+              className={cn(
+                "h-auto py-3 flex flex-col gap-1",
+                isTooLate && "bg-destructive hover:bg-destructive/90",
+                isLate && !isTooLate && "bg-warning hover:bg-warning/90 text-warning-foreground",
+                !isLate && !isTooLate && "bg-primary hover:bg-primary/90"
+              )}
+            >
+              <Check className="h-5 w-5" strokeWidth={3} />
+              <span className="text-xs font-bold">
+                {isTooLate ? "Missed" : isLate ? "Late" : "Take"}
+              </span>
+            </Button>
 
-          <button
-            onClick={() => {
-              onReschedule();
-              onOpenChange(false);
-            }}
-            className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-card hover:bg-muted/60 transition-all duration-200 border-2 border-border hover:border-muted-foreground/30 active:scale-95"
-          >
-            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
-              <ClockIcon className="h-7 w-7 text-muted-foreground" />
-            </div>
-            <span className="text-sm font-semibold text-foreground">SNOOZE</span>
-          </button>
+            <Button
+              onClick={() => {
+                onReschedule();
+                onOpenChange(false);
+              }}
+              variant="outline"
+              size="sm"
+              className="h-auto py-3 flex flex-col gap-1"
+            >
+              <ClockIcon className="h-5 w-5" />
+              <span className="text-xs font-semibold">Snooze</span>
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
