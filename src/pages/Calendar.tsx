@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, ArrowLeft, Flame, LayoutGrid, List } from "lucide-react";
+import { Calendar as CalendarIcon, ArrowLeft, Flame, LayoutGrid, List, Search as SearchIcon, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { CalendarSkeleton } from "@/components/LoadingSkeletons";
@@ -11,6 +11,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WeekCalendar } from "@/components/WeekCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { DoseCard } from "@/components/DoseCard";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DoseLog {
   id: string;
@@ -81,6 +83,8 @@ const Calendar = () => {
     total: 0,
     percentage: 0
   });
+  const [searchText, setSearchText] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchMedications = useCallback(async () => {
     try {
@@ -453,6 +457,46 @@ const Calendar = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search and Filters */}
+        <Card className="mb-4">
+          <CardContent className="pt-6">
+            <div className="flex flex-col lg:flex-row gap-3 items-stretch">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Input
+                  placeholder="Search medications"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-10 h-12 rounded-xl"
+                />
+              </div>
+              <Button variant="outline" className="h-12 rounded-xl w-full lg:w-[160px]" onClick={() => setShowFilters(s => !s)}>
+                <SlidersHorizontal className="w-4 h-4 mr-2" /> {showFilters ? "Hide Filters" : "Filters"}
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-12 rounded-xl w-full lg:w-[120px]"
+                onClick={() => { setSearchText(""); setShowFilters(false); }}
+              >
+                Clear
+              </Button>
+            </div>
+            {showFilters && (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Select value={selectedMedication || "all"} onValueChange={(v) => setSelectedMedication(v === "all" ? null : v)}>
+                  <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="All Medications" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Medications</SelectItem>
+                    {medications.map(med => (
+                      <SelectItem key={med.id} value={med.id}>{med.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Filter and View Selector */}
         <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week")} className="w-full mb-6">
           <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2">
