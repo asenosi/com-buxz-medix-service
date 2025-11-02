@@ -77,6 +77,11 @@ const Medications = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
   // Jump to a focused step when requested
   useEffect(() => {
     if (!focus) return;
@@ -450,38 +455,37 @@ const Medications = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b border-border shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Button onClick={() => navigate("/dashboard")} variant="ghost" size="lg" className="mb-4">
-            <ArrowLeft className="w-6 h-6 mr-2" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Button onClick={() => navigate("/dashboard")} variant="ghost" size="sm" className="mb-3">
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">{editId ? "Edit Medication" : "Add New Medication"}</h1>
-          <p className="text-lg text-muted-foreground mt-2">
+          <h1 className="text-2xl font-bold">{editId ? "Edit Medication" : "Add New Medication"}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Step {currentStep} of {totalSteps}
           </p>
-          <div className="mt-4 w-full bg-muted rounded-full h-2">
+          <div className="mt-3 w-full bg-muted rounded-full h-1.5">
             <div 
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             />
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {renderStep()}
 
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             {currentStep > 1 && (
               <Button
                 type="button"
                 variant="outline"
-                size="lg"
                 onClick={prevStep}
-                className="flex-1 text-xl h-16"
+                className="flex-1 h-10"
               >
-                <ChevronLeft className="w-6 h-6 mr-2" />
+                <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
               </Button>
             )}
@@ -489,20 +493,18 @@ const Medications = () => {
             {currentStep < totalSteps ? (
               <Button
                 type="button"
-                size="lg"
                 onClick={nextStep}
-                className="flex-1 text-xl h-16"
                 disabled={!canProceed()}
+                className="flex-1 h-10"
               >
                 Next
-                <ChevronRight className="w-6 h-6 ml-2" />
+                <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
               <Button
                 type="submit"
-                size="lg"
-                className="flex-1 text-xl h-16"
                 disabled={loading || !canProceed()}
+                className="flex-1 h-10"
               >
                 {loading ? (editId ? "Updating..." : "Saving...") : (editId ? "Update Medication" : "Save Medication")}
               </Button>

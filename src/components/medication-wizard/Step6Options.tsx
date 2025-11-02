@@ -69,53 +69,53 @@ export const Step6Options = ({
 }: Step6OptionsProps) => {
   return (
     <Card>
-      <CardContent className="pt-6 space-y-6">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">Almost done!</h2>
-          <p className="text-muted-foreground">Additional options (all optional)</p>
+      <CardContent className="pt-4 space-y-4">
+        <div className="text-center mb-3">
+          <h2 className="text-xl font-bold mb-1">Almost done!</h2>
+          <p className="text-sm text-muted-foreground">Additional options (all optional)</p>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Treatment Duration</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold">Treatment Duration</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="startDate" className="text-sm">Start Date</Label>
               <Input
                 id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
-                className="h-12"
+                className="h-9"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="treatmentDays">Treatment Duration (days)</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="treatmentDays" className="text-sm">Treatment Duration (days)</Label>
               <Input
                 id="treatmentDays"
                 type="number"
                 value={treatmentDays}
                 onChange={(e) => setTreatmentDays(e.target.value)}
                 placeholder="e.g., 30"
-                className="h-12"
+                className="h-9"
               />
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Medication Images</h3>
-          <p className="text-sm text-muted-foreground">Select up to 5 images. Existing images remain; new ones will be added.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-            <div className="space-y-2">
-              <Label htmlFor="images">Upload Images</Label>
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold">Medication Images</h3>
+          <p className="text-xs text-muted-foreground">Select up to 5 images. Existing images remain; new ones will be added.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+            <div className="space-y-1.5">
+              <Label htmlFor="images" className="text-sm">Upload Images</Label>
               <Input
                 id="images"
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={(e) => e.target.files && onAddImages(e.target.files)}
-                className="h-12"
+                className="h-9"
               />
               <p className="text-xs text-muted-foreground">PNG or JPG up to ~5MB each</p>
             </div>
@@ -143,40 +143,40 @@ export const Step6Options = ({
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Refill Reminders</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="totalPills">Total Pills/Doses</Label>
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold">Refill Reminders</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="totalPills" className="text-sm">Total Pills/Doses</Label>
               <Input
                 id="totalPills"
                 type="number"
                 value={totalPills}
                 onChange={(e) => setTotalPills(e.target.value)}
                 placeholder="e.g., 30"
-                className="h-12"
+                className="h-9"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="refillThreshold">Remind me when left</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="refillThreshold" className="text-sm">Remind me when left</Label>
               <Input
                 id="refillThreshold"
                 type="number"
                 value={refillThreshold}
                 onChange={(e) => setRefillThreshold(e.target.value)}
                 placeholder="e.g., 7"
-                className="h-12"
+                className="h-9"
               />
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Instructions</h3>
-          <div className="space-y-3">
-            <Label htmlFor="withFood">Take with food?</Label>
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold">Instructions</h3>
+          <div className="space-y-2">
+            <Label htmlFor="withFood" className="text-sm">Take with food?</Label>
             <Select value={withFood} onValueChange={setWithFood}>
-              <SelectTrigger className="h-12">
+              <SelectTrigger className="h-9">
                 <SelectValue placeholder="Select..." />
               </SelectTrigger>
               <SelectContent>
@@ -188,23 +188,23 @@ export const Step6Options = ({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="instructions">Any other instructions?</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="instructions" className="text-sm">Any other instructions?</Label>
             <Textarea
               id="instructions"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               placeholder="e.g., Take with water, Avoid alcohol"
-              className="min-h-[80px]"
+              className="min-h-[60px] text-sm"
             />
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Customize Icon</h3>
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold">Customize Icon</h3>
           
           <div className="space-y-2">
-            <Label>Select Icon</Label>
+            <Label className="text-sm">Select Icon</Label>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
               {iconOptions.map((option) => {
                 const Icon = option.icon;
@@ -214,9 +214,9 @@ export const Step6Options = ({
                     type="button"
                     variant={medicationIcon === option.value ? "default" : "outline"}
                     onClick={() => setMedicationIcon(option.value)}
-                    className="h-20 flex flex-col gap-1"
+                    className="h-16 flex flex-col gap-0.5"
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-4 h-4" />
                     <span className="text-xs">{option.label}</span>
                   </Button>
                 );
@@ -225,15 +225,15 @@ export const Step6Options = ({
           </div>
 
           <div className="space-y-2">
-            <Label>Select Color</Label>
+            <Label className="text-sm">Select Color</Label>
             <div className="grid grid-cols-6 gap-2">
               {colorOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setMedicationColor(option.value)}
-                  className={`h-12 rounded-md ${option.color} ${
-                    medicationColor === option.value ? "ring-4 ring-ring" : ""
+                  className={`h-10 rounded-md ${option.color} ${
+                    medicationColor === option.value ? "ring-2 ring-ring" : ""
                   }`}
                 />
               ))}

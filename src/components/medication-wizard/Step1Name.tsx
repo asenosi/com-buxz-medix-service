@@ -10,14 +10,14 @@ interface Step1NameProps {
 export const Step1Name = ({ name, setName }: Step1NameProps) => {
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">What medication would you like to add?</h2>
-          <p className="text-muted-foreground">Enter the medication name</p>
+      <CardContent className="pt-4 space-y-3">
+        <div className="text-center mb-3">
+          <h2 className="text-xl font-bold mb-1">What medication would you like to add?</h2>
+          <p className="text-sm text-muted-foreground">Enter the medication name</p>
         </div>
         
-        <div className="space-y-3">
-          <Label htmlFor="name" className="text-lg font-semibold">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="text-sm font-semibold">
             Medication Name *
           </Label>
           <Input
@@ -26,7 +26,7 @@ export const Step1Name = ({ name, setName }: Step1NameProps) => {
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Aspirin, Metformin, Lisinopril"
             required
-            className="text-lg h-14"
+            className="h-10"
           />
         </div>
       </CardContent>

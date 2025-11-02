@@ -13,14 +13,14 @@ interface Step4ReasonProps {
 export const Step4Reason = ({ reason, setReason, dosage, setDosage }: Step4ReasonProps) => {
   return (
     <Card>
-      <CardContent className="pt-6 space-y-6">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">What are you taking it for?</h2>
-          <p className="text-muted-foreground">Help us understand your treatment</p>
+      <CardContent className="pt-4 space-y-4">
+        <div className="text-center mb-3">
+          <h2 className="text-xl font-bold mb-1">What are you taking it for?</h2>
+          <p className="text-sm text-muted-foreground">Help us understand your treatment</p>
         </div>
         
-        <div className="space-y-3">
-          <Label htmlFor="reason" className="text-lg font-semibold">
+        <div className="space-y-2">
+          <Label htmlFor="reason" className="text-sm font-semibold">
             Reason for Taking *
           </Label>
           <Textarea
@@ -29,12 +29,12 @@ export const Step4Reason = ({ reason, setReason, dosage, setDosage }: Step4Reaso
             onChange={(e) => setReason(e.target.value)}
             placeholder="e.g., High blood pressure, Diabetes, Pain relief"
             required
-            className="text-lg min-h-[100px]"
+            className="min-h-[80px] text-sm"
           />
         </div>
 
-        <div className="space-y-3">
-          <Label htmlFor="dosage" className="text-lg font-semibold">
+        <div className="space-y-2">
+          <Label htmlFor="dosage" className="text-sm font-semibold">
             Dosage/Strength *
           </Label>
           <Input
@@ -43,7 +43,7 @@ export const Step4Reason = ({ reason, setReason, dosage, setDosage }: Step4Reaso
             onChange={(e) => setDosage(e.target.value)}
             placeholder="e.g., 100mg, 2 puffs, 1 drop"
             required
-            className="text-lg h-14"
+            className="h-10"
           />
         </div>
       </CardContent>

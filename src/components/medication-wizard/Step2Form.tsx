@@ -40,9 +40,9 @@ export const Step2Form = ({ form, setForm }: Step2FormProps) => {
                 type="button"
                 variant={form === option.value ? "default" : "outline"}
                 onClick={() => setForm(option.value)}
-                className="h-16 flex flex-col gap-1 text-sm"
+                className="h-14 flex flex-col gap-0.5 text-sm"
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4" />
                 <span className="text-xs">{option.label}</span>
               </Button>
             );
