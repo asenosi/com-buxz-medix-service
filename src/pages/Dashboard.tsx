@@ -739,10 +739,10 @@ const Dashboard = () => {
               <Button 
                 size="lg" 
                 onClick={() => navigate("/medications")}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
-                <Pill className="w-5 h-5" />
-                Add Your First Medication
+                <Pill className="w-5 h-5 shrink-0" />
+                <span className="whitespace-normal">Add Your First Medication</span>
               </Button>
             </CardContent>
           </Card>
