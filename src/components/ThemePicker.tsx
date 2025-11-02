@@ -1,9 +1,8 @@
-import { useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Palette } from "lucide-react";
 import { useTheme, ThemeName } from "@/hooks/use-theme";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type ThemeDef = {
   id: ThemeName;
@@ -23,35 +22,38 @@ const themes: ThemeDef[] = [
   { id: "mandela", title: "Mandela", description: "Dignified and timeless", colors: { circle: "bg-neutral-700", bar1: "bg-neutral-400", bar2: "bg-neutral-300", button: "bg-neutral-800" } },
 ];
 
-const ThemeCard = ({ themeId, title, description, colors, selected, onSelect }: {
-  themeId: ThemeName; title: string; description: string; colors: ThemeDef["colors"]; selected: boolean; onSelect: (id: ThemeName) => void;
+const ThemeCard = ({ themeId, title, colors, selected, onSelect }: {
+  themeId: ThemeName; title: string; colors: ThemeDef["colors"]; selected: boolean; onSelect: (id: ThemeName) => void;
 }) => (
-  <Card className={`relative hover:shadow-lg transition-all duration-300 ${selected ? "ring-2 ring-primary" : ""}`} role="button" onClick={() => onSelect(themeId)}>
-    <CardHeader>
-      <div className="flex items-center justify-between">
-        <div>
-          <CardTitle className="text-lg">{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </div>
-        {selected && <Check className="w-5 h-5 text-primary" />}
+  <button
+    onClick={() => onSelect(themeId)}
+    className={`relative p-3 rounded-lg border-2 transition-all hover:shadow-md ${
+      selected ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50"
+    }`}
+  >
+    {selected && (
+      <div className="absolute top-2 right-2">
+        <Check className="w-4 h-4 text-primary" />
       </div>
-    </CardHeader>
-    <CardContent>
-      <div className="flex items-center gap-3">
-        <div className={`h-8 w-8 rounded-full ${colors.circle}`} />
-        <div className="flex-1 space-y-2">
-          <div className={`h-2 rounded ${colors.bar1}`} />
-          <div className={`h-2 rounded w-2/3 ${colors.bar2}`} />
-        </div>
+    )}
+    <div className="text-left mb-2">
+      <div className="font-semibold text-sm">{title}</div>
+    </div>
+    <div className="flex items-center gap-2 mb-2">
+      <div className={`h-6 w-6 rounded-full ${colors.circle}`} />
+      <div className="flex-1 space-y-1">
+        <div className={`h-1.5 rounded ${colors.bar1}`} />
+        <div className={`h-1.5 rounded w-3/4 ${colors.bar2}`} />
       </div>
-      <div className={`h-8 rounded mt-4 ${colors.button} text-white text-center leading-8`}>Sample Button</div>
-    </CardContent>
-  </Card>
+    </div>
+    <div className={`h-6 rounded ${colors.button} text-white text-xs text-center leading-6`}>
+      Button
+    </div>
+  </button>
 );
 
 const ThemePicker = ({ trigger }: { trigger?: React.ReactNode }) => {
   const { palette, setPalette } = useTheme();
-  const cols = useMemo(() => (themes.length % 2 === 0 ? 2 : 3), []);
 
   return (
     <Dialog>
@@ -62,16 +64,18 @@ const ThemePicker = ({ trigger }: { trigger?: React.ReactNode }) => {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-5xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Choose Your Theme</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {themes.map(t => (
-            <ThemeCard key={t.id} themeId={t.id} title={t.title} description={t.description} colors={t.colors} selected={palette === t.id} onSelect={setPalette} />
-          ))}
-        </div>
-        <div className="text-center text-xs text-muted-foreground mt-2">ZA Proudly South African Themes</div>
+        <ScrollArea className="max-h-[60vh]">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 pr-4">
+            {themes.map(t => (
+              <ThemeCard key={t.id} themeId={t.id} title={t.title} colors={t.colors} selected={palette === t.id} onSelect={setPalette} />
+            ))}
+          </div>
+        </ScrollArea>
+        <div className="text-center text-xs text-muted-foreground">Proudly South African Themes</div>
       </DialogContent>
     </Dialog>
   );
