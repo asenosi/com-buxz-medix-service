@@ -30,7 +30,7 @@ export const Step3Route = ({ route, setRoute }: Step3RouteProps) => {
               type="button"
               variant={route === option.value ? "default" : "outline"}
               onClick={() => setRoute(option.value)}
-              className="h-12 text-base"
+              className="h-10 text-sm"
             >
               {option.label}
             </Button>

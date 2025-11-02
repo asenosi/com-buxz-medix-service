@@ -34,10 +34,10 @@ export const Step7Review = ({ data }: Step7ReviewProps) => {
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-6">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">Review Your Medication</h2>
-          <p className="text-muted-foreground">Make sure everything looks good</p>
+      <CardContent className="pt-4 space-y-4">
+        <div className="text-center mb-3">
+          <h2 className="text-xl font-bold mb-1">Review Your Medication</h2>
+          <p className="text-sm text-muted-foreground">Make sure everything looks good</p>
         </div>
 
         <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
