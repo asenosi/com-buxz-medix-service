@@ -363,7 +363,31 @@ All colors MUST be HSL.
   }
 }
 
+/* Safe area inset for mobile devices with notches */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
+/* Improved touch targets for mobile */
+@media (max-width: 768px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  input, select, textarea {
+    font-size: 16px; /* Prevent zoom on focus */
+  }
+}
 
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
 
+/* Better focus indicators for accessibility */
+*:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
 

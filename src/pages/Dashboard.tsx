@@ -14,6 +14,10 @@ import { SimpleDoseCard } from "@/components/SimpleDoseCard";
 import { AdherenceStats } from "@/components/AdherenceStats";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { DoseActionDialog } from "@/components/DoseActionDialog";
+import { SwipeableDoseCard } from "@/components/SwipeableDoseCard";
+import { PullToRefresh } from "@/components/PullToRefresh";
+import { TodaysDosesWidget } from "@/components/TodaysDosesWidget";
+import { useHaptic } from "@/hooks/use-haptic";
 import { useTheme } from "@/hooks/use-theme";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -82,6 +86,7 @@ const Dashboard = () => {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
   const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
   const [userName, setUserName] = useState<string>("");
+  const haptic = useHaptic();
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -352,6 +357,10 @@ const Dashboard = () => {
     }
   }, [fetchGamificationStats]);
 
+  const handleRefresh = async () => {
+    await Promise.all([fetchMedications(), fetchGamificationStats()]);
+  };
+
   useEffect(() => {
     const initAuth = async () => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -477,6 +486,7 @@ const Dashboard = () => {
   };
 
   const markAsTaken = async (dose: TodayDose) => {
+    haptic.success();
     try {
       const { error } = await supabase.from("dose_logs").insert([
         {
@@ -508,6 +518,7 @@ const Dashboard = () => {
   };
 
   const markAsSkipped = async (dose: TodayDose) => {
+    haptic.warning();
     try {
       const { error } = await supabase.from("dose_logs").insert([
         {
@@ -530,6 +541,7 @@ const Dashboard = () => {
   };
 
   const markAsSnoozed = async (dose: TodayDose, minutes: number) => {
+    haptic.medium();
     try {
       const snoozeUntil = new Date();
       snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
@@ -597,21 +609,37 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Welcome Message */}
-        <div className="mb-6 animate-fade-in">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-            {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground">
-            {todayDoses.length > 0 
-              ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
-              : "Great job staying on top of your medications! Keep up the excellent work."}
-          </p>
-        </div>
+      <PullToRefresh onRefresh={handleRefresh}>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {/* Welcome Message */}
+          <div className="mb-6 animate-fade-in">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+              {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground">
+              {todayDoses.length > 0 
+                ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
+                : "Great job staying on top of your medications! Keep up the excellent work."}
+            </p>
+          </div>
 
-        {/* Search and Filters - Full Width */}
-        <div className="mb-4 space-y-3">
+          {/* Today's Doses Widget - Mobile First */}
+          {viewMode === "list" && !loading && (
+            <TodaysDosesWidget
+              doses={todayDoses}
+              onMarkTaken={markAsTaken}
+              onViewAll={() => {
+                const firstDose = todayDoses.find(d => !d.isTaken && !d.isSkipped);
+                if (firstDose) {
+                  const element = document.getElementById(`dose-${firstDose.schedule.id}`);
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }}
+            />
+          )}
+
+          {/* Search and Filters - Sticky on Mobile */}
+          <div className="mb-4 space-y-3 sticky top-0 z-20 bg-background/95 backdrop-blur-sm py-2 -mx-4 px-4 sm:static sm:bg-transparent sm:backdrop-blur-none sm:py-0 sm:mx-0 sm:px-0">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -845,25 +873,23 @@ const Dashboard = () => {
                 </Card>
               ) : (
                 <>
-                  {/* Mobile: Time-grouped layout */}
+                  {/* Mobile: Swipeable Cards with Time Grouping */}
                   <div className="sm:hidden space-y-6">
                     {Object.entries(groupDosesByTime(filteredDoses.length === 0 ? [] : filteredDoses)).map(([timeStr, doses], groupIdx) => (
                       <div key={timeStr} className="animate-fade-in" style={{ animationDelay: `${groupIdx * 0.1}s` }}>
-                        <h3 className="text-3xl font-bold mb-3 text-primary">{timeStr}</h3>
-                        <div className="space-y-2">
+                        <h3 className="text-3xl font-bold mb-3 text-primary sticky top-16 bg-background/95 backdrop-blur-sm py-2 -mx-4 px-4 z-10">{timeStr}</h3>
+                        <div className="space-y-3">
                           {doses.map((dose, idx) => (
-                            <SimpleDoseCard
-                              key={`${dose.schedule.id}-${idx}`}
-                              medication={dose.medication}
-                              schedule={dose.schedule}
-                              onClick={() => handleDoseClick(dose)}
-                              className={cn(
-                                dose.isTaken && "bg-success/5 border-l-success",
-                                (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
-                                !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "overdue" && "bg-destructive/5 border-l-destructive",
-                                !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "due" && "bg-accent/5 border-l-accent"
-                              )}
-                            />
+                            <div key={`${dose.schedule.id}-${idx}`} id={`dose-${dose.schedule.id}`}>
+                              <SwipeableDoseCard
+                                dose={dose}
+                                onMarkTaken={markAsTaken}
+                                onMarkSkipped={markAsSkipped}
+                                onMarkSnoozed={markAsSnoozed}
+                                onEdit={handleEditMedication}
+                                onOpenDetails={(id) => navigate(`/medications/${id}`)}
+                              />
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -939,7 +965,8 @@ const Dashboard = () => {
             )}
           </TabsContent>
         </Tabs>
-      </main>
+        </main>
+      </PullToRefresh>
 
       {/* Floating Action Button */}
       <FloatingActionButton
