@@ -970,41 +970,6 @@ const Dashboard = () => {
                 </>
               )}
             </div>
-
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">All Medications</h2>
-              {loading ? (
-                <MedCardGridSkeleton count={4} />
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                {medications.map((med, idx) => {
-                  const img = (med.images && med.images[0]) || med.image_url || defaultImageForForm(med.form || undefined);
-                  const descParts = [
-                    med.dosage ? `${med.dosage}${med.form ? ` · ${med.form}` : ""}` : undefined,
-                    med.reason_for_taking || undefined,
-                  ].filter(Boolean);
-                  return (
-                    <div key={med.id} className="animate-scale-in" style={{ animationDelay: `${idx * 0.08}s` }}>
-                      <SplitMediaCard
-                        imageSrc={img}
-                        imageAlt={med.name}
-                        title={med.name}
-                        description={descParts.join(" — ")}
-                        buttonLabel="View Details"
-                        onButtonClick={() => navigate(`/medications/${med.id}`)}
-                        orientation={idx % 2 === 0 ? "imageLeft" : "imageRight"}
-                        className={"hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-l-4 " + borderColorClass(med.medication_color)}
-                      >
-                        {typeof med.pills_remaining === "number" && (
-                          <div className="text-sm text-muted-foreground">{med.pills_remaining} remaining</div>
-                        )}
-                      </SplitMediaCard>
-                    </div>
-                  );
-                })}
-              </div>
-              )}
-            </div>
               </>
             )}
           </TabsContent>

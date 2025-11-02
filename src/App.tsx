@@ -11,6 +11,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ManageMedications = lazy(() => import("./pages/ManageMedications"));
+const MedicationsList = lazy(() => import("./pages/MedicationsList"));
 const AddMedication = lazy(() => import("./pages/AddMedication"));
 const MedicationDetails = lazy(() => import("./pages/MedicationDetails"));
 const Calendar = lazy(() => import("./pages/Calendar"));
@@ -36,6 +37,7 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/medications" element={<ManageMedications />} />
+              <Route path="/medications/list" element={<MedicationsList />} />
               <Route path="/medications/add" element={<AddMedication />} />
               <Route path="/medications/:id" element={<MedicationDetails />} />
               <Route path="/calendar" element={<Calendar />} />
