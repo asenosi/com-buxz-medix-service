@@ -18,7 +18,7 @@ export const FloatingActionButton = ({ actions }: FloatingActionButtonProps) => 
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50">
+    <div className="fixed bottom-20 right-6 sm:bottom-8 sm:right-8 z-50">
       {/* Action Buttons */}
       <div
         className={cn(
