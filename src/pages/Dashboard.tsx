@@ -729,21 +729,49 @@ const Dashboard = () => {
 
         {medications.length === 0 ? (
           /* Empty State */
-          <Card className="text-center py-12 sm:py-16 animate-fade-in">
+          <Card className="text-center py-12 sm:py-16 animate-fade-in relative">
             <CardContent>
               <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
               <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
               <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 px-4 max-w-md mx-auto">
                 Start your health journey by adding your first medication. Track doses, set reminders, and never miss a dose again.
               </p>
-              <Button 
-                size="lg" 
-                onClick={() => navigate("/medications")}
-                className="gap-2 w-full sm:w-auto"
-              >
-                <Pill className="w-5 h-5 shrink-0" />
-                <span className="whitespace-normal">Add Your First Medication</span>
-              </Button>
+              
+              {/* Curved Arrow pointing to FAB */}
+              <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 flex items-end gap-2 animate-pulse">
+                <div className="text-right">
+                  <p className="text-sm sm:text-base font-medium text-primary mb-1">Tap here to get started!</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">Add your first medication</p>
+                </div>
+                <svg 
+                  width="80" 
+                  height="80" 
+                  viewBox="0 0 80 80" 
+                  className="text-primary"
+                  style={{ transform: 'scaleX(-1)' }}
+                >
+                  <path
+                    d="M 10 10 Q 40 10, 60 40 T 70 70"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    markerEnd="url(#arrowhead)"
+                  />
+                  <defs>
+                    <marker
+                      id="arrowhead"
+                      markerWidth="10"
+                      markerHeight="10"
+                      refX="9"
+                      refY="3"
+                      orient="auto"
+                    >
+                      <polygon points="0 0, 10 3, 0 6" fill="currentColor" />
+                    </marker>
+                  </defs>
+                </svg>
+              </div>
             </CardContent>
           </Card>
         ) : (
