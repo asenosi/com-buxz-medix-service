@@ -919,7 +919,10 @@ const Dashboard = () => {
                   <div className="sm:hidden space-y-6">
                     {Object.entries(groupDosesByTime(filteredDoses.length === 0 ? [] : filteredDoses)).map(([timeStr, doses], groupIdx) => (
                       <div key={timeStr} className="animate-fade-in" style={{ animationDelay: `${groupIdx * 0.1}s` }}>
-                        <h3 className="text-xl font-bold mb-3 text-primary">{timeStr}</h3>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Clock className="w-5 h-5 text-primary" />
+                          <h3 className="text-lg font-bold text-primary">{timeStr}</h3>
+                        </div>
                         <div className="space-y-2">
                           {doses.map((dose, idx) => (
                             <SimpleDoseCard
