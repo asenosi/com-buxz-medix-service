@@ -621,6 +621,77 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Search and Filters - Compact */}
+        <Card className="mb-4">
+          <CardContent className="py-3">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search doses"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-8 h-9 text-sm"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="h-9" onClick={() => setShowFilters(s => !s)}>
+                  <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5" /> Filters
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9"
+                  onClick={() => { setSearchText(""); setStatusFilter("all"); setTimeBucket("all"); setWithFood("any"); setSortOpt("timeAsc"); setShowFilters(false); }}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+            {showFilters && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="upcoming">Upcoming</SelectItem>
+                    <SelectItem value="due">Due</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                    <SelectItem value="taken">Taken</SelectItem>
+                    <SelectItem value="snoozed">Snoozed</SelectItem>
+                    <SelectItem value="skipped">Skipped</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={timeBucket} onValueChange={(v: TimeBucket) => setTimeBucket(v)}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Time of day" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any time</SelectItem>
+                    <SelectItem value="morning">Morning (5–11)</SelectItem>
+                    <SelectItem value="afternoon">Afternoon (11–17)</SelectItem>
+                    <SelectItem value="evening">Evening (17–21)</SelectItem>
+                    <SelectItem value="night">Night (21–5)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={withFood} onValueChange={(v: WithFood) => setWithFood(v)}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="With food" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">With or without</SelectItem>
+                    <SelectItem value="yes">With food</SelectItem>
+                    <SelectItem value="no">Without food</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortOpt} onValueChange={(v: SortOpt) => setSortOpt(v)}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Sort" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="timeAsc">Time ↑</SelectItem>
+                    <SelectItem value="timeDesc">Time ↓</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="mb-6">
           <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2 bg-muted">
             <TabsTrigger 
@@ -752,74 +823,6 @@ const Dashboard = () => {
                 totalTaken={totalTaken}
               />
             )}
-
-            {/* Search entry just below stats */}
-            <Card className="mb-4">
-              <CardContent className="pt-6">
-                <div className="flex flex-col lg:flex-row gap-3 items-stretch">
-                  <div className="relative flex-1">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                    <Input
-                      placeholder="Search doses"
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                      className="pl-10 h-12 rounded-xl"
-                    />
-                  </div>
-                  <Button variant="outline" className="h-12 rounded-xl w-full lg:w-[160px]" onClick={() => setShowFilters(s => !s)}>
-                    <SlidersHorizontal className="w-4 h-4 mr-2" /> {showFilters ? "Hide Filters" : "Filters"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="h-12 rounded-xl w-full lg:w-[120px]"
-                    onClick={() => { setSearchText(""); setStatusFilter("all"); setTimeBucket("all"); setWithFood("any"); setSortOpt("timeAsc"); setShowFilters(false); }}
-                  >
-                    Clear
-                  </Button>
-                </div>
-                {showFilters && (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
-                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Status" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All statuses</SelectItem>
-                        <SelectItem value="upcoming">Upcoming</SelectItem>
-                        <SelectItem value="due">Due</SelectItem>
-                        <SelectItem value="overdue">Overdue</SelectItem>
-                        <SelectItem value="taken">Taken</SelectItem>
-                        <SelectItem value="snoozed">Snoozed</SelectItem>
-                        <SelectItem value="skipped">Skipped</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={timeBucket} onValueChange={(v: TimeBucket) => setTimeBucket(v)}>
-                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Time of day" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Any time</SelectItem>
-                        <SelectItem value="morning">Morning (5–11)</SelectItem>
-                        <SelectItem value="afternoon">Afternoon (11–17)</SelectItem>
-                        <SelectItem value="evening">Evening (17–21)</SelectItem>
-                        <SelectItem value="night">Night (21–5)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={withFood} onValueChange={(v: WithFood) => setWithFood(v)}>
-                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="With food" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">With or without</SelectItem>
-                        <SelectItem value="yes">With food</SelectItem>
-                        <SelectItem value="no">Without food</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={sortOpt} onValueChange={(v: SortOpt) => setSortOpt(v)}>
-                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="timeAsc">Time ↑</SelectItem>
-                        <SelectItem value="timeDesc">Time ↓</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
