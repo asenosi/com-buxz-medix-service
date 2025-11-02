@@ -624,6 +624,20 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Welcome Message */}
+        <Card className="mb-6 animate-fade-in bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/20">
+          <CardContent className="py-4 sm:py-6">
+            <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
+              Welcome back! 👋
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {todayDoses.length > 0 
+                ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
+                : "Great job staying on top of your medications! Keep up the excellent work."}
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Search and Filters - Full Width */}
         <div className="mb-4 space-y-3">
           <div className="flex gap-2">
