@@ -23,6 +23,7 @@ import { DoseItemSkeleton, MedCardGridSkeleton } from "@/components/LoadingSkele
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeekCalendar } from "@/components/WeekCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
+import { StreakCard } from "@/components/StreakCard";
 
 interface Medication {
   id: string;
@@ -608,6 +609,11 @@ const Dashboard = () => {
               ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
               : "Great job staying on top of your medications! Keep up the excellent work."}
           </p>
+        </div>
+
+        {/* Streak Card */}
+        <div className="mb-6 animate-fade-in">
+          <StreakCard streak={streak} onClick={() => setShowStats(true)} />
         </div>
 
         {/* Search and Filters - Full Width */}
