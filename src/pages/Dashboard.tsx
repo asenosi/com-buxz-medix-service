@@ -598,7 +598,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 sm:pb-28">
         {/* Welcome Message */}
         <div className="mb-6 animate-fade-in">
           <h2 className="text-2xl sm:text-3xl font-bold mb-2">
@@ -919,7 +919,10 @@ const Dashboard = () => {
                   <div className="sm:hidden space-y-6">
                     {Object.entries(groupDosesByTime(filteredDoses.length === 0 ? [] : filteredDoses)).map(([timeStr, doses], groupIdx) => (
                       <div key={timeStr} className="animate-fade-in" style={{ animationDelay: `${groupIdx * 0.1}s` }}>
-                        <h3 className="text-3xl font-bold mb-3 text-primary">{timeStr}</h3>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Clock className="w-5 h-5 text-primary" />
+                          <h3 className="text-lg font-bold text-primary">{timeStr}</h3>
+                        </div>
                         <div className="space-y-2">
                           {doses.map((dose, idx) => (
                             <SimpleDoseCard
@@ -968,41 +971,6 @@ const Dashboard = () => {
                     </Card>
                   )}
                 </>
-              )}
-            </div>
-
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left">All Medications</h2>
-              {loading ? (
-                <MedCardGridSkeleton count={4} />
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                {medications.map((med, idx) => {
-                  const img = (med.images && med.images[0]) || med.image_url || defaultImageForForm(med.form || undefined);
-                  const descParts = [
-                    med.dosage ? `${med.dosage}${med.form ? ` · ${med.form}` : ""}` : undefined,
-                    med.reason_for_taking || undefined,
-                  ].filter(Boolean);
-                  return (
-                    <div key={med.id} className="animate-scale-in" style={{ animationDelay: `${idx * 0.08}s` }}>
-                      <SplitMediaCard
-                        imageSrc={img}
-                        imageAlt={med.name}
-                        title={med.name}
-                        description={descParts.join(" — ")}
-                        buttonLabel="View Details"
-                        onButtonClick={() => navigate(`/medications/${med.id}`)}
-                        orientation={idx % 2 === 0 ? "imageLeft" : "imageRight"}
-                        className={"hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-l-4 " + borderColorClass(med.medication_color)}
-                      >
-                        {typeof med.pills_remaining === "number" && (
-                          <div className="text-sm text-muted-foreground">{med.pills_remaining} remaining</div>
-                        )}
-                      </SplitMediaCard>
-                    </div>
-                  );
-                })}
-              </div>
               )}
             </div>
               </>

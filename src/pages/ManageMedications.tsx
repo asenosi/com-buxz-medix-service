@@ -29,7 +29,7 @@ const menuSections = {
     {
       icon: Pill,
       label: "Medications",
-      path: "/dashboard",
+      path: "/medications/list",
       iconBg: "bg-blue-500/10 text-blue-500",
     },
     {
