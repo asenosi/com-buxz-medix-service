@@ -81,6 +81,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
   const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
+  const [userName, setUserName] = useState<string>("");
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -104,6 +105,14 @@ const Dashboard = () => {
       case 'pink': return 'border-l-pink-500';
       default: return 'border-l-primary';
     }
+  }, []);
+
+  const getTimeGreeting = useCallback(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    if (hour < 21) return "Good evening";
+    return "Good evening";
   }, []);
 
   // Search & Filters for Today's Schedule
@@ -361,6 +370,23 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         fetchMedications();
+        // Fetch user profile
+        const fetchProfile = async () => {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("user_id", currentSession.user.id)
+              .single();
+            
+            if (profile?.full_name) {
+              setUserName(profile.full_name.split(" ")[0]);
+            }
+          } catch (error) {
+            console.error("Failed to fetch profile:", error);
+          }
+        };
+        fetchProfile();
       }
 
       return () => subscription.unsubscribe();
@@ -624,6 +650,18 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Welcome Message */}
+        <div className="mb-6 animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+            {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground">
+            {todayDoses.length > 0 
+              ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
+              : "Great job staying on top of your medications! Keep up the excellent work."}
+          </p>
+        </div>
+
         {/* Search and Filters - Full Width */}
         <div className="mb-4 space-y-3">
           <div className="flex gap-2">
