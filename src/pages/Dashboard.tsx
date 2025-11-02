@@ -682,35 +682,34 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")} className="flex-1">
-            <TabsList className="grid h-auto w-full max-w-md grid-cols-2 bg-muted">
+        <div className="mb-6">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
+            <TabsList className="grid h-auto w-full max-w-3xl mx-auto grid-cols-3 bg-muted">
               <TabsTrigger 
                 value="list" 
                 className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
               >
                 <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                List View
+                List
               </TabsTrigger>
               <TabsTrigger 
                 value="calendar" 
                 className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
               >
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-                Calendar View
+                Calendar
               </TabsTrigger>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowStats(s => !s)}
+                className="h-auto min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+              >
+                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
+                Stats
+              </Button>
             </TabsList>
           </Tabs>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowStats(s => !s)}
-            className="shrink-0 w-full sm:w-auto"
-          >
-            <BarChart3 className="w-4 h-4 mr-2" />
-            {showStats ? "Hide Stats" : "Show Stats"}
-          </Button>
         </div>
 
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
