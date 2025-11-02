@@ -729,7 +729,7 @@ const Dashboard = () => {
 
         {medications.length === 0 ? (
           /* Empty State */
-          <Card className="text-center py-12 sm:py-16 animate-fade-in relative overflow-visible">
+          <Card className="text-center py-12 sm:py-16 animate-fade-in relative overflow-visible border-2 border-dashed border-muted-foreground/30">
             <CardContent className="pb-32 sm:pb-40">
               <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
               <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
