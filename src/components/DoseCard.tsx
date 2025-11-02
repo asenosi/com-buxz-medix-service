@@ -118,24 +118,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <CardTitle className="text-base truncate">{dose.medication.name}</CardTitle>
-              {isTooLate && !isCompleted && (
-                <Badge variant="destructive" className="rounded-full text-[10px] px-1.5 py-0">
-                  Too Late ({minutesLate}min)
-                </Badge>
-              )}
-              {isLate && !isTooLate && !isCompleted && (
-                <Badge variant="warning" className="rounded-full text-[10px] px-1.5 py-0">
-                  Late ({minutesLate}min)
-                </Badge>
-              )}
-              {!isLate && !isTooLate && (
-                <Badge variant="warning" className="rounded-full text-[10px] px-1.5 py-0">
-                  {dose.status === 'overdue' ? 'Overdue' : dose.status === 'due' ? 'Due' : 'Active'}
-                </Badge>
-              )}
-            </div>
+            <CardTitle className="text-base truncate">{dose.medication.name}</CardTitle>
             <CardDescription className="text-sm mt-0.5">
               {dose.medication.dosage}
               {dose.medication.form && ` • ${dose.medication.form}`}
@@ -193,20 +176,6 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
         </div>
         {!isCompleted && !isPastDate && (
           <div className="space-y-2">
-            {/* Grace Period Warning Banner */}
-            {isTooLate && (
-              <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/30 text-xs">
-                <p className="font-semibold text-destructive">⚠️ Beyond cutoff ({missedDoseCutoffMinutes}min)</p>
-                <p className="text-destructive/80">Taking now will be logged as MISSED</p>
-              </div>
-            )}
-            {isLate && !isTooLate && (
-              <div className="p-2 rounded-lg bg-warning/10 border border-warning/30 text-xs">
-                <p className="font-semibold text-warning">⏰ Outside grace period ({gracePeriodMinutes}min)</p>
-                <p className="text-warning/80">Taking now will be logged as LATE</p>
-              </div>
-            )}
-            
             <div className="grid grid-cols-3 gap-2">
               <Button
                 onClick={() => onMarkTaken(dose)}
