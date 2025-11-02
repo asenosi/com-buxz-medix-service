@@ -598,7 +598,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 sm:pb-28">
         {/* Welcome Message */}
         <div className="mb-6 animate-fade-in">
           <h2 className="text-2xl sm:text-3xl font-bold mb-2">
