@@ -61,6 +61,8 @@ interface TodayDose {
   isSkipped?: boolean;
   isSnoozed?: boolean;
   snoozeUntil?: Date;
+  takenAt?: Date;
+  adherenceStatus?: "on_time" | "late" | "missed";
 }
 
 const Dashboard = () => {
@@ -318,7 +320,29 @@ const Dashboard = () => {
               new Date(log.scheduled_time).getMinutes() === minutes
             );
 
-            // Keep snoozed doses in the list; surface as snoozed with snoozeUntil
+            // Calculate adherence status if taken
+            let adherenceStatus: "on_time" | "late" | "missed" | undefined;
+            let takenAtDate: Date | undefined;
+            
+            if (doseLog?.status === "taken") {
+              // Use taken_at if available, otherwise fall back to scheduled_time
+              const takenTimeValue = doseLog.taken_at || doseLog.scheduled_time;
+              if (takenTimeValue) {
+                takenAtDate = new Date(takenTimeValue);
+                const scheduledTime = doseTime;
+                const minutesLate = Math.floor((takenAtDate.getTime() - scheduledTime.getTime()) / (60 * 1000));
+                const gracePeriod = med.grace_period_minutes || 60;
+                const missedCutoff = med.missed_dose_cutoff_minutes || 180;
+                
+                if (minutesLate <= gracePeriod) {
+                  adherenceStatus = "on_time";
+                } else if (minutesLate <= missedCutoff) {
+                  adherenceStatus = "late";
+                } else {
+                  adherenceStatus = "missed";
+                }
+              }
+            }
 
             doses.push({
               medication: med,
@@ -329,6 +353,8 @@ const Dashboard = () => {
               isSkipped: doseLog?.status === "skipped",
               isSnoozed: doseLog?.status === "snoozed",
               snoozeUntil: doseLog?.snooze_until ? new Date(doseLog.snooze_until) : undefined,
+              takenAt: takenAtDate,
+              adherenceStatus,
             });
           });
         });
