@@ -262,29 +262,29 @@ const MedicationDetails = () => {
 
             <Separator />
             
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-2 gap-3">
               {med.total_pills !== null && (
                 <div>
-                  <p className="text-muted-foreground mb-1">Total Pills</p>
-                  <p className="font-medium">{med.total_pills}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Total Pills</p>
+                  <p className="text-sm font-medium">{med.total_pills}</p>
                 </div>
               )}
               {med.pills_remaining !== null && (
                 <div>
-                  <p className="text-muted-foreground mb-1">Remaining</p>
-                  <p className="font-medium">{med.pills_remaining}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Remaining</p>
+                  <p className="text-sm font-medium">{med.pills_remaining}</p>
                 </div>
               )}
               {med.start_date && (
                 <div>
-                  <p className="text-muted-foreground mb-1">Start Date</p>
-                  <p className="font-medium">{new Date(med.start_date).toLocaleDateString()}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Start Date</p>
+                  <p className="text-sm font-medium">{new Date(med.start_date).toLocaleDateString()}</p>
                 </div>
               )}
               {med.end_date && (
                 <div>
-                  <p className="text-muted-foreground mb-1">End Date</p>
-                  <p className="font-medium">{new Date(med.end_date).toLocaleDateString()}</p>
+                  <p className="text-sm text-muted-foreground mb-1">End Date</p>
+                  <p className="text-sm font-medium">{new Date(med.end_date).toLocaleDateString()}</p>
                 </div>
               )}
             </div>
