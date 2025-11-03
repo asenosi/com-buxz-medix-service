@@ -52,13 +52,13 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className }: Sim
 
   return (
     <Card
+      onClick={onClick}
       className={cn(
         "p-4 hover:bg-accent/50 transition-colors cursor-pointer border-l-4 border-l-transparent",
         className
       )}
-      onClick={onClick}
     >
-      <div className="flex items-center gap-4 pointer-events-none">
+      <div className="flex items-center gap-4">
         {/* Icon/Image */}
         <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0", getIconColor(medication.form))}>
           {primaryImage ? (
