@@ -185,7 +185,7 @@ const MedicationDetails = () => {
         </div>
       </div>
 
-      <div className="px-4 space-y-4">
+      <div className="px-3 space-y-4">
         {/* Header Card with Image */}
         <Card className="overflow-hidden">
           <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6">
