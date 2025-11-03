@@ -86,16 +86,16 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
 
   return (
     <Card
-      onClick={handleCardClick}
       className={cn(
-        "rounded-lg border px-3 py-3 transition-all duration-300 hover:shadow-lg cursor-pointer",
+        "rounded-lg border px-3 py-3 transition-all duration-300 hover:shadow-lg cursor-pointer relative",
         dose.isTaken && "bg-success/5 border-success/30",
         (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-warning/30",
         !isCompleted && dose.status === "overdue" && "bg-destructive/5 border-destructive/30",
         !isCompleted && dose.status === "due" && "bg-accent/5 border-accent/30"
       )}
     >
-      <CardHeader className="p-0 pb-2">
+      <div onClick={handleCardClick} className="absolute inset-0 z-0" />
+      <CardHeader className="p-0 pb-2 relative z-10">
         <div className="flex items-start gap-3">
           <div className="shrink-0">
             {primaryImage ? (
@@ -147,7 +147,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0 pt-2">
+      <CardContent className="p-0 pt-2 relative z-10">
         <div className="flex flex-wrap gap-1.5 mb-2 text-xs">
           {dose.schedule.with_food && (
             <span className="text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">🍽️ With food</span>
