@@ -88,14 +88,14 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
     <Card
       onClick={handleCardClick}
       className={cn(
-        "rounded-lg border px-3 py-3 transition-all duration-300 hover:shadow-lg",
+        "rounded-lg border px-3 py-3 transition-all duration-300 hover:shadow-lg cursor-pointer",
         dose.isTaken && "bg-success/5 border-success/30",
         (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-warning/30",
         !isCompleted && dose.status === "overdue" && "bg-destructive/5 border-destructive/30",
         !isCompleted && dose.status === "due" && "bg-accent/5 border-accent/30"
       )}
     >
-      <CardHeader className="p-0 pb-2">
+      <CardHeader className="p-0 pb-2 pointer-events-none">
         <div className="flex items-start gap-3">
           <div className="shrink-0">
             {primaryImage ? (
@@ -140,14 +140,14 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
               )}
             </div>
           </div>
-          <div className="self-start">
+          <div className="self-start pointer-events-auto">
             <Button onClick={() => onEdit(dose.medication.id)} size="icon" variant="ghost" className="rounded-full h-7 w-7">
               <Edit className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0 pt-2">
+      <CardContent className="p-0 pt-2 pointer-events-none">
         <div className="flex flex-wrap gap-1.5 mb-2 text-xs">
           {dose.schedule.with_food && (
             <span className="text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">🍽️ With food</span>
@@ -175,7 +175,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
           )}
         </div>
         {!isCompleted && !isPastDate && (
-          <div className="space-y-2">
+          <div className="space-y-2 pointer-events-auto">
             <div className="grid grid-cols-3 gap-2">
               <Button
                 onClick={() => onMarkTaken(dose)}
