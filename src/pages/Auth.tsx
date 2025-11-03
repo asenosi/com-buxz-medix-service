@@ -41,7 +41,7 @@ const Auth = () => {
         if (error) throw error;
         
         toast.success("Welcome back!", {
-          className: "text-lg p-4 bg-primary/10 text-primary border-primary",
+          className: "text-lg p-4 bg-success/10 text-success border-success",
         });
         navigate("/dashboard");
       } else {
