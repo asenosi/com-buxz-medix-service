@@ -3,10 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Pause, Play, Trash2, Plus } from "lucide-react";
+import { Edit, Pause, Play, Trash2, Plus, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import { SimpleDoseCard } from "@/components/SimpleDoseCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -171,63 +178,81 @@ const MedicationsList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">My Medications</h1>
-        <Button onClick={() => navigate("/medications/add")}>
+        <Button onClick={() => navigate("/medications/add")} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Add Medication
         </Button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {medications.map((med) => {
           const schedule = getFirstSchedule(med.id);
           return (
-            <Card key={med.id} className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <SimpleDoseCard
-                    medication={med}
-                    schedule={schedule}
+            <Card key={med.id} className="overflow-hidden hover:shadow-md transition-shadow">
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  <div 
+                    className="flex-1 cursor-pointer" 
                     onClick={() => navigate(`/medications/${med.id}`)}
-                  />
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigate(`/medications/${med.id}`)}
-                    title="Edit"
                   >
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                    <SimpleDoseCard
+                      medication={med}
+                      schedule={schedule}
+                    />
+                  </div>
                   
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleToggleActive(med.id, med.active)}
-                    title={med.active ? "Suspend" : "Activate"}
-                  >
-                    {med.active ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setSelectedMedId(med.id);
-                      setDeleteDialogOpen(true);
-                    }}
-                    title="Delete"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge 
+                      variant={med.active ? "default" : "secondary"}
+                      className="hidden sm:flex"
+                    >
+                      {med.active ? "Active" : "Inactive"}
+                    </Badge>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => navigate(`/medications/${med.id}`)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleToggleActive(med.id, med.active)}>
+                          {med.active ? (
+                            <>
+                              <Pause className="mr-2 h-4 w-4" />
+                              Suspend
+                            </>
+                          ) : (
+                            <>
+                              <Play className="mr-2 h-4 w-4" />
+                              Activate
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setSelectedMedId(med.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </div>
             </Card>
