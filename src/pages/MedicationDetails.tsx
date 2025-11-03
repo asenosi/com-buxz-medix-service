@@ -138,6 +138,25 @@ const MedicationDetails = () => {
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  const formatDays = (days: number[] | null) => {
+    if (!days || days.length === 0) return "Everyday";
+    if (days.length === 7) return "Everyday";
+    if (days.length === 5 && !days.includes(0) && !days.includes(6)) return "Weekdays";
+    if (days.length === 2 && days.includes(0) && days.includes(6)) return "Weekends";
+    return days.sort((a, b) => a - b).map(d => dayNames[d]).join(", ");
+  };
+
+  const getFrequencyText = () => {
+    const activeSchedules = schedules.filter(s => s.active);
+    const count = activeSchedules.length;
+    if (count === 0) return "No active schedules";
+    if (count === 1) return "Once daily";
+    if (count === 2) return "Twice daily";
+    if (count === 3) return "Three times daily";
+    if (count === 4) return "Four times daily";
+    return `${count} times daily`;
+  };
+
   return (
     <div className="space-y-4 pb-6">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -281,59 +300,78 @@ const MedicationDetails = () => {
         {/* Schedules */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Schedules
-            </CardTitle>
-            <CardDescription>When to take this medication</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Schedule
+                </CardTitle>
+                <CardDescription className="mt-1">{getFrequencyText()}</CardDescription>
+              </div>
+              {schedules.length > 0 && (
+                <Badge variant="secondary" className="text-sm">
+                  {formatDays(schedules[0]?.days_of_week)}
+                </Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {schedules.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No schedules configured</p>
             ) : (
-              <div className="space-y-3">
-                {schedules.map((s, idx) => (
-                  <div key={s.id}>
-                    {idx > 0 && <Separator className="my-3" />}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-primary" />
-                          <span className="font-semibold text-lg">{s.time_of_day}</span>
-                        </div>
-                        <Badge variant={s.active ? "default" : "secondary"}>
-                          {s.active ? "Active" : "Inactive"}
-                        </Badge>
+              <div className="space-y-4">
+                {/* Timing Section */}
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Times</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {schedules.filter(s => s.active).map((s) => (
+                      <div key={s.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
+                        <Clock className="w-4 h-4 text-primary shrink-0" />
+                        <span className="font-medium">{s.time_of_day}</span>
                       </div>
-                      
-                      {s.days_of_week && s.days_of_week.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex gap-1">
-                            {s.days_of_week.map((day) => (
-                              <Badge key={day} variant="outline" className="text-xs px-2 py-0">
-                                {dayNames[day]}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {s.with_food && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Pill className="w-4 h-4" />
-                          <span>Take with food</span>
-                        </div>
-                      )}
-                      
-                      {s.special_instructions && (
-                        <div className="text-sm text-muted-foreground pl-6">
-                          {s.special_instructions}
-                        </div>
-                      )}
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                {/* Instructions Section */}
+                {(schedules.some(s => s.with_food) || schedules.some(s => s.special_instructions)) && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Instructions</p>
+                      <div className="space-y-2">
+                        {schedules.some(s => s.with_food) && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Pill className="w-4 h-4 text-primary" />
+                            <span>Take with food</span>
+                          </div>
+                        )}
+                        {schedules.map((s) => s.special_instructions && (
+                          <div key={s.id} className="text-sm text-muted-foreground">
+                            • {s.special_instructions}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Inactive Schedules */}
+                {schedules.filter(s => !s.active).length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Inactive</p>
+                      <div className="flex flex-wrap gap-2">
+                        {schedules.filter(s => !s.active).map((s) => (
+                          <Badge key={s.id} variant="outline" className="text-xs">
+                            {s.time_of_day}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </CardContent>
