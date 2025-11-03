@@ -58,7 +58,7 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className }: Sim
         className
       )}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 pointer-events-none">
         {/* Icon/Image */}
         <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0", getIconColor(medication.form))}>
           {primaryImage ? (
