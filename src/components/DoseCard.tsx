@@ -88,7 +88,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
     <Card
       onClick={handleCardClick}
       className={cn(
-        "rounded-lg border px-3 py-3 transition-all duration-300 hover:shadow-lg",
+        "rounded-lg border px-3 py-3 transition-all duration-300 hover:shadow-lg cursor-pointer",
         dose.isTaken && "bg-success/5 border-success/30",
         (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-warning/30",
         !isCompleted && dose.status === "overdue" && "bg-destructive/5 border-destructive/30",
