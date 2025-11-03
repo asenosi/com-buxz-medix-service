@@ -40,7 +40,14 @@ const Auth = () => {
 
         if (error) throw error;
         
-        toast.success("Welcome back!");
+        toast.success("Welcome back!", {
+          className: "text-lg p-4",
+          style: {
+            background: "hsl(142 76% 95%)",
+            color: "hsl(142 76% 36%)",
+            border: "1px solid hsl(142 76% 36%)",
+          },
+        });
         navigate("/dashboard");
       } else {
         const { error: signUpError, data } = await supabase.auth.signUp({
