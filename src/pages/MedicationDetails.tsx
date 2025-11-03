@@ -185,7 +185,7 @@ const MedicationDetails = () => {
         </div>
       </div>
 
-      <div className="px-3 space-y-4">
+      <div className="px-2 space-y-4">
         {/* Header Card with Image */}
         <Card className="overflow-hidden">
           <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6">
@@ -291,59 +291,6 @@ const MedicationDetails = () => {
           </CardContent>
         </Card>
 
-        {/* Refill Reminder */}
-        {(med.refill_reminder_threshold !== null || med.pills_remaining !== null) && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Pill className="w-5 h-5" />
-                Refill Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div>
-                  <p className="text-sm font-medium">Pills Remaining</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Current inventory</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">{med.pills_remaining ?? 0}</p>
-                </div>
-              </div>
-              
-              {med.refill_reminder_threshold !== null && (
-                <>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Refill Alert Threshold</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        You'll be notified when pills fall below this amount
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="ml-2">
-                      {med.refill_reminder_threshold} pills
-                    </Badge>
-                  </div>
-                </>
-              )}
-              
-              {med.pills_remaining !== null && med.refill_reminder_threshold !== null && 
-               med.pills_remaining <= med.refill_reminder_threshold && (
-                <>
-                  <Separator />
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
-                    <Badge variant="destructive" className="mt-0.5">Low Stock</Badge>
-                    <p className="text-sm flex-1">
-                      Time to refill! Your medication is running low.
-                    </p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         {/* Schedules */}
         <Card>
           <CardHeader>
@@ -423,6 +370,59 @@ const MedicationDetails = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Refill Reminder */}
+        {(med.refill_reminder_threshold !== null || med.pills_remaining !== null) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Pill className="w-5 h-5" />
+                Refill Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div>
+                  <p className="text-sm font-medium">Pills Remaining</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Current inventory</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{med.pills_remaining ?? 0}</p>
+                </div>
+              </div>
+              
+              {med.refill_reminder_threshold !== null && (
+                <>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Refill Alert Threshold</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        You'll be notified when pills fall below this amount
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="ml-2">
+                      {med.refill_reminder_threshold} pills
+                    </Badge>
+                  </div>
+                </>
+              )}
+              
+              {med.pills_remaining !== null && med.refill_reminder_threshold !== null && 
+               med.pills_remaining <= med.refill_reminder_threshold && (
+                <>
+                  <Separator />
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive">
+                    <Badge variant="destructive" className="mt-0.5">Low Stock</Badge>
+                    <p className="text-sm flex-1">
+                      Time to refill! Your medication is running low.
+                    </p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
