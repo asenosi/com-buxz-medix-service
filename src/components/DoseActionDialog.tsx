@@ -98,7 +98,7 @@ export const DoseActionDialog = ({
                 <span className="text-xs">Edit</span>
               </Button>
               <Button size="sm" variant="ghost" onClick={onDelete} className="h-8 px-2 text-destructive hover:text-destructive">
-                <Trash2 className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
