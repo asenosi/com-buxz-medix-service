@@ -62,26 +62,13 @@ const Alerts = () => {
       
       console.log("Creating test notification...");
       
-      // Check if service worker is available
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification("Test Notification 🔔", {
-          body: "Notifications are working! You'll receive reminders for your medications.",
-          icon: "/favicon.ico",
-          badge: "/favicon.ico",
-          requireInteraction: false,
-        });
-      } else {
-        // Fallback to direct notification
-        new Notification("Test Notification 🔔", {
-          body: "Notifications are working! You'll receive reminders for your medications.",
-          icon: "/favicon.ico",
-          badge: "/favicon.ico",
-          requireInteraction: false,
-        });
-      }
+      // Use sendNotification from hook which handles preferences correctly
+      sendNotification("Test Notification 🔔", {
+        body: "Notifications are working! You'll receive reminders for your medications.",
+        requireInteraction: false,
+      });
       
-      console.log("Test notification created");
+      console.log("Test notification sent");
       toast.success("Test notification sent!");
     } catch (error) {
       console.error("Failed to send test notification:", error);
