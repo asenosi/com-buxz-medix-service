@@ -18,42 +18,39 @@ export const FloatingActionButton = ({ actions }: FloatingActionButtonProps) => 
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-4 z-50 flex flex-col items-end">
-      {/* Action Buttons */}
-      <div
-        className={cn(
-          "flex flex-col-reverse gap-3 mb-3 transition-all duration-300",
-          isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
-        )}
-      >
-        {actions.map((action, idx) => (
-          <div
-            key={idx}
-            className="flex items-center gap-3 animate-fade-in"
-            style={{ animationDelay: `${idx * 50}ms` }}
-          >
-            <span className="bg-card text-card-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap hidden sm:block">
-              {action.label}
-            </span>
-            <span className="bg-card text-card-foreground px-3 py-1.5 rounded-lg shadow-lg text-xs font-medium whitespace-nowrap sm:hidden">
-              {action.label}
-            </span>
-            <Button
-              size="lg"
-              className={cn(
-                "rounded-full h-14 w-14 sm:h-16 sm:w-16 shadow-xl hover:scale-110 transition-transform",
-                action.color
-              )}
-              onClick={() => {
-                action.onClick();
-                setIsOpen(false);
-              }}
+    <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3">
+      {/* Action Buttons - Only render when open */}
+      {isOpen && (
+        <div className="flex flex-col-reverse gap-3 animate-in fade-in slide-in-from-bottom-4">
+          {actions.map((action, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-3"
+              style={{ animationDelay: `${idx * 50}ms` }}
             >
-              {action.icon}
-            </Button>
-          </div>
-        ))}
-      </div>
+              <span className="bg-card text-card-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap hidden sm:block">
+                {action.label}
+              </span>
+              <span className="bg-card text-card-foreground px-3 py-1.5 rounded-lg shadow-lg text-xs font-medium whitespace-nowrap sm:hidden">
+                {action.label}
+              </span>
+              <Button
+                size="lg"
+                className={cn(
+                  "rounded-full h-14 w-14 sm:h-16 sm:w-16 shadow-xl hover:scale-110 transition-transform",
+                  action.color
+                )}
+                onClick={() => {
+                  action.onClick();
+                  setIsOpen(false);
+                }}
+              >
+                {action.icon}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Main FAB */}
       <Button
