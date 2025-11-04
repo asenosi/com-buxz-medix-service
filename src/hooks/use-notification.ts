@@ -12,6 +12,9 @@ interface NotificationPreferences {
   remind_for_missed: boolean;
   quiet_hours_start: string | null;
   quiet_hours_end: string | null;
+  enabled_types?: string[] | null;
+  default_type?: string | null;
+  use_actions?: boolean | null;
 }
 
 export function useNotification() {
@@ -36,6 +39,8 @@ export function useNotification() {
         .from("notification_preferences")
         .select("*")
         .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
@@ -51,6 +56,9 @@ export function useNotification() {
           remind_for_missed: true,
           quiet_hours_start: null,
           quiet_hours_end: null,
+          enabled_types: ["dose_due", "refill_reminder", "streak_milestone"],
+          default_type: "dose_due",
+          use_actions: true,
         };
 
         const { data: newData, error: insertError } = await supabase
@@ -105,21 +113,71 @@ export function useNotification() {
   const updatePreferences = useCallback(async (updates: Partial<NotificationPreferences>) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session || !preferences) return;
+      if (!session) return;
 
-      const { data, error } = await supabase
-        .from("notification_preferences")
-        .update(updates)
-        .eq("user_id", session.user.id)
-        .select()
-        .single();
+      // Ensure we always have a row; use upsert to avoid 0-row update errors
+      // Only include keys that exist on the loaded record to avoid unknown-column errors
+      const allowed = new Set(Object.keys(preferences ?? {}));
+      const filteredUpdates = preferences
+        ? (Object.fromEntries(
+            Object.entries(updates).filter(([k]) => allowed.has(k))
+          ) as Partial<NotificationPreferences>)
+        : updates;
 
-      if (error) throw error;
-      setPreferences(data);
+      // If nothing to change (e.g., field not present on this schema), exit quietly
+      if (!filteredUpdates || Object.keys(filteredUpdates).length === 0) {
+        return;
+      }
+
+      // Ensure we operate on a single row by id (handles duplicates safely)
+      const existingId = preferences?.id
+        ?? (await supabase
+              .from("notification_preferences")
+              .select("id")
+              .eq("user_id", session.user.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            ).data?.id;
+
+      if (existingId) {
+        const { data, error } = await supabase
+          .from("notification_preferences")
+          .update(filteredUpdates)
+          .eq("id", existingId)
+          .select()
+          .single();
+        if (error) throw error;
+        setPreferences(data);
+      } else {
+        // Insert a minimal valid row (only required NOT NULL columns), merge known updates
+        const base = {
+          user_id: session.user.id,
+          enabled: true,
+          browser_enabled: true,
+          sound_enabled: true,
+          reminder_minutes_before: 15,
+          remind_for_missed: true,
+          quiet_hours_start: null as string | null,
+          quiet_hours_end: null as string | null,
+        };
+        const insertPayload = { ...base, ...filteredUpdates } as NotificationPreferences;
+        const { data, error } = await supabase
+          .from("notification_preferences")
+          .insert(insertPayload)
+          .select()
+          .single();
+        if (error) throw error;
+        setPreferences(data);
+      }
       toast.success("Notification settings updated");
     } catch (error) {
       console.error("Failed to update preferences:", error);
-      toast.error("Failed to update notification settings");
+      const anyErr = error as any;
+      const msg =
+        (anyErr && (anyErr.message || anyErr.hint || anyErr.code)) ||
+        (typeof anyErr === "string" ? anyErr : "Unknown error");
+      toast.error(`Failed to update notification settings: ${msg}`);
     }
   }, [preferences]);
 
@@ -146,7 +204,7 @@ export function useNotification() {
   }, [preferences]);
 
   // Send notification
-  const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
+  const sendNotification = useCallback((title: string, options?: NotificationOptions & { url?: string }) => {
     if (!preferences?.enabled || !preferences?.browser_enabled) {
       return;
     }
@@ -166,6 +224,13 @@ export function useNotification() {
         badge: "/favicon.ico",
         ...options,
       });
+
+      if (options?.url) {
+        notification.onclick = () => {
+          window.focus();
+          window.open(options.url!, "_blank");
+        };
+      }
 
       if (preferences?.sound_enabled) {
         // Play notification sound (you can add a sound file)
