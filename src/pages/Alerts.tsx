@@ -218,7 +218,7 @@ const Alerts = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -226,70 +226,58 @@ const Alerts = () => {
   return (
     <div className="min-h-screen pb-20">
       {/* Header */}
-      <div className="bg-background border-b border-border pb-6 mb-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Alert Center</h1>
-            <p className="text-muted-foreground text-lg">Stay on track with your medications</p>
-          </div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold mb-1">Alerts</h1>
+          <p className="text-sm text-muted-foreground">Stay on track with your medications</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {preferences?.enabled && preferences?.browser_enabled ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-success/10 text-success rounded-full text-xs">
+              <Bell className="w-3 h-3" />
+              <span>Active</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs">
+              <BellOff className="w-3 h-3" />
+              <span>Off</span>
+            </div>
+          )}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/notification-settings")}
-            className="shrink-0"
+            className="h-8 w-8"
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-4 h-4" />
           </Button>
-        </div>
-        
-        {/* Notification Status */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {preferences?.enabled && preferences?.browser_enabled ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-full text-sm">
-              <Bell className="w-4 h-4" />
-              <span>Notifications Active</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-destructive/10 text-destructive rounded-full text-sm">
-              <BellOff className="w-4 h-4" />
-              <span>Notifications Disabled</span>
-            </div>
-          )}
         </div>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Urgent Alerts */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Urgent Alerts</h2>
-          {missedDoses.length === 0 ? (
-            <Card className="border-border">
-              <CardContent className="py-8 text-center text-muted-foreground">
-                <CheckCircle className="w-12 h-12 mx-auto mb-2 text-success" />
-                <p className="text-lg">No missed doses - great job!</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
+        {missedDoses.length > 0 && (
+          <section>
+            <h2 className="text-sm font-medium text-muted-foreground mb-3">Urgent</h2>
+            <div className="space-y-2">
               {missedDoses.map((dose, idx) => (
-                <Card key={`${dose.schedule.id}-${idx}`} className="border-l-4 border-l-destructive">
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <AlertCircle className="w-6 h-6 text-destructive mt-1 shrink-0" />
+                <Card key={`${dose.schedule.id}-${idx}`} className="border-l-2 border-l-destructive">
+                  <CardContent className="flex items-center justify-between p-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg mb-1">
-                          Missed Dose: {dose.medication.name}
+                        <h3 className="font-medium text-sm mb-0.5">
+                          {dose.medication.name}
                         </h3>
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          <span>{formatDistanceToNow(dose.scheduledTime, { addSuffix: true })}</span>
-                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(dose.scheduledTime, { addSuffix: true })}
+                        </p>
                       </div>
                     </div>
                     <Button
                       onClick={() => handleTakeNow(dose)}
-                      className="bg-cyan-500 hover:bg-cyan-600 text-white shrink-0"
-                      size="lg"
+                      size="sm"
+                      className="shrink-0"
                     >
                       Take Now
                     </Button>
@@ -297,41 +285,40 @@ const Alerts = () => {
                 </Card>
               ))}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* Today's Reminders */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Today's Reminders</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">Upcoming</h2>
           {upcomingDoses.length === 0 ? (
-            <Card className="border-border">
-              <CardContent className="py-8 text-center text-muted-foreground">
-                <Bell className="w-12 h-12 mx-auto mb-2" />
-                <p className="text-lg">No upcoming doses for today</p>
+            <Card>
+              <CardContent className="py-6 text-center">
+                <CheckCircle className="w-8 h-8 mx-auto mb-2 text-success" />
+                <p className="text-sm text-muted-foreground">All caught up!</p>
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {upcomingDoses.slice(0, 5).map((dose, idx) => (
-                <Card key={`${dose.schedule.id}-${idx}`} className="border-l-4 border-l-primary">
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <Bell className="w-6 h-6 text-primary mt-1 shrink-0" />
+                <Card key={`${dose.schedule.id}-${idx}`}>
+                  <CardContent className="flex items-center justify-between p-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <Bell className="w-4 h-4 text-primary shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg mb-1">{dose.medication.name}</h3>
-                        <p className="text-muted-foreground mb-1">Due</p>
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          <span>{format(dose.scheduledTime, "h:mm a")}</span>
-                        </div>
+                        <h3 className="font-medium text-sm mb-0.5">{dose.medication.name}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {format(dose.scheduledTime, "h:mm a")}
+                        </p>
                       </div>
                     </div>
                     <Button
                       onClick={() => navigate("/dashboard")}
-                      className="bg-cyan-500 hover:bg-cyan-600 text-white shrink-0"
-                      size="lg"
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0"
                     >
-                      Set Reminder
+                      View
                     </Button>
                   </CardContent>
                 </Card>
@@ -342,23 +329,19 @@ const Alerts = () => {
 
         {/* Recent Updates */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Recent Updates</h2>
-          <Card className="border-border hover:bg-accent/5 transition-colors cursor-pointer" onClick={() => navigate("/medications")}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="bg-success/10 rounded-full p-2 mt-1 shrink-0">
-                  <CheckCircle className="w-5 h-5 text-success" />
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">Recent</h2>
+          <Card className="hover:bg-accent/5 transition-colors cursor-pointer" onClick={() => navigate("/medications")}>
+            <CardContent className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="bg-success/10 rounded-full p-1.5 shrink-0">
+                  <CheckCircle className="w-3.5 h-3.5 text-success" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-lg mb-1">Medication Refill Ready</h3>
-                  <p className="text-muted-foreground mb-2">Your prescription is ready for pickup</p>
-                  <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                    <Clock className="w-4 h-4" />
-                    <span>2:30 PM</span>
-                  </div>
+                  <h3 className="font-medium text-sm mb-0.5">Medication Refill Ready</h3>
+                  <p className="text-xs text-muted-foreground">Your prescription is ready for pickup</p>
                 </div>
               </div>
-              <ChevronRight className="w-6 h-6 text-muted-foreground shrink-0" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
             </CardContent>
           </Card>
         </section>
