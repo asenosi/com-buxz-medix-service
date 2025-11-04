@@ -613,18 +613,23 @@ const Calendar = () => {
 
           <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-border">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between w-full gap-4">
-                <div className="text-center flex-1">
-                  <p className="text-2xl font-bold text-success">{adherenceStats.taken}</p>
-                  <p className="text-sm text-muted-foreground">Taken</p>
+              <div className="flex items-center gap-4 w-full">
+                <div className="bg-accent rounded-full p-3 shrink-0">
+                  <TrendingUp className="w-6 h-6 text-primary" />
                 </div>
-                <div className="text-center flex-1">
-                  <p className="text-2xl font-bold text-warning">{adherenceStats.skipped}</p>
-                  <p className="text-sm text-muted-foreground">Skipped</p>
-                </div>
-                <div className="text-center flex-1">
-                  <p className="text-2xl font-bold text-destructive">{adherenceStats.missed}</p>
-                  <p className="text-sm text-muted-foreground">Missed</p>
+                <div className="flex justify-between flex-1 gap-2">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-success">{adherenceStats.taken}</p>
+                    <p className="text-xs text-muted-foreground">Taken</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-warning">{adherenceStats.skipped}</p>
+                    <p className="text-xs text-muted-foreground">Skipped</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-destructive">{adherenceStats.missed}</p>
+                    <p className="text-xs text-muted-foreground">Missed</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
