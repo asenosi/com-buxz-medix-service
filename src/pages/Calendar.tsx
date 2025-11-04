@@ -554,6 +554,14 @@ const Calendar = () => {
                 <MonthCalendar
                   selectedDate={selectedDate || new Date()}
                   onDateSelect={handleDateSelect}
+                  adherenceData={calendarDays.map(day => ({
+                    date: day.date,
+                    hasTaken: day.hasTaken,
+                    hasSkipped: day.hasSkipped,
+                    hasSnoozed: day.hasSnoozed,
+                    totalDoses: day.logs.length,
+                    takenDoses: day.logs.filter(log => log.status === 'taken').length
+                  }))}
                 />
               )}
 
@@ -561,6 +569,14 @@ const Calendar = () => {
                 <WeekCalendar
                   selectedDate={selectedDate || new Date()}
                   onDateSelect={handleDateSelect}
+                  adherenceData={calendarDays.map(day => ({
+                    date: day.date,
+                    hasTaken: day.hasTaken,
+                    hasSkipped: day.hasSkipped,
+                    hasSnoozed: day.hasSnoozed,
+                    totalDoses: day.logs.length,
+                    takenDoses: day.logs.filter(log => log.status === 'taken').length
+                  }))}
                 />
               )}
             </CardContent>
