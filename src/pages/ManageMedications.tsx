@@ -65,6 +65,13 @@ const menuSections = {
   ],
   settings: [
     {
+      icon: Bell,
+      label: "Notification Settings",
+      description: "Configure medication reminders",
+      path: "/notification-settings",
+      iconBg: "bg-purple-500/10 text-purple-500",
+    },
+    {
       icon: Settings,
       label: "App Settings",
       path: "/profile",
@@ -77,13 +84,6 @@ const menuSections = {
       path: "/auth",
       badge: "!",
       iconBg: "bg-emerald-500/10 text-emerald-500",
-    },
-    {
-      icon: Bell,
-      label: "Reminders Troubleshooting",
-      path: "/alerts",
-      badge: "!",
-      iconBg: "bg-purple-500/10 text-purple-500",
     },
     {
       icon: HelpCircle,

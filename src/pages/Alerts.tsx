@@ -37,44 +37,7 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [missedDoses, setMissedDoses] = useState<AlertDose[]>([]);
   const [upcomingDoses, setUpcomingDoses] = useState<AlertDose[]>([]);
-  const { permission, preferences, requestPermission, sendNotification, updatePreferences } = useNotification();
-
-  const testNotification = async () => {
-    console.log("Test notification clicked");
-    console.log("Current permission:", permission);
-    
-    try {
-      // Check if browser supports notifications
-      if (!("Notification" in window)) {
-        toast.error("Your browser doesn't support notifications");
-        return;
-      }
-
-      // Request permission if not granted
-      if (permission !== "granted") {
-        console.log("Requesting notification permission...");
-        const granted = await requestPermission();
-        if (!granted) {
-          toast.error("Please allow notifications in your browser settings");
-          return;
-        }
-      }
-      
-      console.log("Creating test notification...");
-      
-      // Use sendNotification from hook which handles preferences correctly
-      sendNotification("Test Notification 🔔", {
-        body: "Notifications are working! You'll receive reminders for your medications.",
-        requireInteraction: false,
-      });
-      
-      console.log("Test notification sent");
-      toast.success("Test notification sent!");
-    } catch (error) {
-      console.error("Failed to send test notification:", error);
-      toast.error(`Failed: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
-  };
+  const { preferences, sendNotification } = useNotification();
 
   const fetchAlerts = useCallback(async () => {
     try {
@@ -281,7 +244,7 @@ const Alerts = () => {
         
         {/* Notification Status */}
         <div className="flex items-center gap-3 flex-wrap">
-          {permission === "granted" && preferences?.enabled && preferences?.browser_enabled ? (
+          {preferences?.enabled && preferences?.browser_enabled ? (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-full text-sm">
               <Bell className="w-4 h-4" />
               <span>Notifications Active</span>
@@ -291,37 +254,6 @@ const Alerts = () => {
               <BellOff className="w-4 h-4" />
               <span>Notifications Disabled</span>
             </div>
-          )}
-          
-          {/* Quick toggle for notifications */}
-          {permission === "granted" && preferences && (
-            <Button
-              variant={preferences.enabled && preferences.browser_enabled ? "destructive" : "default"}
-              size="sm"
-              onClick={() => updatePreferences({ 
-                enabled: !(preferences.enabled && preferences.browser_enabled),
-                browser_enabled: !(preferences.enabled && preferences.browser_enabled)
-              })}
-            >
-              {preferences.enabled && preferences.browser_enabled ? "Disable All" : "Enable All"}
-            </Button>
-          )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={testNotification}
-          >
-            Test Notification
-          </Button>
-          {permission !== "granted" && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={requestPermission}
-            >
-              Enable Notifications
-            </Button>
           )}
         </div>
       </div>
