@@ -61,15 +61,27 @@ const Alerts = () => {
       }
       
       console.log("Creating test notification...");
-      // Send test notification directly, bypassing preference checks
-      const notification = new Notification("Test Notification 🔔", {
-        body: "Notifications are working! You'll receive reminders for your medications.",
-        icon: "/favicon.ico",
-        badge: "/favicon.ico",
-        requireInteraction: false,
-      });
       
-      console.log("Test notification created:", notification);
+      // Check if service worker is available
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification("Test Notification 🔔", {
+          body: "Notifications are working! You'll receive reminders for your medications.",
+          icon: "/favicon.ico",
+          badge: "/favicon.ico",
+          requireInteraction: false,
+        });
+      } else {
+        // Fallback to direct notification
+        new Notification("Test Notification 🔔", {
+          body: "Notifications are working! You'll receive reminders for your medications.",
+          icon: "/favicon.ico",
+          badge: "/favicon.ico",
+          requireInteraction: false,
+        });
+      }
+      
+      console.log("Test notification created");
       toast.success("Test notification sent!");
     } catch (error) {
       console.error("Failed to send test notification:", error);
