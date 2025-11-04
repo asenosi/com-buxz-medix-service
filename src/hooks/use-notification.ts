@@ -171,12 +171,15 @@ export function useNotification() {
         setPreferences(data);
       }
       toast.success("Notification settings updated");
-    } catch (error) {
-      console.error("Failed to update preferences:", error);
-      const anyErr = error as any;
-      const msg =
-        (anyErr && (anyErr.message || anyErr.hint || anyErr.code)) ||
-        (typeof anyErr === "string" ? anyErr : "Unknown error");
+    } catch (err) {
+      console.error("Failed to update preferences:", err);
+      let msg = "Unknown error";
+      if (typeof err === "string") {
+        msg = err;
+      } else if (err && typeof err === "object") {
+        const e = err as { message?: string; hint?: string; code?: string };
+        msg = e.message || e.hint || e.code || msg;
+      }
       toast.error(`Failed to update notification settings: ${msg}`);
     }
   }, [preferences]);
