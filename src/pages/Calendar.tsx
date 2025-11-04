@@ -86,7 +86,6 @@ const Calendar = () => {
   });
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [adherencePeriod, setAdherencePeriod] = useState<"day" | "week" | "month">("day");
   const [medicationAdherence, setMedicationAdherence] = useState<{
     medicationId: string;
     medicationName: string;
@@ -164,31 +163,34 @@ const Calendar = () => {
     }
   }, [selectedMedication]);
 
-  const calculateAdherenceForPeriod = useCallback(async () => {
+  const calculateAdherenceForPeriod = useCallback(async (baseDate: Date, viewMode: "week" | "month") => {
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const endOfToday = new Date();
-      endOfToday.setHours(23, 59, 59, 999);
-      
       let startDate: Date;
+      let endDate: Date;
       
-      if (adherencePeriod === "day") {
-        startDate = new Date(today);
-      } else if (adherencePeriod === "week") {
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - 7);
+      if (viewMode === "week") {
+        // Calculate week boundaries (Sunday to Saturday)
+        startDate = new Date(baseDate);
+        startDate.setDate(baseDate.getDate() - baseDate.getDay());
+        startDate.setHours(0, 0, 0, 0);
+        
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
       } else {
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - 30);
+        // Calculate month boundaries
+        startDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+        startDate.setHours(0, 0, 0, 0);
+        
+        endDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
       }
       
       let query = supabase
         .from("dose_logs")
         .select("*, medications(name)")
         .gte("scheduled_time", startDate.toISOString())
-        .lte("scheduled_time", endOfToday.toISOString());
+        .lte("scheduled_time", endDate.toISOString());
       
       if (selectedMedication) {
         query = query.eq("medication_id", selectedMedication);
@@ -235,7 +237,7 @@ const Calendar = () => {
     } catch (error: unknown) {
       console.error("Failed to calculate adherence:", error);
     }
-  }, [adherencePeriod, selectedMedication]);
+  }, [selectedMedication]);
 
   const fetchCalendarData = useCallback(async () => {
     try {
@@ -285,7 +287,7 @@ const Calendar = () => {
 
       // Calculate streak and adherence
       calculateStreak();
-      calculateAdherenceForPeriod();
+      calculateAdherenceForPeriod(selectedDate || currentDate, view);
     } catch (error: unknown) {
       toast.error("Failed to load calendar data");
       console.error(error);
@@ -407,9 +409,9 @@ const Calendar = () => {
 
   useEffect(() => {
     if (session) {
-      calculateAdherenceForPeriod();
+      calculateAdherenceForPeriod(selectedDate || currentDate, view);
     }
-  }, [adherencePeriod, session, calculateAdherenceForPeriod]);
+  }, [selectedDate, view, session, calculateAdherenceForPeriod, currentDate]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -429,6 +431,7 @@ const Calendar = () => {
     setSelectedDate(date);
     setCurrentDate(date);
     computeDosesForDate(date);
+    calculateAdherenceForPeriod(date, view);
   };
 
   const filteredDoses = useMemo(() => {
@@ -654,18 +657,20 @@ const Calendar = () => {
           )}
         </div>
 
-        {/* Period Selector for Stats */}
-        <div className="mb-4">
-          <Tabs value={adherencePeriod} onValueChange={(v) => setAdherencePeriod(v as "day" | "week" | "month")} className="w-full">
-            <TabsList className="grid h-10 w-full max-w-[400px] grid-cols-3">
-              <TabsTrigger value="day" className="text-sm">Today</TabsTrigger>
-              <TabsTrigger value="week" className="text-sm">Last 7 Days</TabsTrigger>
-              <TabsTrigger value="month" className="text-sm">Last 30 Days</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
         {/* Stats Cards */}
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold mb-2">
+            {view === "week" ? "Week Overview" : "Month Overview"}
+            {selectedDate && (
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                {view === "week" 
+                  ? `Week of ${new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - selectedDate.getDay()).toLocaleDateString()}`
+                  : selectedDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+                }
+              </span>
+            )}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           {/* Overall Stats */}
           <div className="grid grid-cols-3 gap-4">
