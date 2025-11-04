@@ -227,18 +227,18 @@ const Alerts = () => {
     <div className="min-h-screen pb-20">
       {/* Header */}
       <div className="bg-background border-b border-border pb-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Alert Center</h1>
             <p className="text-muted-foreground text-lg">Stay on track with your medications</p>
           </div>
           <Button
-            variant="outline"
+            variant="ghost"
+            size="icon"
             onClick={() => navigate("/profile")}
-            className="flex items-center gap-2"
+            className="shrink-0"
           >
-            <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Settings</span>
+            <Settings className="w-5 h-5" />
           </Button>
         </div>
         
