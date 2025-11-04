@@ -235,6 +235,10 @@ export type Database = {
           created_at: string
           enabled: boolean
           id: string
+          enabled_types: string[] | null
+          default_type: string | null
+          use_actions: boolean | null
+          action_settings: Json | null
           quiet_hours_end: string | null
           quiet_hours_start: string | null
           remind_for_missed: boolean
@@ -248,6 +252,10 @@ export type Database = {
           created_at?: string
           enabled?: boolean
           id?: string
+          enabled_types?: string[] | null
+          default_type?: string | null
+          use_actions?: boolean | null
+          action_settings?: Json | null
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           remind_for_missed?: boolean
@@ -261,6 +269,10 @@ export type Database = {
           created_at?: string
           enabled?: boolean
           id?: string
+          enabled_types?: string[] | null
+          default_type?: string | null
+          use_actions?: boolean | null
+          action_settings?: Json | null
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           remind_for_missed?: boolean
