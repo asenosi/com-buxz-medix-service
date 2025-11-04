@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, AlertCircle, Clock, CheckCircle, ChevronRight } from "lucide-react";
+import { Bell, AlertCircle, Clock, CheckCircle, ChevronRight, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
+import { useNotification } from "@/hooks/use-notification";
 
 interface Medication {
   id: string;
@@ -36,6 +37,7 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [missedDoses, setMissedDoses] = useState<AlertDose[]>([]);
   const [upcomingDoses, setUpcomingDoses] = useState<AlertDose[]>([]);
+  const { sendNotification, preferences } = useNotification();
 
   const fetchAlerts = useCallback(async () => {
     try {
@@ -134,16 +136,54 @@ const Alerts = () => {
 
       setMissedDoses(missed);
       setUpcomingDoses(upcoming);
+
+      // Send notifications for upcoming doses
+      if (preferences?.enabled && preferences?.browser_enabled) {
+        upcoming.slice(0, 3).forEach((dose) => {
+          const timeUntil = dose.scheduledTime.getTime() - Date.now();
+          const minutesUntil = Math.floor(timeUntil / (1000 * 60));
+          
+          if (minutesUntil <= (preferences?.reminder_minutes_before || 15) && minutesUntil > 0) {
+            sendNotification(
+              `Time for ${dose.medication.name}`,
+              {
+                body: `Your ${dose.medication.dosage} dose is due at ${format(dose.scheduledTime, "h:mm a")}`,
+                tag: `dose-${dose.schedule.id}`,
+                requireInteraction: true,
+              }
+            );
+          }
+        });
+
+        // Send notifications for missed doses
+        if (preferences?.remind_for_missed && missed.length > 0) {
+          missed.slice(0, 2).forEach((dose) => {
+            sendNotification(
+              `Missed: ${dose.medication.name}`,
+              {
+                body: `You missed your ${dose.medication.dosage} dose scheduled for ${format(dose.scheduledTime, "h:mm a")}`,
+                tag: `missed-${dose.schedule.id}`,
+                requireInteraction: true,
+              }
+            );
+          });
+        }
+      }
     } catch (error) {
       console.error("Failed to load alerts:", error);
       toast.error("Failed to load alerts");
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, sendNotification, preferences]);
 
   useEffect(() => {
     fetchAlerts();
+    
+    // Set up interval to check for alerts every minute
+    const interval = setInterval(fetchAlerts, 60000);
+    
+    return () => clearInterval(interval);
   }, [fetchAlerts]);
 
   const handleTakeNow = async (dose: AlertDose) => {
@@ -187,8 +227,20 @@ const Alerts = () => {
     <div className="min-h-screen pb-20">
       {/* Header */}
       <div className="bg-background border-b border-border pb-6 mb-6">
-        <h1 className="text-3xl font-bold mb-2">Alert Center</h1>
-        <p className="text-muted-foreground text-lg">Stay on track with your medications</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Alert Center</h1>
+            <p className="text-muted-foreground text-lg">Stay on track with your medications</p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/profile")}
+            className="flex items-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            <span className="hidden sm:inline">Settings</span>
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-8">
