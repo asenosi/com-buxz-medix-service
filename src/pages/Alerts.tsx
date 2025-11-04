@@ -39,21 +39,28 @@ const Alerts = () => {
   const [upcomingDoses, setUpcomingDoses] = useState<AlertDose[]>([]);
   const { permission, preferences, requestPermission, sendNotification } = useNotification();
 
-  const testNotification = () => {
-    if (permission !== "granted") {
-      requestPermission().then((granted) => {
-        if (granted) {
-          sendNotification("Test Notification", {
-            body: "Notifications are working! You'll receive reminders for your medications.",
-            requireInteraction: false,
-          });
+  const testNotification = async () => {
+    try {
+      if (permission !== "granted") {
+        const granted = await requestPermission();
+        if (!granted) {
+          toast.error("Please allow notifications in your browser settings");
+          return;
         }
-      });
-    } else {
-      sendNotification("Test Notification", {
+      }
+      
+      // Send test notification directly, bypassing preference checks
+      new Notification("Test Notification 🔔", {
         body: "Notifications are working! You'll receive reminders for your medications.",
+        icon: "/favicon.ico",
+        badge: "/favicon.ico",
         requireInteraction: false,
       });
+      
+      toast.success("Test notification sent!");
+    } catch (error) {
+      console.error("Failed to send test notification:", error);
+      toast.error("Failed to send test notification. Check browser settings.");
     }
   };
 
