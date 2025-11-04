@@ -169,6 +169,9 @@ const Calendar = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+      
       let startDate: Date;
       
       if (adherencePeriod === "day") {
@@ -185,7 +188,7 @@ const Calendar = () => {
         .from("dose_logs")
         .select("*, medications(name)")
         .gte("scheduled_time", startDate.toISOString())
-        .lte("scheduled_time", today.toISOString());
+        .lte("scheduled_time", endOfToday.toISOString());
       
       if (selectedMedication) {
         query = query.eq("medication_id", selectedMedication);
