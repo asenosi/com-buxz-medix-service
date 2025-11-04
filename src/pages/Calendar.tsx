@@ -211,7 +211,7 @@ const Calendar = () => {
       
       logs?.forEach(log => {
         const medId = log.medication_id;
-        const medName = (log.medications as any)?.name || "Unknown";
+        const medName = (log.medications as { name: string } | null)?.name || "Unknown";
         
         if (!medAdherence[medId]) {
           medAdherence[medId] = { name: medName, taken: 0, total: 0 };
