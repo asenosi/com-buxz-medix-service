@@ -37,7 +37,7 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [missedDoses, setMissedDoses] = useState<AlertDose[]>([]);
   const [upcomingDoses, setUpcomingDoses] = useState<AlertDose[]>([]);
-  const { permission, preferences, requestPermission, sendNotification } = useNotification();
+  const { permission, preferences, requestPermission, sendNotification, updatePreferences } = useNotification();
 
   const testNotification = async () => {
     try {
@@ -280,6 +280,21 @@ const Alerts = () => {
               <span>Notifications Disabled</span>
             </div>
           )}
+          
+          {/* Quick toggle for notifications */}
+          {permission === "granted" && preferences && (
+            <Button
+              variant={preferences.enabled && preferences.browser_enabled ? "destructive" : "default"}
+              size="sm"
+              onClick={() => updatePreferences({ 
+                enabled: !(preferences.enabled && preferences.browser_enabled),
+                browser_enabled: !(preferences.enabled && preferences.browser_enabled)
+              })}
+            >
+              {preferences.enabled && preferences.browser_enabled ? "Disable All" : "Enable All"}
+            </Button>
+          )}
+          
           <Button
             variant="outline"
             size="sm"
