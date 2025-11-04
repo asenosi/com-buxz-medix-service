@@ -235,7 +235,7 @@ const Alerts = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate("/notification-settings")}
             className="shrink-0"
           >
             <Settings className="w-5 h-5" />
