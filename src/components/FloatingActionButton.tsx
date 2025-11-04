@@ -18,11 +18,11 @@ export const FloatingActionButton = ({ actions }: FloatingActionButtonProps) => 
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-20 right-0 sm:bottom-6 sm:right-0 z-50 mr-2 border-none outline-none">
+    <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-4 z-50 flex flex-col items-end">
       {/* Action Buttons */}
       <div
         className={cn(
-          "flex flex-col-reverse gap-3 mb-3 transition-all duration-300 items-end",
+          "flex flex-col-reverse gap-3 mb-3 transition-all duration-300",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
         )}
       >
