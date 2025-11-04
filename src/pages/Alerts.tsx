@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, AlertCircle, Clock, CheckCircle, ChevronRight, Settings } from "lucide-react";
+import { Bell, AlertCircle, Clock, CheckCircle, ChevronRight, Settings, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 import { useNotification } from "@/hooks/use-notification";
@@ -37,7 +37,25 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [missedDoses, setMissedDoses] = useState<AlertDose[]>([]);
   const [upcomingDoses, setUpcomingDoses] = useState<AlertDose[]>([]);
-  const { sendNotification, preferences } = useNotification();
+  const { permission, preferences, requestPermission, sendNotification } = useNotification();
+
+  const testNotification = () => {
+    if (permission !== "granted") {
+      requestPermission().then((granted) => {
+        if (granted) {
+          sendNotification("Test Notification", {
+            body: "Notifications are working! You'll receive reminders for your medications.",
+            requireInteraction: false,
+          });
+        }
+      });
+    } else {
+      sendNotification("Test Notification", {
+        body: "Notifications are working! You'll receive reminders for your medications.",
+        requireInteraction: false,
+      });
+    }
+  };
 
   const fetchAlerts = useCallback(async () => {
     try {
@@ -227,7 +245,7 @@ const Alerts = () => {
     <div className="min-h-screen pb-20">
       {/* Header */}
       <div className="bg-background border-b border-border pb-6 mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Alert Center</h1>
             <p className="text-muted-foreground text-lg">Stay on track with your medications</p>
@@ -240,6 +258,37 @@ const Alerts = () => {
             <Settings className="w-4 h-4" />
             <span className="hidden sm:inline">Settings</span>
           </Button>
+        </div>
+        
+        {/* Notification Status */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {permission === "granted" && preferences?.enabled && preferences?.browser_enabled ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-full text-sm">
+              <Bell className="w-4 h-4" />
+              <span>Notifications Active</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-destructive/10 text-destructive rounded-full text-sm">
+              <BellOff className="w-4 h-4" />
+              <span>Notifications Disabled</span>
+            </div>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={testNotification}
+          >
+            Test Notification
+          </Button>
+          {permission !== "granted" && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={requestPermission}
+            >
+              Enable Notifications
+            </Button>
+          )}
         </div>
       </div>
 

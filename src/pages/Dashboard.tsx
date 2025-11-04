@@ -24,6 +24,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeekCalendar } from "@/components/WeekCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { StreakCard } from "@/components/StreakCard";
+import { useNotification } from "@/hooks/use-notification";
 
 interface Medication {
   id: string;
@@ -85,6 +86,8 @@ const Dashboard = () => {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
   const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
   const [userName, setUserName] = useState<string>("");
+  const { permission, preferences, requestPermission, sendNotification } = useNotification();
+  
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -422,18 +425,12 @@ const Dashboard = () => {
     initAuth();
   }, [navigate, fetchMedications]);
 
-  // Ask for browser notification permission; falls back to in-app toast
+  // Request notification permission on mount
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      try {
-        if (Notification.permission === "default") {
-          Notification.requestPermission().catch(() => {});
-        }
-      } catch {
-        // ignore
-      }
+    if (permission === "default") {
+      requestPermission();
     }
-  }, []);
+  }, [permission, requestPermission]);
 
   // Clean up timers on unmount
   useEffect(() => {
@@ -445,17 +442,15 @@ const Dashboard = () => {
   }, []);
 
   const notify = useCallback((title: string, body: string) => {
-    try {
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-        new Notification(title, { body });
-      }
-    } catch {
-      // ignore Notification failures; fallback to toast below
+    if (preferences?.enabled && preferences?.browser_enabled) {
+      sendNotification(title, { body, requireInteraction: false });
     }
+    // Also show toast for in-app visibility
     toast.info(body, { description: title });
-  }, []);
+  }, [preferences, sendNotification]);
 
   const scheduleReminder = useCallback((key: string, when: Date, title: string, message: string) => {
+    if (!preferences?.enabled) return;
     if (scheduledRef.current.has(key)) return;
     const delay = when.getTime() - Date.now();
     const trigger = () => {
@@ -471,11 +466,13 @@ const Dashboard = () => {
     scheduledRef.current.add(key);
     const timeoutId = window.setTimeout(trigger, delay);
     timersRef.current.set(key, timeoutId);
-  }, [notify]);
+  }, [notify, preferences]);
 
   // Schedule reminders for upcoming medication times and snooze end times
   useEffect(() => {
     const now = Date.now();
+    const reminderMinutes = preferences?.reminder_minutes_before || 15;
+    
     todayDoses.forEach((dose) => {
       // Snoozed item: schedule reminder for snooze end
       if (dose.isSnoozed && dose.snoozeUntil && dose.snoozeUntil.getTime() > now) {
@@ -487,15 +484,20 @@ const Dashboard = () => {
       // Otherwise, schedule regular reminder if not taken/skipped
       if (dose.isTaken || dose.isSkipped) return;
       const key = `${dose.schedule.id}-${dose.nextDoseTime.toISOString()}`;
-      const when = dose.nextDoseTime;
-      if (when.getTime() > now) {
-        scheduleReminder(key, when, "Medication Reminder", `Time to take ${dose.medication.name}`);
-      } else if ((now - when.getTime()) < 60_000) {
+      // Schedule reminder X minutes before dose time
+      const reminderTime = new Date(dose.nextDoseTime.getTime() - (reminderMinutes * 60 * 1000));
+      
+      if (reminderTime.getTime() > now) {
+        scheduleReminder(key, reminderTime, "Medication Reminder", `${dose.medication.name} due in ${reminderMinutes} minutes`);
+      } else if (dose.nextDoseTime.getTime() > now) {
+        // If we're past the reminder time but dose is still upcoming, notify now
+        scheduleReminder(key, new Date(), "Medication Reminder", `Time to take ${dose.medication.name}`);
+      } else if ((now - dose.nextDoseTime.getTime()) < 60_000) {
         // Just became due within last minute
         scheduleReminder(key, new Date(), "Medication Reminder", `Time to take ${dose.medication.name}`);
       }
     });
-  }, [todayDoses, scheduleReminder]);
+  }, [todayDoses, scheduleReminder, preferences]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
