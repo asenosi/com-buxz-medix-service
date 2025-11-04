@@ -744,25 +744,25 @@ const Calendar = () => {
         {/* Per-Medication Adherence */}
         {medicationAdherence.length > 0 && (
           <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Adherence by Medication</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Adherence by Medication</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {medicationAdherence.map((med) => (
-                  <div key={med.medicationId} className="flex items-center justify-between p-3 rounded-lg bg-accent/5 border border-border">
-                    <div className="flex-1">
-                      <p className="font-medium">{med.medicationName}</p>
-                      <p className="text-sm text-muted-foreground">{med.taken} of {med.total} doses taken</p>
+                  <div key={med.medicationId} className="flex items-center gap-3 p-2 rounded-lg bg-accent/5 border border-border">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{med.medicationName}</p>
+                      <p className="text-xs text-muted-foreground">{med.taken}/{med.total} taken</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-success transition-all duration-300"
                           style={{ width: `${med.percentage}%` }}
                         />
                       </div>
-                      <span className="text-lg font-bold text-success min-w-[3rem] text-right">{med.percentage}%</span>
+                      <span className="text-sm font-bold text-success min-w-[2.5rem] text-right">{med.percentage}%</span>
                     </div>
                   </div>
                 ))}
