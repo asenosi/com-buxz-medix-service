@@ -37,25 +37,7 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [missedDoses, setMissedDoses] = useState<AlertDose[]>([]);
   const [upcomingDoses, setUpcomingDoses] = useState<AlertDose[]>([]);
-  const { permission, preferences, requestPermission, sendNotification } = useNotification();
-
-  const testNotification = () => {
-    if (permission !== "granted") {
-      requestPermission().then((granted) => {
-        if (granted) {
-          sendNotification("Test Notification", {
-            body: "Notifications are working! You'll receive reminders for your medications.",
-            requireInteraction: false,
-          });
-        }
-      });
-    } else {
-      sendNotification("Test Notification", {
-        body: "Notifications are working! You'll receive reminders for your medications.",
-        requireInteraction: false,
-      });
-    }
-  };
+  const { preferences, sendNotification } = useNotification();
 
   const fetchAlerts = useCallback(async () => {
     try {
@@ -245,24 +227,24 @@ const Alerts = () => {
     <div className="min-h-screen pb-20">
       {/* Header */}
       <div className="bg-background border-b border-border pb-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Alert Center</h1>
             <p className="text-muted-foreground text-lg">Stay on track with your medications</p>
           </div>
           <Button
-            variant="outline"
-            onClick={() => navigate("/profile")}
-            className="flex items-center gap-2"
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/notification-settings")}
+            className="shrink-0"
           >
-            <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Settings</span>
+            <Settings className="w-5 h-5" />
           </Button>
         </div>
         
         {/* Notification Status */}
         <div className="flex items-center gap-3 flex-wrap">
-          {permission === "granted" && preferences?.enabled && preferences?.browser_enabled ? (
+          {preferences?.enabled && preferences?.browser_enabled ? (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-full text-sm">
               <Bell className="w-4 h-4" />
               <span>Notifications Active</span>
@@ -272,22 +254,6 @@ const Alerts = () => {
               <BellOff className="w-4 h-4" />
               <span>Notifications Disabled</span>
             </div>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={testNotification}
-          >
-            Test Notification
-          </Button>
-          {permission !== "granted" && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={requestPermission}
-            >
-              Enable Notifications
-            </Button>
           )}
         </div>
       </div>

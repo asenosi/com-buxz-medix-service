@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, BellOff, Volume2, VolumeX, Clock, Moon } from "lucide-react";
 import { useNotification } from "@/hooks/use-notification";
 import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
 
 export const NotificationSettings = () => {
   const { 
@@ -13,8 +14,36 @@ export const NotificationSettings = () => {
     preferences, 
     loading,
     requestPermission,
-    updatePreferences 
+    updatePreferences,
+    sendNotification
   } = useNotification();
+
+  const testNotification = async () => {
+    try {
+      if (!("Notification" in window)) {
+        toast.error("Your browser doesn't support notifications");
+        return;
+      }
+
+      if (permission !== "granted") {
+        const granted = await requestPermission();
+        if (!granted) {
+          toast.error("Please allow notifications in your browser settings");
+          return;
+        }
+      }
+      
+      sendNotification("Test Notification 🔔", {
+        body: "Notifications are working! You'll receive reminders for your medications.",
+        requireInteraction: false,
+      });
+      
+      toast.success("Test notification sent!");
+    } catch (error) {
+      console.error("Failed to send test notification:", error);
+      toast.error(`Failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  };
 
   if (loading || !preferences) {
     return (
@@ -197,6 +226,15 @@ export const NotificationSettings = () => {
                 </Button>
               )}
             </div>
+
+            {/* Test Notification */}
+            <Button 
+              onClick={testNotification}
+              variant="outline"
+              className="w-full"
+            >
+              Send Test Notification
+            </Button>
           </>
         )}
       </CardContent>

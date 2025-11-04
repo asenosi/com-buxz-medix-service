@@ -15,7 +15,6 @@ import { Menu, LogOut, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Calendar as CalendarIcon, Phone, ShieldCheck, User as UserIcon } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { NotificationSettings } from "@/components/NotificationSettings";
 
 type ProfileRow = {
   id?: string;
@@ -331,8 +330,6 @@ const Profile = () => {
           </Card>
 
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-            <NotificationSettings />
-
             <Card className="animate-fade-in" style={{ animationDelay: "0.15s" }}>
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="text-base sm:text-lg">Security</CardTitle>
