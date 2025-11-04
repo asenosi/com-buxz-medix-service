@@ -4,7 +4,11 @@ export function DoseItemSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-xl border p-3">
+        <div 
+          key={i} 
+          className="rounded-xl border p-3 animate-fade-in"
+          style={{ animationDelay: `${i * 0.1}s` }}
+        >
           <div className="flex items-center gap-3">
             <Skeleton className="h-10 w-10 rounded" />
             <div className="flex-1 space-y-2">
@@ -23,7 +27,11 @@ export function MedCardGridSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-xl border p-4">
+        <div 
+          key={i} 
+          className="rounded-xl border p-4 animate-scale-in"
+          style={{ animationDelay: `${i * 0.1}s` }}
+        >
           <div className="flex items-center gap-4">
             <Skeleton className="h-16 w-24 rounded object-cover" />
             <div className="flex-1 space-y-3">
@@ -40,7 +48,7 @@ export function MedCardGridSkeleton({ count = 4 }: { count?: number }) {
 
 export function ProfilePageSkeleton() {
   return (
-    <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 animate-fade-in">
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1 rounded-lg border p-6 space-y-4">
           <div className="flex items-center gap-4">
@@ -96,7 +104,7 @@ export function ProfilePageSkeleton() {
 
 export function MedicationDetailsSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background animate-fade-in">
       <header className="bg-card border-b border-border shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
@@ -146,7 +154,7 @@ export function MedicationDetailsSkeleton() {
 
 export function CalendarSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       <div className="mb-6 rounded-lg border p-6">
         <div className="flex items-center justify-center gap-6">
           <Skeleton className="h-12 w-12 rounded-full" />
