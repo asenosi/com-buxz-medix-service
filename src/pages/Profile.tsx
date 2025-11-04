@@ -205,22 +205,21 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/80 animate-slide-down">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="bg-primary rounded-lg sm:rounded-xl p-2 animate-scale-in shrink-0">
-                <ShieldCheck className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground" />
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="bg-primary rounded-lg p-1.5 animate-scale-in shrink-0">
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold truncate">Your Profile</h1>
-                <p className="text-xs sm:text-sm lg:text-base text-muted-foreground hidden sm:block">Manage your account details</p>
+                <h1 className="text-lg sm:text-xl font-semibold truncate">Your Profile</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Manage your account details</p>
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="hover:scale-105 transition-transform shrink-0">
-                  <Menu className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Menu</span>
+                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0">
+                  <Menu className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -239,16 +238,16 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-1 animate-fade-in">
-            <CardHeader className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">Account</CardTitle>
-              <CardDescription className="text-sm">Identity and contact</CardDescription>
+            <CardHeader className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg p-3">
+              <CardTitle className="text-sm font-medium">Account</CardTitle>
+              <CardDescription className="text-xs">Identity and contact</CardDescription>
             </CardHeader>
-            <CardContent className="pt-4 sm:pt-6 space-y-4 sm:space-y-6 p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                <Avatar className="h-20 w-20 sm:h-16 sm:w-16 border-2 shrink-0">
+            <CardContent className="pt-3 space-y-3 p-3">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
+                <Avatar className="h-14 w-14 sm:h-12 sm:w-12 border-2 shrink-0">
                   {avatarUrl ? (
                     <AvatarImage src={avatarUrl} alt="Avatar" />
                   ) : (
@@ -258,84 +257,84 @@ const Profile = () => {
                   )}
                 </Avatar>
                 <div className="text-center sm:text-left flex-1 min-w-0">
-                  <div className="text-lg sm:text-xl font-semibold break-words">{fullName || "Unnamed User"}</div>
-                  <div className="text-sm text-muted-foreground break-words">{session?.user?.email}</div>
+                  <div className="text-sm font-medium break-words">{fullName || "Unnamed User"}</div>
+                  <div className="text-xs text-muted-foreground break-words">{session?.user?.email}</div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-                <Button variant="outline" onClick={handleFilePick} className="hover:scale-105 transition-transform w-full sm:w-auto touch-manipulation">Upload Avatar</Button>
+                <Button size="sm" variant="outline" onClick={handleFilePick} className="w-full sm:w-auto">Upload Avatar</Button>
                 {avatarUrl && (
-                  <Button variant="secondary" onClick={() => setAvatarUrl(null)} className="w-full sm:w-auto touch-manipulation">Remove</Button>
+                  <Button size="sm" variant="secondary" onClick={() => setAvatarUrl(null)} className="w-full sm:w-auto">Remove</Button>
                 )}
               </div>
 
               <Separator />
 
-              <div className="space-y-3 sm:space-y-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="fullName" className="flex items-center gap-2 text-sm sm:text-base">
-                    <UserIcon className="w-4 h-4 text-muted-foreground shrink-0" /> Full name
+              <div className="space-y-3">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="fullName" className="flex items-center gap-1.5 text-xs">
+                    <UserIcon className="w-3 h-3 text-muted-foreground shrink-0" /> Full name
                   </Label>
                   <Input
                     id="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Jane Doe"
-                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
+                    className="h-9 text-sm"
                   />
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="phone" className="flex items-center gap-2 text-sm sm:text-base">
-                    <Phone className="w-4 h-4 text-muted-foreground shrink-0" /> Phone number
+                <div className="grid gap-1.5">
+                  <Label htmlFor="phone" className="flex items-center gap-1.5 text-xs">
+                    <Phone className="w-3 h-3 text-muted-foreground shrink-0" /> Phone number
                   </Label>
                   <Input
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="e.g. +1 555 123 4567"
-                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
+                    className="h-9 text-sm"
                   />
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="dob" className="flex items-center gap-2 text-sm sm:text-base">
-                    <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" /> Date of birth
+                <div className="grid gap-1.5">
+                  <Label htmlFor="dob" className="flex items-center gap-1.5 text-xs">
+                    <CalendarIcon className="w-3 h-3 text-muted-foreground shrink-0" /> Date of birth
                   </Label>
                   <Input
                     id="dob"
                     type="date"
                     value={dob ?? ""}
                     onChange={(e) => setDob(e.target.value)}
-                    className="h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
+                    className="h-9 text-sm"
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-3 sm:p-3 gap-3">
+                <div className="flex items-center justify-between rounded-lg border p-2.5 gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-sm sm:text-base">Caregiver mode</div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Helps manage someone else's medications</div>
+                    <div className="font-medium text-xs">Caregiver mode</div>
+                    <div className="text-xs text-muted-foreground">Manage someone else's medications</div>
                   </div>
                   <Switch checked={isCaregiver} onCheckedChange={setIsCaregiver} className="shrink-0" />
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
-                <Button onClick={handleSave} className="w-full sm:flex-1 h-11 sm:h-10 hover:scale-[1.02] transition-transform touch-manipulation">Save changes</Button>
-                <Button variant="outline" className="w-full sm:flex-1 h-11 sm:h-10 touch-manipulation" onClick={() => navigate("/dashboard")}>Dashboard</Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button size="sm" onClick={handleSave} className="w-full sm:flex-1">Save changes</Button>
+                <Button size="sm" variant="outline" className="w-full sm:flex-1" onClick={() => navigate("/dashboard")}>Dashboard</Button>
               </div>
             </CardContent>
           </Card>
 
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             <Card className="animate-fade-in" style={{ animationDelay: "0.15s" }}>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Security</CardTitle>
-                <CardDescription className="text-sm">We keep your data private and secure.</CardDescription>
+              <CardHeader className="p-3">
+                <CardTitle className="text-sm font-medium">Security</CardTitle>
+                <CardDescription className="text-xs">We keep your data private and secure.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm sm:text-base text-muted-foreground p-4 sm:p-6 pt-0">
+              <CardContent className="space-y-2 text-xs text-muted-foreground p-3 pt-0">
                 <p>
                   Your account uses secure authentication powered by Supabase. All
                   requests are encrypted and protected by Row Level Security (RLS).
@@ -348,42 +347,42 @@ const Profile = () => {
             </Card>
 
             <Card className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">About</CardTitle>
-                <CardDescription className="text-sm">Personalize how MedTracker feels.</CardDescription>
+              <CardHeader className="p-3">
+                <CardTitle className="text-sm font-medium">About</CardTitle>
+                <CardDescription className="text-xs">Personalize how MedTracker feels.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
-                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-                  <div className="rounded-lg border p-3 sm:p-4">
-                    <div className="font-medium mb-1 text-sm sm:text-base">Theme</div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Light and dark mode supported via system preference.</p>
+              <CardContent className="space-y-2 p-3 pt-0">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="rounded-lg border p-2.5">
+                    <div className="font-medium mb-1 text-xs">Theme</div>
+                    <p className="text-xs text-muted-foreground">Light and dark mode supported via system preference.</p>
                   </div>
-                  <div className="rounded-lg border p-3 sm:p-4">
-                    <div className="font-medium mb-1 text-sm sm:text-base">Animations</div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Smooth, accessible animations with reduced motion support.</p>
+                  <div className="rounded-lg border p-2.5">
+                    <div className="font-medium mb-1 text-xs">Animations</div>
+                    <p className="text-xs text-muted-foreground">Smooth, accessible animations with reduced motion support.</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="animate-fade-in border-destructive/50" style={{ animationDelay: "0.2s" }}>
-              <CardHeader className="p-4 sm:p-6 bg-destructive/5">
-                <CardTitle className="text-base sm:text-lg text-destructive flex items-center gap-2">
-                  <Trash2 className="w-5 h-5" />
+              <CardHeader className="p-3 bg-destructive/5">
+                <CardTitle className="text-sm font-medium text-destructive flex items-center gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5" />
                   Danger Zone
                 </CardTitle>
-                <CardDescription className="text-sm">Irreversible actions that affect your account data.</CardDescription>
+                <CardDescription className="text-xs">Irreversible actions that affect your account data.</CardDescription>
               </CardHeader>
-              <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
-                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-                  <div className="font-medium mb-2 text-sm sm:text-base">Delete All Medications</div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-4">
+              <CardContent className="p-3 pt-0 space-y-3">
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                  <div className="font-medium mb-1.5 text-xs">Delete All Medications</div>
+                  <p className="text-xs text-muted-foreground mb-3">
                     This will permanently delete all your medications, schedules, and dose logs. This action cannot be undone.
                   </p>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" className="w-full sm:w-auto">
-                        <Trash2 className="w-4 h-4 mr-2" />
+                      <Button size="sm" variant="destructive" className="w-full sm:w-auto">
+                        <Trash2 className="w-3 h-3 mr-1.5" />
                         Delete All Medication Data
                       </Button>
                     </AlertDialogTrigger>
