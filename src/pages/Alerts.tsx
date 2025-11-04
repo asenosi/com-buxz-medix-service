@@ -40,8 +40,19 @@ const Alerts = () => {
   const { permission, preferences, requestPermission, sendNotification, updatePreferences } = useNotification();
 
   const testNotification = async () => {
+    console.log("Test notification clicked");
+    console.log("Current permission:", permission);
+    
     try {
+      // Check if browser supports notifications
+      if (!("Notification" in window)) {
+        toast.error("Your browser doesn't support notifications");
+        return;
+      }
+
+      // Request permission if not granted
       if (permission !== "granted") {
+        console.log("Requesting notification permission...");
         const granted = await requestPermission();
         if (!granted) {
           toast.error("Please allow notifications in your browser settings");
@@ -49,18 +60,20 @@ const Alerts = () => {
         }
       }
       
+      console.log("Creating test notification...");
       // Send test notification directly, bypassing preference checks
-      new Notification("Test Notification 🔔", {
+      const notification = new Notification("Test Notification 🔔", {
         body: "Notifications are working! You'll receive reminders for your medications.",
         icon: "/favicon.ico",
         badge: "/favicon.ico",
         requireInteraction: false,
       });
       
+      console.log("Test notification created:", notification);
       toast.success("Test notification sent!");
     } catch (error) {
       console.error("Failed to send test notification:", error);
-      toast.error("Failed to send test notification. Check browser settings.");
+      toast.error(`Failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 
