@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, ArrowLeft, Flame, LayoutGrid, List, Search as SearchIcon, SlidersHorizontal } from "lucide-react";
+import { Calendar as CalendarIcon, ArrowLeft, Flame, LayoutGrid, List, Search as SearchIcon, X, TrendingUp, Target } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { CalendarSkeleton } from "@/components/LoadingSkeletons";
@@ -13,6 +13,7 @@ import { MonthCalendar } from "@/components/MonthCalendar";
 import { DoseCard } from "@/components/DoseCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface DoseLog {
   id: string;
@@ -84,7 +85,7 @@ const Calendar = () => {
     percentage: 0
   });
   const [searchText, setSearchText] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const fetchMedications = useCallback(async () => {
     try {
@@ -357,6 +358,44 @@ const Calendar = () => {
     computeDosesForDate(date);
   };
 
+  const filteredDoses = useMemo(() => {
+    let filtered = selectedDoses;
+    
+    // Filter by search text
+    if (searchText.trim()) {
+      filtered = filtered.filter(dose => 
+        dose.medication.name.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+    
+    // Filter by status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(dose => {
+        if (statusFilter === "taken") return dose.isTaken;
+        if (statusFilter === "skipped") return dose.isSkipped;
+        if (statusFilter === "snoozed") return dose.isSnoozed;
+        if (statusFilter === "pending") return !dose.isTaken && !dose.isSkipped && !dose.isSnoozed;
+        return true;
+      });
+    }
+    
+    return filtered;
+  }, [selectedDoses, searchText, statusFilter]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (searchText.trim()) count++;
+    if (statusFilter !== "all") count++;
+    if (selectedMedication) count++;
+    return count;
+  }, [searchText, statusFilter, selectedMedication]);
+
+  const clearAllFilters = () => {
+    setSearchText("");
+    setStatusFilter("all");
+    setSelectedMedication(null);
+  };
+
   const markAsTaken = async (dose: TodayDose) => {
     try {
       const { error } = await supabase.from("dose_logs").insert([
@@ -456,96 +495,160 @@ const Calendar = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Search and Filters */}
-        <Card className="mb-4">
-          <CardContent className="pt-6">
-            <div className="flex flex-col lg:flex-row gap-3 items-stretch">
-              <div className="relative flex-1">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  placeholder="Search medications"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  className="pl-10 h-12 rounded-xl"
-                />
-              </div>
-              <Button variant="outline" className="h-12 rounded-xl w-full lg:w-[160px]" onClick={() => setShowFilters(s => !s)}>
-                <SlidersHorizontal className="w-4 h-4 mr-2" /> {showFilters ? "Hide Filters" : "Filters"}
-              </Button>
-              <Button
-                variant="ghost"
-                className="h-12 rounded-xl w-full lg:w-[120px]"
-                onClick={() => { setSearchText(""); setShowFilters(false); }}
-              >
-                Clear
-              </Button>
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search medications..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="pl-9 h-10"
+              />
+              {searchText && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                  onClick={() => setSearchText("")}
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              )}
             </div>
-            {showFilters && (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <Select value={selectedMedication || "all"} onValueChange={(v) => setSelectedMedication(v === "all" ? null : v)}>
-                  <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="All Medications" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Medications</SelectItem>
-                    {medications.map(med => (
-                      <SelectItem key={med.id} value={med.id}>{med.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            
+            <div className="flex gap-2">
+              <Select value={selectedMedication || "all"} onValueChange={(v) => setSelectedMedication(v === "all" ? null : v)}>
+                <SelectTrigger className="h-10 w-[180px]">
+                  <SelectValue placeholder="All Medications" />
+                </SelectTrigger>
+                <SelectContent className="bg-card z-50">
+                  <SelectItem value="all">All Medications</SelectItem>
+                  {medications.map(med => (
+                    <SelectItem key={med.id} value={med.id}>{med.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-        {/* Filter and View Selector */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-10 w-[140px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-card z-50">
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="taken">Taken</SelectItem>
+                  <SelectItem value="skipped">Skipped</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {activeFiltersCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10"
+                  onClick={clearAllFilters}
+                >
+                  Clear ({activeFiltersCount})
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {searchText && (
+                <Badge variant="secondary" className="gap-1">
+                  Search: {searchText}
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setSearchText("")} />
+                </Badge>
+              )}
+              {statusFilter !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  Status: {statusFilter}
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setStatusFilter("all")} />
+                </Badge>
+              )}
+              {selectedMedication && (
+                <Badge variant="secondary" className="gap-1">
+                  Medication: {medications.find(m => m.id === selectedMedication)?.name}
+                  <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedMedication(null)} />
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 rounded-full p-3">
+                  <Flame className="w-6 h-6 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-primary">{streak}</p>
+                  <p className="text-sm text-muted-foreground">Day Streak</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-success/5 to-success/10 border-success/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-success/10 rounded-full p-3">
+                  <Target className="w-6 h-6 text-success" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-success">{adherenceStats.percentage}%</p>
+                  <p className="text-sm text-muted-foreground">Adherence Rate</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-border">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4 w-full">
+                <div className="bg-accent rounded-full p-3 shrink-0">
+                  <TrendingUp className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex justify-between flex-1 gap-2">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-success">{adherenceStats.taken}</p>
+                    <p className="text-xs text-muted-foreground">Taken</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-warning">{adherenceStats.skipped}</p>
+                    <p className="text-xs text-muted-foreground">Skipped</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-destructive">{adherenceStats.missed}</p>
+                    <p className="text-xs text-muted-foreground">Missed</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* View Selector */}
         <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week")} className="w-full mb-6">
-          <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2">
-            <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
+          <TabsList className="grid h-10 w-full max-w-[300px] mx-auto grid-cols-2">
+            <TabsTrigger value="week" className="text-sm gap-2">
               <List className="w-4 h-4" />
-              Week
+              Week View
             </TabsTrigger>
-            <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-xs sm:text-sm gap-2 justify-center">
+            <TabsTrigger value="month" className="text-sm gap-2">
               <LayoutGrid className="w-4 h-4" />
-              Month
+              Month View
             </TabsTrigger>
           </TabsList>
         </Tabs>
-
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-orange-500" />
-                <div>
-                  <p className="text-lg font-bold text-primary">{streak}</p>
-                  <p className="text-xs text-muted-foreground">Day Streak</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4 text-sm">
-                <div className="text-center">
-                  <p className="font-bold text-primary">{adherenceStats.percentage}%</p>
-                  <p className="text-xs text-muted-foreground">Rate</p>
-                </div>
-                
-                <div className="flex gap-3 text-xs">
-                  <div className="text-center">
-                    <p className="font-semibold text-primary">{adherenceStats.taken}</p>
-                    <p className="text-muted-foreground">✓</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold text-destructive">{adherenceStats.missed}</p>
-                    <p className="text-muted-foreground">✕</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold text-warning">{adherenceStats.skipped}</p>
-                    <p className="text-muted-foreground">−</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
           <Card>
@@ -554,6 +657,14 @@ const Calendar = () => {
                 <MonthCalendar
                   selectedDate={selectedDate || new Date()}
                   onDateSelect={handleDateSelect}
+                  adherenceData={calendarDays.map(day => ({
+                    date: day.date,
+                    hasTaken: day.hasTaken,
+                    hasSkipped: day.hasSkipped,
+                    hasSnoozed: day.hasSnoozed,
+                    totalDoses: day.logs.length,
+                    takenDoses: day.logs.filter(log => log.status === 'taken').length
+                  }))}
                 />
               )}
 
@@ -561,6 +672,14 @@ const Calendar = () => {
                 <WeekCalendar
                   selectedDate={selectedDate || new Date()}
                   onDateSelect={handleDateSelect}
+                  adherenceData={calendarDays.map(day => ({
+                    date: day.date,
+                    hasTaken: day.hasTaken,
+                    hasSkipped: day.hasSkipped,
+                    hasSnoozed: day.hasSnoozed,
+                    totalDoses: day.logs.length,
+                    takenDoses: day.logs.filter(log => log.status === 'taken').length
+                  }))}
                 />
               )}
             </CardContent>
@@ -589,7 +708,7 @@ const Calendar = () => {
                     );
                   }
 
-                  const dosesForDay = selectedDoses;
+                  const dosesForDay = filteredDoses;
 
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
