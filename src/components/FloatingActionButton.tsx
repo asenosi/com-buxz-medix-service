@@ -22,7 +22,7 @@ export const FloatingActionButton = ({ actions }: FloatingActionButtonProps) => 
       {/* Action Buttons */}
       <div
         className={cn(
-          "flex flex-col-reverse gap-3 mb-3 transition-all duration-300",
+          "flex flex-col-reverse gap-3 mb-3 transition-all duration-300 items-end",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
         )}
       >
