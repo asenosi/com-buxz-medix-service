@@ -86,6 +86,14 @@ const Calendar = () => {
   });
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [adherencePeriod, setAdherencePeriod] = useState<"day" | "week" | "month">("day");
+  const [medicationAdherence, setMedicationAdherence] = useState<{
+    medicationId: string;
+    medicationName: string;
+    taken: number;
+    total: number;
+    percentage: number;
+  }[]>([]);
 
   const fetchMedications = useCallback(async () => {
     try {
@@ -156,6 +164,76 @@ const Calendar = () => {
     }
   }, [selectedMedication]);
 
+  const calculateAdherenceForPeriod = useCallback(async () => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let startDate: Date;
+      
+      if (adherencePeriod === "day") {
+        startDate = new Date(today);
+      } else if (adherencePeriod === "week") {
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 7);
+      } else {
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 30);
+      }
+      
+      let query = supabase
+        .from("dose_logs")
+        .select("*, medications(name)")
+        .gte("scheduled_time", startDate.toISOString())
+        .lte("scheduled_time", today.toISOString());
+      
+      if (selectedMedication) {
+        query = query.eq("medication_id", selectedMedication);
+      }
+      
+      const { data: logs, error } = await query;
+      
+      if (error) throw error;
+      
+      const taken = logs?.filter(log => log.status === 'taken').length || 0;
+      const missed = logs?.filter(log => log.status === 'missed').length || 0;
+      const skipped = logs?.filter(log => log.status === 'skipped').length || 0;
+      const total = logs?.length || 0;
+      const percentage = total > 0 ? Math.round((taken / total) * 100) : 0;
+      
+      setAdherenceStats({ taken, missed, skipped, total, percentage });
+      
+      // Calculate per-medication adherence
+      const medAdherence: Record<string, { name: string; taken: number; total: number }> = {};
+      
+      logs?.forEach(log => {
+        const medId = log.medication_id;
+        const medName = (log.medications as any)?.name || "Unknown";
+        
+        if (!medAdherence[medId]) {
+          medAdherence[medId] = { name: medName, taken: 0, total: 0 };
+        }
+        
+        medAdherence[medId].total++;
+        if (log.status === 'taken') {
+          medAdherence[medId].taken++;
+        }
+      });
+      
+      const medAdherenceArray = Object.entries(medAdherence).map(([id, data]) => ({
+        medicationId: id,
+        medicationName: data.name,
+        taken: data.taken,
+        total: data.total,
+        percentage: data.total > 0 ? Math.round((data.taken / data.total) * 100) : 0
+      }));
+      
+      setMedicationAdherence(medAdherenceArray);
+    } catch (error: unknown) {
+      console.error("Failed to calculate adherence:", error);
+    }
+  }, [adherencePeriod, selectedMedication]);
+
   const fetchCalendarData = useCallback(async () => {
     try {
       const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
@@ -180,21 +258,6 @@ const Calendar = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Calculate adherence stats for the current month
-      const pastLogs = logs?.filter(log => {
-        const logDate = new Date(log.scheduled_time);
-        logDate.setHours(0, 0, 0, 0);
-        return logDate <= today;
-      }) || [];
-
-      const taken = pastLogs.filter(log => log.status === 'taken').length;
-      const missed = pastLogs.filter(log => log.status === 'missed').length;
-      const skipped = pastLogs.filter(log => log.status === 'skipped').length;
-      const total = pastLogs.length;
-      const percentage = total > 0 ? Math.round((taken / total) * 100) : 0;
-
-      setAdherenceStats({ taken, missed, skipped, total, percentage });
-
       for (let d = new Date(startOfMonth); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
         const dayStart = new Date(d);
         dayStart.setHours(0, 0, 0, 0);
@@ -217,13 +280,14 @@ const Calendar = () => {
 
       setCalendarDays(days);
 
-      // Calculate streak
+      // Calculate streak and adherence
       calculateStreak();
+      calculateAdherenceForPeriod();
     } catch (error: unknown) {
       toast.error("Failed to load calendar data");
       console.error(error);
     }
-  }, [currentMonth, selectedMedication, calculateStreak]);
+  }, [currentMonth, selectedMedication, calculateStreak, calculateAdherenceForPeriod]);
 
   const computeDosesForDate = useCallback(async (date: Date) => {
     try {
@@ -337,6 +401,12 @@ const Calendar = () => {
       fetchCalendarData();
     }
   }, [currentMonth, selectedMedication, session, fetchCalendarData]);
+
+  useEffect(() => {
+    if (session) {
+      calculateAdherenceForPeriod();
+    }
+  }, [adherencePeriod, session, calculateAdherenceForPeriod]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -581,60 +651,117 @@ const Calendar = () => {
           )}
         </div>
 
+        {/* Period Selector for Stats */}
+        <div className="mb-4">
+          <Tabs value={adherencePeriod} onValueChange={(v) => setAdherencePeriod(v as "day" | "week" | "month")} className="w-full">
+            <TabsList className="grid h-10 w-full max-w-[400px] grid-cols-3">
+              <TabsTrigger value="day" className="text-sm">Today</TabsTrigger>
+              <TabsTrigger value="week" className="text-sm">Last 7 Days</TabsTrigger>
+              <TabsTrigger value="month" className="text-sm">Last 30 Days</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 rounded-full p-3">
-                  <Flame className="w-6 h-6 text-orange-500" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {/* Overall Stats */}
+          <div className="grid grid-cols-3 gap-4">
+            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="bg-primary/10 rounded-full p-3">
+                    <Flame className="w-6 h-6 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-primary">{streak}</p>
+                    <p className="text-xs text-muted-foreground">Day Streak</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">{streak}</p>
-                  <p className="text-sm text-muted-foreground">Day Streak</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-success/5 to-success/10 border-success/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="bg-success/10 rounded-full p-3">
-                  <Target className="w-6 h-6 text-success" />
+            <Card className="bg-gradient-to-br from-success/5 to-success/10 border-success/20">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="bg-success/10 rounded-full p-3">
+                    <Target className="w-6 h-6 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-success">{adherenceStats.percentage}%</p>
+                    <p className="text-xs text-muted-foreground">Adherence</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-success">{adherenceStats.percentage}%</p>
-                  <p className="text-sm text-muted-foreground">Adherence Rate</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-border">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4 w-full">
-                <div className="bg-accent rounded-full p-3 shrink-0">
-                  <TrendingUp className="w-6 h-6 text-primary" />
+            <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-border">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="bg-accent rounded-full p-3">
+                    <TrendingUp className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{adherenceStats.total}</p>
+                    <p className="text-xs text-muted-foreground">Total Doses</p>
+                  </div>
                 </div>
-                <div className="flex justify-between flex-1 gap-2">
-                  <div className="text-center">
-                    <p className="text-xl font-bold text-success">{adherenceStats.taken}</p>
-                    <p className="text-xs text-muted-foreground">Taken</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xl font-bold text-warning">{adherenceStats.skipped}</p>
-                    <p className="text-xs text-muted-foreground">Skipped</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xl font-bold text-destructive">{adherenceStats.missed}</p>
-                    <p className="text-xs text-muted-foreground">Missed</p>
-                  </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Detailed Stats */}
+          <Card className="bg-gradient-to-br from-card to-card/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Dose Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-3 rounded-lg bg-success/10">
+                  <p className="text-2xl font-bold text-success">{adherenceStats.taken}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Taken</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-warning/10">
+                  <p className="text-2xl font-bold text-warning">{adherenceStats.skipped}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Skipped</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-destructive/10">
+                  <p className="text-2xl font-bold text-destructive">{adherenceStats.missed}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Missed</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Per-Medication Adherence */}
+        {medicationAdherence.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Adherence by Medication</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {medicationAdherence.map((med) => (
+                  <div key={med.medicationId} className="flex items-center justify-between p-3 rounded-lg bg-accent/5 border border-border">
+                    <div className="flex-1">
+                      <p className="font-medium">{med.medicationName}</p>
+                      <p className="text-sm text-muted-foreground">{med.taken} of {med.total} doses taken</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-success transition-all duration-300"
+                          style={{ width: `${med.percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-lg font-bold text-success min-w-[3rem] text-right">{med.percentage}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* View Selector */}
         <Tabs value={view} onValueChange={(v) => setView(v as "month" | "week")} className="w-full mb-6">
