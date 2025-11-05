@@ -62,9 +62,9 @@ export const BulkPrescriptionUpload = ({ open, onOpenChange, onComplete }: BulkP
       } else {
         toast.error("No medications found in the image. Please try a clearer image.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error processing prescription:", error);
-      toast.error(error.message || "Failed to process prescription");
+      toast.error(error instanceof Error ? error.message : "Failed to process prescription");
     } finally {
       setIsProcessing(false);
     }
@@ -120,7 +120,13 @@ export const BulkPrescriptionUpload = ({ open, onOpenChange, onComplete }: BulkP
           // Insert schedule(s)
           const times = med.times && med.times.length > 0 ? med.times : ["09:00"];
           for (const time of times) {
-            const scheduleData: any = {
+            const scheduleData: {
+              medication_id: string;
+              time_of_day: string;
+              frequency_type: string;
+              active: boolean;
+              days_of_week?: number[];
+            } = {
               medication_id: medication.id,
               time_of_day: time,
               frequency_type: med.frequency_type || "everyday",
@@ -155,7 +161,7 @@ export const BulkPrescriptionUpload = ({ open, onOpenChange, onComplete }: BulkP
       if (failCount > 0) {
         toast.error(`Failed to add ${failCount} medication${failCount > 1 ? 's' : ''}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving medications:", error);
       toast.error("Failed to save medications");
     } finally {
