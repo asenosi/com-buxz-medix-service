@@ -81,15 +81,16 @@ export const NotificationSettings = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-6" style={{ animationDelay: "0.1s" }}>
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left: System + Scheduling */}
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">System Settings</h3>
+    <Card className="animate-fade-in overflow-hidden" style={{ animationDelay: "0.1s" }}>
+      <CardContent className="p-4 sm:p-6">
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Left: System + Scheduling */}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">System Settings</h3>
             
             {/* Master */}
-            <div className="flex items-center justify-between p-3 gap-3 bg-card border rounded-lg">
+            <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm flex items-center gap-2">
                   {preferences.enabled ? <Bell className="w-4 h-4 shrink-0" /> : <BellOff className="w-4 h-4 shrink-0 text-muted-foreground" />}
@@ -101,7 +102,7 @@ export const NotificationSettings = () => {
             </div>
 
             {/* Browser */}
-            <div className="flex items-center justify-between p-3 gap-3 bg-card border rounded-lg">
+            <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm truncate">Browser Notifications</div>
                 <div className="text-xs text-muted-foreground line-clamp-1">
@@ -129,7 +130,7 @@ export const NotificationSettings = () => {
             )}
 
             {/* Sound */}
-            <div className="flex items-center justify-between p-3 gap-3 bg-card border rounded-lg">
+            <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm flex items-center gap-2">
                   {preferences.sound_enabled ? <Volume2 className="w-4 h-4 shrink-0" /> : <VolumeX className="w-4 h-4 shrink-0 text-muted-foreground" />}
@@ -145,7 +146,7 @@ export const NotificationSettings = () => {
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Scheduling</h3>
             
-            <div className="space-y-3 p-3 bg-card border rounded-lg">
+            <div className="space-y-3 p-3 rounded-lg bg-muted/20">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 shrink-0 text-muted-foreground" />
                 <Label className="font-medium text-sm truncate">Reminder Timing</Label>
@@ -155,7 +156,7 @@ export const NotificationSettings = () => {
               <div className="flex justify-between text-xs text-muted-foreground"><span>5 min</span><span>30 min</span><span>60 min</span></div>
             </div>
 
-            <div className="space-y-3 p-3 bg-card border rounded-lg">
+            <div className="space-y-3 p-3 rounded-lg bg-muted/20">
               <div className="flex items-center gap-2">
                 <Moon className="w-4 h-4 shrink-0 text-muted-foreground" />
                 <Label className="font-medium text-sm truncate">Quiet Hours</Label>
@@ -185,8 +186,8 @@ export const NotificationSettings = () => {
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Advanced Settings</h3>
           
           <AccordionUI.Accordion type="single" collapsible defaultValue="types">
-            <AccordionUI.AccordionItem value="types" className="border rounded-lg overflow-hidden">
-              <AccordionUI.AccordionTrigger className="px-3 py-2 text-sm">Notification Types</AccordionUI.AccordionTrigger>
+            <AccordionUI.AccordionItem value="types" className="border-0">
+              <AccordionUI.AccordionTrigger className="px-3 py-2 text-sm bg-muted/20 rounded-lg hover:bg-muted/30">Notification Types</AccordionUI.AccordionTrigger>
               <AccordionUI.AccordionContent className="px-3 pb-3 space-y-3 overflow-hidden">
                 {Array.from(
                   NOTIFICATION_TYPES.reduce((map, t) => {
@@ -202,7 +203,7 @@ export const NotificationSettings = () => {
                       {items.map((t) => {
                         const enabled = preferences.enabled_types?.includes(t.key) ?? true;
                         return (
-                          <div key={t.key} className="flex items-center justify-between p-2.5 gap-3 bg-muted/30 rounded-md">
+                          <div key={t.key} className="flex items-center justify-between p-2.5 gap-3 rounded-md hover:bg-muted/40 transition-colors">
                             <div className="min-w-0 flex-1">
                               <div className="font-medium text-sm truncate">{t.name}</div>
                               <div className="text-xs text-muted-foreground line-clamp-2">{t.description}</div>
@@ -235,17 +236,18 @@ export const NotificationSettings = () => {
             </AccordionUI.AccordionItem>
           </AccordionUI.Accordion>
 
-          <div className="flex items-center justify-between p-3 gap-3 bg-card border rounded-lg">
+          <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
             <div className="text-sm flex-1 min-w-0 truncate">Enable Actions on Notifications</div>
             <Switch checked={preferences.use_actions ?? true} onCheckedChange={(checked)=> updatePreferences({ use_actions: checked })} className="shrink-0" />
           </div>
           
-          <div className="flex items-center justify-between p-3 gap-3 bg-card border rounded-lg">
+          <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
             <div className="font-medium text-sm flex-1 min-w-0 truncate">Missed Dose Alerts</div>
             <Switch checked={preferences.remind_for_missed} onCheckedChange={(checked) => updatePreferences({ remind_for_missed: checked })} className="shrink-0" />
           </div>
         </div>
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
