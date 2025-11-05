@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, List, X } from "lucide-react";
+import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, List, X, FileText } from "lucide-react";
 import { format } from "date-fns";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,6 +14,7 @@ import { SimpleDoseCard } from "@/components/SimpleDoseCard";
 import { AdherenceStats } from "@/components/AdherenceStats";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { DoseActionDialog } from "@/components/DoseActionDialog";
+import { BulkPrescriptionUpload } from "@/components/BulkPrescriptionUpload";
 import { useTheme } from "@/hooks/use-theme";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -87,6 +88,7 @@ const Dashboard = () => {
   const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
   const [userName, setUserName] = useState<string>("");
   const { permission, preferences, requestPermission, sendNotification } = useNotification();
+  const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(false);
   
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
@@ -1018,9 +1020,9 @@ const Dashboard = () => {
             color: "bg-primary hover:bg-primary/90",
           },
           {
-            label: "Add Tracker Entry",
-            icon: <Activity className="h-6 w-6" />,
-            onClick: () => navigate("/calendar"),
+            label: "Add Script",
+            icon: <FileText className="h-6 w-6" />,
+            onClick: () => setShowPrescriptionUpload(true),
             color: "bg-blue-500 hover:bg-blue-600",
           },
           {
@@ -1056,6 +1058,16 @@ const Dashboard = () => {
           onInfo={() => navigate(`/medications/${selectedDose.medication.id}`)}
         />
       )}
+
+      {/* Bulk Prescription Upload Dialog */}
+      <BulkPrescriptionUpload
+        open={showPrescriptionUpload}
+        onOpenChange={setShowPrescriptionUpload}
+        onComplete={() => {
+          fetchMedications();
+          toast.success("Medications added successfully!");
+        }}
+      />
     </div>
   );
 };
