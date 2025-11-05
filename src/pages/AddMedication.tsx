@@ -12,6 +12,7 @@ import { Step4Reason } from "@/components/medication-wizard/Step4Reason";
 import { Step5Frequency } from "@/components/medication-wizard/Step5Frequency";
 import { Step6Options } from "@/components/medication-wizard/Step6Options";
 import { Step7Review } from "@/components/medication-wizard/Step7Review";
+import { PrescriptionUpload } from "@/components/PrescriptionUpload";
 
 const Medications = () => {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ const Medications = () => {
   const [medicationIcon, setMedicationIcon] = useState("pill");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -370,10 +372,48 @@ const Medications = () => {
     }
   };
 
+  const handlePrescriptionExtracted = (medications: Array<{
+    name: string;
+    dosage: string;
+    form?: string;
+    frequency_type?: string;
+    route_of_administration?: string;
+    reason_for_taking?: string;
+    instructions?: string;
+  }>) => {
+    if (medications.length === 0) return;
+    
+    // Use the first medication found
+    const med = medications[0];
+    setName(med.name || "");
+    setDosage(med.dosage || "");
+    if (med.form) setForm(med.form);
+    if (med.route_of_administration) setRoute(med.route_of_administration);
+    if (med.reason_for_taking) setReason(med.reason_for_taking);
+    if (med.instructions) setInstructions(med.instructions);
+    if (med.frequency_type) setFrequencyType(med.frequency_type);
+    
+    setShowPrescriptionUpload(false);
+    
+    if (medications.length > 1) {
+      toast.info(`Found ${medications.length} medications. Showing first one. You can add others separately.`);
+    }
+    
+    // Move to step 1 to review the extracted name
+    setCurrentStep(1);
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1Name name={name} setName={setName} />;
+        return (
+          <div className="space-y-4">
+            {showPrescriptionUpload && !editId && (
+              <PrescriptionUpload onMedicationsExtracted={handlePrescriptionExtracted} />
+            )}
+            <Step1Name name={name} setName={setName} />
+          </div>
+        );
       case 2:
         return <Step2Form form={form} setForm={setForm} />;
       case 3:
