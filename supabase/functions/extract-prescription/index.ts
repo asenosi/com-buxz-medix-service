@@ -32,14 +32,47 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a medical prescription parser. Extract medication details from prescription images and return structured data."
+            content: `You are a medical prescription parser. Extract medication details from prescription images and return structured data.
+
+CRITICAL: Interpret common medical notation correctly:
+- Duration notation: X/7 means X days (e.g., 14/7 = 14 days = 2 weeks), X/12 means X months (e.g., 1/12 = 1 month, 2/12 = 2 months)
+- Frequency abbreviations:
+  * od/OD = once daily (frequency_type: "once_daily")
+  * bd/BD = twice daily (frequency_type: "twice_daily")
+  * tds/TDS = three times daily (frequency_type: "three_times_daily")
+  * qds/QDS = four times daily (frequency_type: "four_times_daily")
+  * prn/PRN = as needed (frequency_type: "as_needed")
+- Route abbreviations: p.o/PO = by mouth (route: "by_mouth"), topical = on skin (route: "topical"), etc.
+- Dosage: Include the unit (mg, ml, puffs, drops, etc.)
+
+Example: "20 mg od p.o 1/12" means: 20mg once daily by mouth for 1 month`
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Extract all medication information from this prescription. For each medication, identify: name, dosage/strength, form (tablet/capsule/liquid/etc), frequency (how often to take), route of administration, reason for taking, and any special instructions. Return ONLY valid JSON with no markdown formatting."
+                text: `Extract all medication information from this prescription. For each medication, identify:
+- name: Medication name
+- dosage: Dosage/strength with unit (e.g., "20mg", "2 puffs", "1 drop")
+- form: Form (tablet, capsule, liquid, cream, inhaler, etc.)
+- frequency_type: Parse abbreviations correctly:
+  * "od"/"OD" → "once_daily"
+  * "bd"/"BD" → "twice_daily"
+  * "tds"/"TDS" → "three_times_daily"
+  * "qds"/"QDS" → "four_times_daily"
+  * "prn"/"PRN" → "as_needed"
+  * If specific days mentioned → "specific_days"
+- route_of_administration: Parse abbreviations:
+  * "p.o"/"PO" → "by_mouth"
+  * "topical" → "topical"
+  * "inhaled" → "inhaled"
+  * "nose"/"eye"/"ear" → "nose_eyes_ear"
+- duration: Parse duration notation (e.g., "1/12" = "1 month", "14/7" = "14 days", "2/12" = "2 months")
+- reason_for_taking: Condition being treated (if visible)
+- instructions: Any special instructions (take with food, before bed, etc.)
+
+Return ONLY valid JSON with no markdown formatting.`
               },
               {
                 type: "image_url",
@@ -65,12 +98,25 @@ serve(async (req) => {
                       type: "object",
                       properties: {
                         name: { type: "string", description: "Medication name" },
-                        dosage: { type: "string", description: "Dosage/strength (e.g., 100mg, 2 puffs)" },
-                        form: { type: "string", description: "Form (tablet, capsule, liquid, etc.)" },
-                        frequency_type: { type: "string", description: "Frequency (Once daily, Twice daily, etc.)" },
-                        route_of_administration: { type: "string", description: "Route (Oral, Topical, etc.)" },
+                        dosage: { type: "string", description: "Dosage with unit (e.g., '20mg', '2 puffs', '1 drop')" },
+                        form: { 
+                          type: "string", 
+                          enum: ["pill", "capsule", "liquid", "cream", "inhaler", "spray", "drop", "syringe", "other"],
+                          description: "Medication form" 
+                        },
+                        frequency_type: { 
+                          type: "string",
+                          enum: ["once_daily", "twice_daily", "three_times_daily", "four_times_daily", "as_needed", "specific_days", "everyday"],
+                          description: "Frequency type parsed from abbreviations (od→once_daily, bd→twice_daily, tds→three_times_daily, qds→four_times_daily)" 
+                        },
+                        route_of_administration: { 
+                          type: "string",
+                          enum: ["by_mouth", "topical", "inhaled", "nose_eyes_ear", "rectum_vagina"],
+                          description: "Route parsed from abbreviations (p.o→by_mouth)" 
+                        },
+                        duration: { type: "string", description: "Duration parsed from notation (e.g., '1/12'→'1 month', '14/7'→'14 days')" },
                         reason_for_taking: { type: "string", description: "Condition being treated" },
-                        instructions: { type: "string", description: "Special instructions" }
+                        instructions: { type: "string", description: "Special instructions including duration" }
                       },
                       required: ["name", "dosage"]
                     }
