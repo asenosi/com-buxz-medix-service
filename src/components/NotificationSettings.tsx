@@ -3,7 +3,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Bell, BellOff, Volume2, VolumeX, Clock, Moon, Check } from "lucide-react";
+import { Bell, BellOff, Volume2, VolumeX, Clock, Moon, Check, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
 import { useNotification } from "@/hooks/use-notification";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
@@ -20,6 +22,8 @@ export const NotificationSettings = () => {
     updatePreferences,
     sendNotification
   } = useNotification();
+
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const testNotification = async () => {
     try {
@@ -186,12 +190,21 @@ export const NotificationSettings = () => {
       </Card>
 
       {/* Advanced Settings Card */}
-      <Card className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
-        <CardHeader>
-          <CardTitle className="text-lg">Advanced Settings</CardTitle>
-          <CardDescription>Customize notification types and behavior</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+        <Card className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <CollapsibleTrigger className="w-full">
+            <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <CardTitle className="text-lg">Advanced Settings</CardTitle>
+                  <CardDescription>Customize notification types and behavior</CardDescription>
+                </div>
+                <ChevronDown className={`h-5 w-5 shrink-0 transition-transform duration-200 ${advancedOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
           <AccordionUI.Accordion type="single" collapsible defaultValue="types">
             <AccordionUI.AccordionItem value="types" className="border-0">
               <AccordionUI.AccordionTrigger className="px-3 py-2 text-sm bg-muted/20 rounded-lg hover:bg-muted/30">Notification Types</AccordionUI.AccordionTrigger>
@@ -252,8 +265,10 @@ export const NotificationSettings = () => {
             <div className="font-medium text-sm flex-1 min-w-0 truncate">Missed Dose Alerts</div>
             <Switch checked={preferences.remind_for_missed} onCheckedChange={(checked) => updatePreferences({ remind_for_missed: checked })} className="shrink-0" />
           </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     </div>
   );
 };
