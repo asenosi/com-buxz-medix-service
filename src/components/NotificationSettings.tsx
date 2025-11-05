@@ -82,13 +82,6 @@ export const NotificationSettings = () => {
 
   return (
     <Card className="animate-fade-in overflow-hidden" style={{ animationDelay: "0.1s" }}>
-      <CardHeader className="p-4 sm:p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg">
-        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-          <Bell className="w-5 h-5 shrink-0" />
-          Notification Settings
-        </CardTitle>
-        <CardDescription className="text-sm">Configure when and how you receive medication reminders</CardDescription>
-      </CardHeader>
       <CardContent className="p-4 sm:p-6 overflow-hidden">
         <div className="grid gap-4 lg:gap-6 lg:grid-cols-2">
           {/* Left: System + Scheduling */}
