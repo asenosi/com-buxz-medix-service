@@ -81,110 +81,117 @@ export const NotificationSettings = () => {
   }
 
   return (
-    <Card className="animate-fade-in overflow-hidden" style={{ animationDelay: "0.1s" }}>
-      <CardContent className="p-4 sm:p-6">
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Left: System + Scheduling */}
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">System Settings</h3>
-            
-            {/* Master */}
-            <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm flex items-center gap-2">
-                  {preferences.enabled ? <Bell className="w-4 h-4 shrink-0" /> : <BellOff className="w-4 h-4 shrink-0 text-muted-foreground" />}
-                  <span className="truncate">Enable Notifications</span>
-                </div>
-                <div className="text-xs text-muted-foreground line-clamp-1">Turn all medication reminders on or off</div>
+    <div className="space-y-6">
+      {/* System Settings Card */}
+      <Card className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <CardHeader>
+          <CardTitle className="text-lg">System Settings</CardTitle>
+          <CardDescription>Manage notification permissions and preferences</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Master */}
+          <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm flex items-center gap-2">
+                {preferences.enabled ? <Bell className="w-4 h-4 shrink-0" /> : <BellOff className="w-4 h-4 shrink-0 text-muted-foreground" />}
+                <span className="truncate">Enable Notifications</span>
               </div>
-              <Switch checked={preferences.enabled} onCheckedChange={(checked) => updatePreferences({ enabled: checked })} className="shrink-0" />
+              <div className="text-xs text-muted-foreground line-clamp-1">Turn all medication reminders on or off</div>
             </div>
-
-            {/* Browser */}
-            <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm truncate">Browser Notifications</div>
-                <div className="text-xs text-muted-foreground line-clamp-1">
-                  {permission === "granted" ? "Receive push notifications" : "Permission required"}
-                </div>
-              </div>
-              <Switch
-                checked={preferences.browser_enabled && permission === "granted"}
-                onCheckedChange={async (checked) => {
-                  if (checked && permission !== "granted") {
-                    const granted = await requestPermission();
-                    if (granted) updatePreferences({ browser_enabled: true });
-                  } else {
-                    updatePreferences({ browser_enabled: checked });
-                  }
-                }}
-                className="shrink-0"
-              />
-            </div>
-            {permission === "default" && (
-              <Button onClick={requestPermission} variant="outline" className="w-full" size="sm">Enable Browser Notifications</Button>
-            )}
-            {permission === "denied" && (
-              <div className="text-sm text-muted-foreground bg-destructive/10 p-3 rounded-lg">Notifications blocked. Enable them in your browser settings.</div>
-            )}
-
-            {/* Sound */}
-            <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm flex items-center gap-2">
-                  {preferences.sound_enabled ? <Volume2 className="w-4 h-4 shrink-0" /> : <VolumeX className="w-4 h-4 shrink-0 text-muted-foreground" />}
-                  <span className="truncate">Notification Sound</span>
-                </div>
-                <div className="text-xs text-muted-foreground line-clamp-1">Play a sound with notifications</div>
-              </div>
-              <Switch checked={preferences.sound_enabled} onCheckedChange={(checked) => updatePreferences({ sound_enabled: checked })} className="shrink-0" />
-            </div>
+            <Switch checked={preferences.enabled} onCheckedChange={(checked) => updatePreferences({ enabled: checked })} className="shrink-0" />
           </div>
 
-          {/* Scheduling */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Scheduling</h3>
-            
-            <div className="space-y-3 p-3 rounded-lg bg-muted/20">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 shrink-0 text-muted-foreground" />
-                <Label className="font-medium text-sm truncate">Reminder Timing</Label>
+          {/* Browser */}
+          <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm truncate">Browser Notifications</div>
+              <div className="text-xs text-muted-foreground line-clamp-1">
+                {permission === "granted" ? "Receive push notifications" : "Permission required"}
               </div>
-              <div className="text-xs text-muted-foreground">Notify me {preferences.reminder_minutes_before} minutes before each dose</div>
-              <Slider value={[preferences.reminder_minutes_before]} onValueChange={([value]) => updatePreferences({ reminder_minutes_before: value })} min={5} max={60} step={5} className="w-full" />
-              <div className="flex justify-between text-xs text-muted-foreground"><span>5 min</span><span>30 min</span><span>60 min</span></div>
             </div>
-
-            <div className="space-y-3 p-3 rounded-lg bg-muted/20">
-              <div className="flex items-center gap-2">
-                <Moon className="w-4 h-4 shrink-0 text-muted-foreground" />
-                <Label className="font-medium text-sm truncate">Quiet Hours</Label>
-              </div>
-              <div className="text-xs text-muted-foreground mb-3">Disable notifications during specific hours</div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="quiet-start" className="text-xs">Start Time</Label>
-                  <Input id="quiet-start" type="time" value={preferences.quiet_hours_start || ""} onChange={(e) => updatePreferences({ quiet_hours_start: e.target.value || null })} className="h-10 text-sm" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quiet-end" className="text-xs">End Time</Label>
-                  <Input id="quiet-end" type="time" value={preferences.quiet_hours_end || ""} onChange={(e) => updatePreferences({ quiet_hours_end: e.target.value || null })} className="h-10 text-sm" />
-                </div>
-              </div>
-              {preferences.quiet_hours_start && preferences.quiet_hours_end && (
-                <Button variant="ghost" size="sm" onClick={() => updatePreferences({ quiet_hours_start: null, quiet_hours_end: null })} className="w-full text-xs">Clear Quiet Hours</Button>
-              )}
-            </div>
-
-            <Button onClick={testNotification} variant="outline" className="w-full">Send Test Notification</Button>
+            <Switch
+              checked={preferences.browser_enabled && permission === "granted"}
+              onCheckedChange={async (checked) => {
+                if (checked && permission !== "granted") {
+                  const granted = await requestPermission();
+                  if (granted) updatePreferences({ browser_enabled: true });
+                } else {
+                  updatePreferences({ browser_enabled: checked });
+                }
+              }}
+              className="shrink-0"
+            />
           </div>
-        </div>
+          {permission === "default" && (
+            <Button onClick={requestPermission} variant="outline" className="w-full" size="sm">Enable Browser Notifications</Button>
+          )}
+          {permission === "denied" && (
+            <div className="text-sm text-muted-foreground bg-destructive/10 p-3 rounded-lg">Notifications blocked. Enable them in your browser settings.</div>
+          )}
 
-        {/* Right: Advanced (Types) */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Advanced Settings</h3>
-          
+          {/* Sound */}
+          <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm flex items-center gap-2">
+                {preferences.sound_enabled ? <Volume2 className="w-4 h-4 shrink-0" /> : <VolumeX className="w-4 h-4 shrink-0 text-muted-foreground" />}
+                <span className="truncate">Notification Sound</span>
+              </div>
+              <div className="text-xs text-muted-foreground line-clamp-1">Play a sound with notifications</div>
+            </div>
+            <Switch checked={preferences.sound_enabled} onCheckedChange={(checked) => updatePreferences({ sound_enabled: checked })} className="shrink-0" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Scheduling Card */}
+      <Card className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <CardHeader>
+          <CardTitle className="text-lg">Scheduling</CardTitle>
+          <CardDescription>Configure when you receive notifications</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3 p-3 rounded-lg bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 shrink-0 text-muted-foreground" />
+              <Label className="font-medium text-sm truncate">Reminder Timing</Label>
+            </div>
+            <div className="text-xs text-muted-foreground">Notify me {preferences.reminder_minutes_before} minutes before each dose</div>
+            <Slider value={[preferences.reminder_minutes_before]} onValueChange={([value]) => updatePreferences({ reminder_minutes_before: value })} min={5} max={60} step={5} className="w-full" />
+            <div className="flex justify-between text-xs text-muted-foreground"><span>5 min</span><span>30 min</span><span>60 min</span></div>
+          </div>
+
+          <div className="space-y-3 p-3 rounded-lg bg-muted/20">
+            <div className="flex items-center gap-2">
+              <Moon className="w-4 h-4 shrink-0 text-muted-foreground" />
+              <Label className="font-medium text-sm truncate">Quiet Hours</Label>
+            </div>
+            <div className="text-xs text-muted-foreground mb-3">Disable notifications during specific hours</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="quiet-start" className="text-xs">Start Time</Label>
+                <Input id="quiet-start" type="time" value={preferences.quiet_hours_start || ""} onChange={(e) => updatePreferences({ quiet_hours_start: e.target.value || null })} className="h-10 text-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="quiet-end" className="text-xs">End Time</Label>
+                <Input id="quiet-end" type="time" value={preferences.quiet_hours_end || ""} onChange={(e) => updatePreferences({ quiet_hours_end: e.target.value || null })} className="h-10 text-sm" />
+              </div>
+            </div>
+            {preferences.quiet_hours_start && preferences.quiet_hours_end && (
+              <Button variant="ghost" size="sm" onClick={() => updatePreferences({ quiet_hours_start: null, quiet_hours_end: null })} className="w-full text-xs">Clear Quiet Hours</Button>
+            )}
+          </div>
+
+          <Button onClick={testNotification} variant="outline" className="w-full">Send Test Notification</Button>
+        </CardContent>
+      </Card>
+
+      {/* Advanced Settings Card */}
+      <Card className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
+        <CardHeader>
+          <CardTitle className="text-lg">Advanced Settings</CardTitle>
+          <CardDescription>Customize notification types and behavior</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <AccordionUI.Accordion type="single" collapsible defaultValue="types">
             <AccordionUI.AccordionItem value="types" className="border-0">
               <AccordionUI.AccordionTrigger className="px-3 py-2 text-sm bg-muted/20 rounded-lg hover:bg-muted/30">Notification Types</AccordionUI.AccordionTrigger>
@@ -245,9 +252,8 @@ export const NotificationSettings = () => {
             <div className="font-medium text-sm flex-1 min-w-0 truncate">Missed Dose Alerts</div>
             <Switch checked={preferences.remind_for_missed} onCheckedChange={(checked) => updatePreferences({ remind_for_missed: checked })} className="shrink-0" />
           </div>
-        </div>
-      </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
