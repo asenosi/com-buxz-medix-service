@@ -1119,34 +1119,34 @@ const Dashboard = () => {
                               style={{ animationDelay: `${periodIdx * 0.1}s` }}
                             >
                               {/* Period Header with Status */}
-                              <CollapsibleTrigger className="w-full">
+                              <CollapsibleTrigger className="w-full group">
                                 <div className="space-y-2">
-                                  <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
-                                    <span className="text-3xl">{info.icon}</span>
+                                  <div className="flex items-center gap-3 cursor-pointer group-hover:opacity-70 transition-all duration-200">
+                                    <span className="text-2xl">{info.icon}</span>
                                     <div className="flex-1 text-left">
-                                      <h3 className="text-xl font-bold">{info.title}</h3>
-                                      <p className="text-sm text-muted-foreground">
+                                      <h3 className="text-lg font-semibold">{info.title}</h3>
+                                      <p className="text-xs text-muted-foreground">
                                         {info.takenCount} of {info.totalCount} completed
                                       </p>
                                     </div>
                                     <ChevronDown 
-                                      className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                                      className={`h-4 w-4 text-muted-foreground/50 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                                     />
                                   </div>
                                   
                                   {/* Celebratory or Encouraging Message */}
                                   {info.isComplete ? (
-                                    <Card className="bg-success/10 border-success/20">
-                                      <CardContent className="py-3 px-4">
-                                        <p className="text-sm font-medium text-success-foreground">
+                                    <Card className="bg-success/5 border-success/10">
+                                      <CardContent className="py-2 px-3">
+                                        <p className="text-xs text-success-foreground/80">
                                           {info.celebrationMsg}
                                         </p>
                                       </CardContent>
                                     </Card>
                                   ) : info.hasDue || info.hasUpcoming ? (
-                                    <Card className="bg-primary/10 border-primary/20">
-                                      <CardContent className="py-3 px-4">
-                                        <p className="text-sm font-medium text-primary-foreground">
+                                    <Card className="bg-primary/5 border-primary/10">
+                                      <CardContent className="py-2 px-3">
+                                        <p className="text-xs text-primary-foreground/80">
                                           {info.encourageMsg}
                                         </p>
                                       </CardContent>
@@ -1155,7 +1155,7 @@ const Dashboard = () => {
                                 </div>
                               </CollapsibleTrigger>
                               
-                              <CollapsibleContent>
+                              <CollapsibleContent className="transition-all duration-200 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                                 {/* Mobile: SimpleDoseCard layout */}
                                 <div className="sm:hidden space-y-2">
                                   {doses.map((dose, idx) => (
