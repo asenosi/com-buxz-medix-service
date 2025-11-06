@@ -67,6 +67,16 @@ interface TodayDose {
   adherenceStatus?: "on_time" | "late" | "missed";
 }
 
+interface DoseLog {
+  id: string;
+  medication_id: string;
+  schedule_id: string;
+  scheduled_time: string;
+  taken_at: string | null;
+  status: "taken" | "skipped" | "snoozed" | "missed";
+  snooze_until: string | null;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -83,7 +93,7 @@ const Dashboard = () => {
   const [showStats, setShowStats] = useState(false);
   const [selectedDose, setSelectedDose] = useState<TodayDose | null>(null);
   const [showDoseDialog, setShowDoseDialog] = useState(false);
-  const [doseLogs, setDoseLogs] = useState<any[]>([]);
+  const [doseLogs, setDoseLogs] = useState<DoseLog[]>([]);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
   const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
@@ -642,7 +652,7 @@ const Dashboard = () => {
           .order("taken_at", { ascending: false });
 
         if (error) throw error;
-        setDoseLogs(logs || []);
+        setDoseLogs((logs || []) as DoseLog[]);
       } catch (error) {
         console.error("Failed to fetch dose logs:", error);
         setDoseLogs([]);
