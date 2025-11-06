@@ -709,7 +709,7 @@ const Dashboard = () => {
   const getPeriodInfo = (period: string, doses: TodayDose[]) => {
     const totalCount = doses.length;
     const takenCount = doses.filter(d => d.isTaken).length;
-    const isComplete = totalCount > 0 && takenCount === totalCount;
+    const isComplete = totalCount > 0 && doses.every(d => d.isTaken || d.isSnoozed);
     const hasUpcoming = doses.some(d => !d.isTaken && !d.isSkipped && d.status === "upcoming");
     const hasDue = doses.some(d => !d.isTaken && !d.isSkipped && d.status === "due");
     
