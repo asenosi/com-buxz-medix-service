@@ -102,7 +102,7 @@ const Dashboard = () => {
   const [userName, setUserName] = useState<string>("");
   const { permission, preferences, requestPermission, sendNotification } = useNotification();
   const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(false);
-  const [collapsedPeriods, setCollapsedPeriods] = useState<Set<string>>(new Set());
+  const [expandedPeriods, setExpandedPeriods] = useState<Set<string>>(new Set());
   
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
@@ -749,7 +749,7 @@ const Dashboard = () => {
   };
 
   const togglePeriod = (period: string) => {
-    setCollapsedPeriods(prev => {
+    setExpandedPeriods(prev => {
       const next = new Set(prev);
       if (next.has(period)) {
         next.delete(period);
@@ -1109,7 +1109,8 @@ const Dashboard = () => {
                         if (doses.length === 0) return null;
                         
                         const info = getPeriodInfo(period, doses);
-                        const isOpen = !collapsedPeriods.has(period) || !info.isComplete;
+                        // Auto-collapse complete periods unless user has explicitly expanded them
+                        const isOpen = info.isComplete ? expandedPeriods.has(period) : true;
                         
                         return (
                           <Collapsible 
