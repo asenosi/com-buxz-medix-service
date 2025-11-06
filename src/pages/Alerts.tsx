@@ -261,7 +261,11 @@ const Alerts = () => {
             <h2 className="text-sm font-medium text-muted-foreground mb-3">Urgent</h2>
             <div className="space-y-2">
               {missedDoses.map((dose, idx) => (
-                <Card key={`${dose.schedule.id}-${idx}`} className="border-l-2 border-l-destructive">
+                <Card 
+                  key={`${dose.schedule.id}-${idx}`} 
+                  className="border-l-2 border-l-destructive hover:bg-accent/5 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/medications/${dose.medication.id}`)}
+                >
                   <CardContent className="flex items-center justify-between p-3">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
@@ -275,7 +279,10 @@ const Alerts = () => {
                       </div>
                     </div>
                     <Button
-                      onClick={() => handleTakeNow(dose)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTakeNow(dose);
+                      }}
                       size="sm"
                       className="shrink-0"
                     >

@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Pill } from "lucide-react";
+import { Pill, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 interface Medication {
   id: string;
@@ -20,9 +21,14 @@ interface SimpleDoseCardProps {
   schedule: Schedule;
   onClick?: () => void;
   className?: string;
+  isTaken?: boolean;
+  isSkipped?: boolean;
+  isSnoozed?: boolean;
 }
 
-export const SimpleDoseCard = ({ medication, schedule, onClick, className }: SimpleDoseCardProps) => {
+export const SimpleDoseCard = ({ medication, schedule, onClick, className, isTaken, isSkipped, isSnoozed }: SimpleDoseCardProps) => {
+  const isCompleted = isTaken || isSkipped || isSnoozed;
+
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
     const f = form.toLowerCase();
@@ -52,28 +58,62 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className }: Sim
 
   return (
     <Card
-      onClick={onClick}
+      onClick={isCompleted ? undefined : onClick}
       className={cn(
-        "p-4 hover:bg-accent/50 transition-colors cursor-pointer border-l-4 border-l-transparent",
+        "p-4 transition-colors border-l-4 border-l-transparent relative",
+        !isCompleted && "hover:bg-accent/50 cursor-pointer",
+        isCompleted && "opacity-70 cursor-default",
         className
       )}
     >
-      <div className="flex items-center gap-4 pointer-events-none">
+      <div className="flex items-center gap-4">
         {/* Icon/Image */}
-        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0", getIconColor(medication.form))}>
+        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative", getIconColor(medication.form))}>
           {primaryImage ? (
-            <img src={primaryImage} alt={medication.name} className="w-8 h-8 object-contain" />
+            <img src={primaryImage} alt={medication.name} className={cn("w-8 h-8 object-contain", isCompleted && "opacity-50")} />
           ) : (
-            <Pill className="w-6 h-6" />
+            <Pill className={cn("w-6 h-6", isCompleted && "opacity-50")} />
+          )}
+          {isTaken && (
+            <div className="absolute -bottom-1 -right-1 bg-success rounded-full p-0.5">
+              <CheckCircle2 className="w-4 h-4 text-white" />
+            </div>
+          )}
+          {isSkipped && (
+            <div className="absolute -bottom-1 -right-1 bg-warning rounded-full p-0.5">
+              <XCircle className="w-4 h-4 text-white" />
+            </div>
+          )}
+          {isSnoozed && (
+            <div className="absolute -bottom-1 -right-1 bg-warning rounded-full p-0.5">
+              <Clock className="w-4 h-4 text-white" />
+            </div>
           )}
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-lg truncate">{medication.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className={cn("font-semibold text-lg truncate", isCompleted && "line-through")}>{medication.name}</h3>
+          </div>
           <p className="text-sm text-muted-foreground truncate">{medication.dosage}</p>
           {schedule.special_instructions && (
             <p className="text-xs text-muted-foreground mt-1 truncate">{schedule.special_instructions}</p>
+          )}
+          {isTaken && (
+            <Badge variant="outline" className="mt-1 text-[10px] h-5 bg-success/10 text-success border-success/30">
+              ✓ Taken
+            </Badge>
+          )}
+          {isSkipped && (
+            <Badge variant="outline" className="mt-1 text-[10px] h-5 bg-warning/10 text-warning border-warning/30">
+              ⚠️ Skipped
+            </Badge>
+          )}
+          {isSnoozed && (
+            <Badge variant="outline" className="mt-1 text-[10px] h-5 bg-warning/10 text-warning border-warning/30">
+              ⏰ Snoozed
+            </Badge>
           )}
         </div>
       </div>

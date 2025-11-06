@@ -508,80 +508,109 @@ const Dashboard = () => {
   };
 
   const markAsTaken = async (dose: TodayDose) => {
+    // Prevent duplicate actions
+    if (dose.isTaken) {
+      toast.info("This dose is already marked as taken");
+      return;
+    }
+
     try {
-      const { error } = await supabase.from("dose_logs").insert([
-        {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.functions.invoke("update-reminder-status", {
+        body: {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
           scheduled_time: dose.nextDoseTime.toISOString(),
-          taken_at: new Date().toISOString(),
           status: "taken",
         },
-      ]);
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
-
-      if (dose.medication.pills_remaining && dose.medication.pills_remaining > 0) {
-        const { error: updateError } = await supabase
-          .from("medications")
-          .update({ pills_remaining: dose.medication.pills_remaining - 1 })
-          .eq("id", dose.medication.id);
-
-        if (updateError) throw updateError;
-      }
+      if (data?.error) throw new Error(data.error);
 
       toast.success(`✅ Great job! ${dose.medication.name} marked as taken!`);
       fetchMedications();
     } catch (error: unknown) {
-      toast.error("Failed to log dose");
+      const message = error instanceof Error ? error.message : "Failed to log dose";
+      toast.error(message);
       console.error(error);
     }
   };
 
   const markAsSkipped = async (dose: TodayDose) => {
+    // Prevent duplicate actions
+    if (dose.isSkipped) {
+      toast.info("This dose is already marked as skipped");
+      return;
+    }
+
     try {
-      const { error } = await supabase.from("dose_logs").insert([
-        {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.functions.invoke("update-reminder-status", {
+        body: {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
           scheduled_time: dose.nextDoseTime.toISOString(),
-          taken_at: null,
           status: "skipped",
         },
-      ]);
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.info(`${dose.medication.name} marked as skipped`);
       fetchMedications();
     } catch (error: unknown) {
-      toast.error("Failed to log skip");
+      const message = error instanceof Error ? error.message : "Failed to log skip";
+      toast.error(message);
       console.error(error);
     }
   };
 
   const markAsSnoozed = async (dose: TodayDose, minutes: number) => {
-    try {
-      const snoozeUntil = new Date();
-      snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
+    // Prevent duplicate actions
+    if (dose.isSnoozed) {
+      toast.info("This dose is already snoozed");
+      return;
+    }
 
-      const { error } = await supabase.from("dose_logs").insert([
-        {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.functions.invoke("update-reminder-status", {
+        body: {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
           scheduled_time: dose.nextDoseTime.toISOString(),
-          taken_at: null,
           status: "snoozed",
-          snooze_until: snoozeUntil.toISOString(),
+          snooze_minutes: minutes,
         },
-      ]);
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
+      const snoozeUntil = new Date();
+      snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
       toast.success(`⏰ ${dose.medication.name} snoozed until ${snoozeUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
       fetchMedications();
     } catch (error: unknown) {
-      toast.error("Failed to snooze");
+      const message = error instanceof Error ? error.message : "Failed to snooze";
+      toast.error(message);
       console.error(error);
     }
   };
@@ -591,6 +620,10 @@ const Dashboard = () => {
   };
 
   const handleDoseClick = (dose: TodayDose) => {
+    // Don't open dialog for already completed doses
+    if (dose.isTaken || dose.isSkipped || dose.isSnoozed) {
+      return;
+    }
     setSelectedDose(dose);
     setShowDoseDialog(true);
   };
@@ -960,6 +993,9 @@ const Dashboard = () => {
                               medication={dose.medication}
                               schedule={dose.schedule}
                               onClick={() => handleDoseClick(dose)}
+                              isTaken={dose.isTaken}
+                              isSkipped={dose.isSkipped}
+                              isSnoozed={dose.isSnoozed}
                               className={cn(
                                 dose.isTaken && "bg-success/5 border-l-success",
                                 (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
@@ -1045,6 +1081,9 @@ const Dashboard = () => {
           dosage={selectedDose.medication.dosage}
           gracePeriodMinutes={selectedDose.medication.grace_period_minutes || 60}
           missedDoseCutoffMinutes={selectedDose.medication.missed_dose_cutoff_minutes || 180}
+          isTaken={selectedDose.isTaken}
+          isSkipped={selectedDose.isSkipped}
+          isSnoozed={selectedDose.isSnoozed}
           onTake={() => markAsTaken(selectedDose)}
           onSkip={() => markAsSkipped(selectedDose)}
           onReschedule={() => {
