@@ -620,6 +620,10 @@ const Dashboard = () => {
   };
 
   const handleDoseClick = (dose: TodayDose) => {
+    // Don't open dialog for already completed doses
+    if (dose.isTaken || dose.isSkipped || dose.isSnoozed) {
+      return;
+    }
     setSelectedDose(dose);
     setShowDoseDialog(true);
   };
@@ -989,6 +993,9 @@ const Dashboard = () => {
                               medication={dose.medication}
                               schedule={dose.schedule}
                               onClick={() => handleDoseClick(dose)}
+                              isTaken={dose.isTaken}
+                              isSkipped={dose.isSkipped}
+                              isSnoozed={dose.isSnoozed}
                               className={cn(
                                 dose.isTaken && "bg-success/5 border-l-success",
                                 (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
@@ -1074,6 +1081,9 @@ const Dashboard = () => {
           dosage={selectedDose.medication.dosage}
           gracePeriodMinutes={selectedDose.medication.grace_period_minutes || 60}
           missedDoseCutoffMinutes={selectedDose.medication.missed_dose_cutoff_minutes || 180}
+          isTaken={selectedDose.isTaken}
+          isSkipped={selectedDose.isSkipped}
+          isSnoozed={selectedDose.isSnoozed}
           onTake={() => markAsTaken(selectedDose)}
           onSkip={() => markAsSkipped(selectedDose)}
           onReschedule={() => {

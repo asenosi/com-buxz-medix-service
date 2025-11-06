@@ -36,6 +36,9 @@ interface DoseActionDialogProps {
   lastTaken?: Date;
   gracePeriodMinutes?: number;
   missedDoseCutoffMinutes?: number;
+  isTaken?: boolean;
+  isSkipped?: boolean;
+  isSnoozed?: boolean;
   onTake: () => void;
   onSkip: () => void;
   onReschedule: () => void;
@@ -54,6 +57,9 @@ export const DoseActionDialog = ({
   lastTaken,
   gracePeriodMinutes = 60,
   missedDoseCutoffMinutes = 180,
+  isTaken = false,
+  isSkipped = false,
+  isSnoozed = false,
   onTake,
   onSkip,
   onReschedule,
@@ -61,6 +67,8 @@ export const DoseActionDialog = ({
   onDelete,
   onInfo,
 }: DoseActionDialogProps) => {
+  const isCompleted = isTaken || isSkipped || isSnoozed;
+  
   // Calculate time difference and dose status
   const now = new Date();
   const minutesLate = Math.floor((now.getTime() - scheduledTime.getTime()) / (60 * 1000));
@@ -284,52 +292,62 @@ export const DoseActionDialog = ({
 
         {/* Action Buttons */}
         <div className="sticky bottom-0 bg-background border-t p-3">
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              onClick={() => {
-                onSkip();
-                onOpenChange(false);
-              }}
-              variant="outline"
-              size="sm"
-              className="h-auto py-3 flex flex-col gap-1"
-            >
-              <X className="h-5 w-5" />
-              <span className="text-xs font-semibold">Skip</span>
-            </Button>
+          {isCompleted ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">
+                {isTaken && "✓ This dose has been taken"}
+                {isSkipped && "⚠️ This dose was skipped"}
+                {isSnoozed && "⏰ This dose is snoozed"}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                onClick={() => {
+                  onSkip();
+                  onOpenChange(false);
+                }}
+                variant="outline"
+                size="sm"
+                className="h-auto py-3 flex flex-col gap-1"
+              >
+                <X className="h-5 w-5" />
+                <span className="text-xs font-semibold">Skip</span>
+              </Button>
 
-            <Button
-              onClick={() => {
-                onTake();
-                onOpenChange(false);
-              }}
-              size="sm"
-              className={cn(
-                "h-auto py-3 flex flex-col gap-1",
-                isTooLate && "bg-destructive hover:bg-destructive/90",
-                isLate && !isTooLate && "bg-warning hover:bg-warning/90 text-warning-foreground",
-                !isLate && !isTooLate && "bg-primary hover:bg-primary/90"
-              )}
-            >
-              <Check className="h-5 w-5" strokeWidth={3} />
-              <span className="text-xs font-bold">
-                {isTooLate ? "Missed" : isLate ? "Late" : "Take"}
-              </span>
-            </Button>
+              <Button
+                onClick={() => {
+                  onTake();
+                  onOpenChange(false);
+                }}
+                size="sm"
+                className={cn(
+                  "h-auto py-3 flex flex-col gap-1",
+                  isTooLate && "bg-destructive hover:bg-destructive/90",
+                  isLate && !isTooLate && "bg-warning hover:bg-warning/90 text-warning-foreground",
+                  !isLate && !isTooLate && "bg-primary hover:bg-primary/90"
+                )}
+              >
+                <Check className="h-5 w-5" strokeWidth={3} />
+                <span className="text-xs font-bold">
+                  {isTooLate ? "Missed" : isLate ? "Late" : "Take"}
+                </span>
+              </Button>
 
-            <Button
-              onClick={() => {
-                onReschedule();
-                onOpenChange(false);
-              }}
-              variant="outline"
-              size="sm"
-              className="h-auto py-3 flex flex-col gap-1"
-            >
-              <ClockIcon className="h-5 w-5" />
-              <span className="text-xs font-semibold">Snooze</span>
-            </Button>
-          </div>
+              <Button
+                onClick={() => {
+                  onReschedule();
+                  onOpenChange(false);
+                }}
+                variant="outline"
+                size="sm"
+                className="h-auto py-3 flex flex-col gap-1"
+              >
+                <ClockIcon className="h-5 w-5" />
+                <span className="text-xs font-semibold">Snooze</span>
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
