@@ -674,6 +674,77 @@ const Dashboard = () => {
     return groups;
   };
 
+  const groupDosesByPeriod = (doses: TodayDose[]) => {
+    const groups: {
+      morning: TodayDose[];
+      midday: TodayDose[];
+      evening: TodayDose[];
+      night: TodayDose[];
+    } = {
+      morning: [],
+      midday: [],
+      evening: [],
+      night: [],
+    };
+
+    doses.forEach((dose) => {
+      const hour = dose.nextDoseTime.getHours();
+      if (hour >= 5 && hour < 12) {
+        groups.morning.push(dose);
+      } else if (hour >= 12 && hour < 17) {
+        groups.midday.push(dose);
+      } else if (hour >= 17 && hour < 21) {
+        groups.evening.push(dose);
+      } else {
+        groups.night.push(dose);
+      }
+    });
+
+    return groups;
+  };
+
+  const getPeriodInfo = (period: string, doses: TodayDose[]) => {
+    const totalCount = doses.length;
+    const takenCount = doses.filter(d => d.isTaken).length;
+    const isComplete = totalCount > 0 && takenCount === totalCount;
+    const hasUpcoming = doses.some(d => !d.isTaken && !d.isSkipped && d.status === "upcoming");
+    const hasDue = doses.some(d => !d.isTaken && !d.isSkipped && d.status === "due");
+    
+    let icon = "🌅";
+    let title = "Morning Medications";
+    let celebrationMsg = "🎉 Amazing! You've completed all your morning meds!";
+    let encourageMsg = "💪 Time for your morning medications!";
+    
+    if (period === "midday") {
+      icon = "☀️";
+      title = "Midday Medications";
+      celebrationMsg = "🎉 Great job! All midday medications completed!";
+      encourageMsg = "☀️ Don't forget your midday medications!";
+    } else if (period === "evening") {
+      icon = "🌆";
+      title = "Evening Medications";
+      celebrationMsg = "🎉 Excellent! Evening medications all done!";
+      encourageMsg = "🌆 Time for your evening medications!";
+    } else if (period === "night") {
+      icon = "🌙";
+      title = "Night Medications";
+      celebrationMsg = "🎉 Perfect! Night medications complete!";
+      encourageMsg = "🌙 Don't forget your night medications before bed!";
+    }
+    
+    return {
+      icon,
+      title,
+      celebrationMsg,
+      encourageMsg,
+      isComplete,
+      hasUpcoming,
+      hasDue,
+      takenCount,
+      totalCount,
+    };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -1012,55 +1083,100 @@ const Dashboard = () => {
                 </Card>
               ) : (
                 <>
-                  {/* Mobile: Time-grouped layout */}
-                  <div className="sm:hidden space-y-6">
-                    {Object.entries(groupDosesByTime(filteredDoses.length === 0 ? [] : filteredDoses)).map(([timeStr, doses], groupIdx) => (
-                      <div key={timeStr} className="animate-fade-in" style={{ animationDelay: `${groupIdx * 0.1}s` }}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Clock className="w-5 h-5 text-gray-500" />
-                          <h3 className="text-lg font-bold text-gray-600">{timeStr}</h3>
-                        </div>
-                        <div className="space-y-2">
-                          {doses.map((dose, idx) => (
-                            <SimpleDoseCard
-                              key={`${dose.schedule.id}-${idx}`}
-                              medication={dose.medication}
-                              schedule={dose.schedule}
-                              onClick={() => handleDoseClick(dose)}
-                              isTaken={dose.isTaken}
-                              isSkipped={dose.isSkipped}
-                              isSnoozed={dose.isSnoozed}
-                              className={cn(
-                                dose.isTaken && "bg-success/5 border-l-success",
-                                (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
-                                !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "overdue" && "bg-destructive/5 border-l-destructive",
-                                !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "due" && "bg-accent/5 border-l-accent"
-                              )}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop: Original DoseCard layout */}
-                  <div className="hidden sm:grid gap-3 sm:gap-4">
-                    {(filteredDoses.length === 0 ? [] : filteredDoses).map((dose, idx) => (
-                      <div 
-                        key={`${dose.schedule.id}-${idx}`}
-                        className="animate-slide-in-right"
-                        style={{ animationDelay: `${idx * 0.1}s` }}
-                      >
-                        <DoseCard
-                          dose={dose}
-                          onMarkTaken={markAsTaken}
-                          onMarkSkipped={markAsSkipped}
-                          onMarkSnoozed={markAsSnoozed}
-                          onEdit={handleEditMedication}
-                          onOpenDetails={(id) => navigate(`/medications/${id}`)}
-                        />
-                      </div>
-                    ))}
+                  {/* Period-grouped layout for both mobile and desktop */}
+                  <div className="space-y-8">
+                    {(() => {
+                      const periodGroups = groupDosesByPeriod(filteredDoses.length === 0 ? [] : filteredDoses);
+                      const periods: Array<keyof typeof periodGroups> = ["morning", "midday", "evening", "night"];
+                      
+                      return periods.map((period, periodIdx) => {
+                        const doses = periodGroups[period];
+                        if (doses.length === 0) return null;
+                        
+                        const info = getPeriodInfo(period, doses);
+                        
+                        return (
+                          <div 
+                            key={period} 
+                            className="animate-fade-in space-y-4"
+                            style={{ animationDelay: `${periodIdx * 0.1}s` }}
+                          >
+                            {/* Period Header with Status */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <span className="text-3xl">{info.icon}</span>
+                                <div className="flex-1">
+                                  <h3 className="text-xl font-bold">{info.title}</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {info.takenCount} of {info.totalCount} completed
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              {/* Celebratory or Encouraging Message */}
+                              {info.isComplete ? (
+                                <Card className="bg-success/10 border-success/20">
+                                  <CardContent className="py-3 px-4">
+                                    <p className="text-sm font-medium text-success-foreground">
+                                      {info.celebrationMsg}
+                                    </p>
+                                  </CardContent>
+                                </Card>
+                              ) : info.hasDue || info.hasUpcoming ? (
+                                <Card className="bg-primary/10 border-primary/20">
+                                  <CardContent className="py-3 px-4">
+                                    <p className="text-sm font-medium text-primary-foreground">
+                                      {info.encourageMsg}
+                                    </p>
+                                  </CardContent>
+                                </Card>
+                              ) : null}
+                            </div>
+                            
+                            {/* Mobile: SimpleDoseCard layout */}
+                            <div className="sm:hidden space-y-2">
+                              {doses.map((dose, idx) => (
+                                <SimpleDoseCard
+                                  key={`${dose.schedule.id}-${idx}`}
+                                  medication={dose.medication}
+                                  schedule={dose.schedule}
+                                  onClick={() => handleDoseClick(dose)}
+                                  isTaken={dose.isTaken}
+                                  isSkipped={dose.isSkipped}
+                                  isSnoozed={dose.isSnoozed}
+                                  className={cn(
+                                    dose.isTaken && "bg-success/5 border-l-success",
+                                    (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
+                                    !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "overdue" && "bg-destructive/5 border-l-destructive",
+                                    !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "due" && "bg-accent/5 border-l-accent"
+                                  )}
+                                />
+                              ))}
+                            </div>
+                            
+                            {/* Desktop: DoseCard layout */}
+                            <div className="hidden sm:grid gap-3 sm:gap-4">
+                              {doses.map((dose, idx) => (
+                                <div 
+                                  key={`${dose.schedule.id}-${idx}`}
+                                  className="animate-slide-in-right"
+                                  style={{ animationDelay: `${idx * 0.05}s` }}
+                                >
+                                  <DoseCard
+                                    dose={dose}
+                                    onMarkTaken={markAsTaken}
+                                    onMarkSkipped={markAsSkipped}
+                                    onMarkSnoozed={markAsSnoozed}
+                                    onEdit={handleEditMedication}
+                                    onOpenDetails={(id) => navigate(`/medications/${id}`)}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
 
                   {filteredDoses.length === 0 && (
