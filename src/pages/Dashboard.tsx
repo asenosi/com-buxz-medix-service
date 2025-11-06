@@ -515,45 +515,29 @@ const Dashboard = () => {
     }
 
     try {
-      // Check if log already exists
-      const { data: existingLog } = await supabase
-        .from("dose_logs")
-        .select("id, status")
-        .eq("medication_id", dose.medication.id)
-        .eq("schedule_id", dose.schedule.id)
-        .eq("scheduled_time", dose.nextDoseTime.toISOString())
-        .maybeSingle();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-      if (existingLog) {
-        toast.info("This dose has already been logged");
-        return;
-      }
-
-      const { error } = await supabase.from("dose_logs").insert([
-        {
+      const { data, error } = await supabase.functions.invoke("update-reminder-status", {
+        body: {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
           scheduled_time: dose.nextDoseTime.toISOString(),
-          taken_at: new Date().toISOString(),
           status: "taken",
         },
-      ]);
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
-
-      if (dose.medication.pills_remaining && dose.medication.pills_remaining > 0) {
-        const { error: updateError } = await supabase
-          .from("medications")
-          .update({ pills_remaining: dose.medication.pills_remaining - 1 })
-          .eq("id", dose.medication.id);
-
-        if (updateError) throw updateError;
-      }
+      if (data?.error) throw new Error(data.error);
 
       toast.success(`✅ Great job! ${dose.medication.name} marked as taken!`);
       fetchMedications();
     } catch (error: unknown) {
-      toast.error("Failed to log dose");
+      const message = error instanceof Error ? error.message : "Failed to log dose";
+      toast.error(message);
       console.error(error);
     }
   };
@@ -566,36 +550,29 @@ const Dashboard = () => {
     }
 
     try {
-      // Check if log already exists
-      const { data: existingLog } = await supabase
-        .from("dose_logs")
-        .select("id, status")
-        .eq("medication_id", dose.medication.id)
-        .eq("schedule_id", dose.schedule.id)
-        .eq("scheduled_time", dose.nextDoseTime.toISOString())
-        .maybeSingle();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-      if (existingLog) {
-        toast.info("This dose has already been logged");
-        return;
-      }
-
-      const { error } = await supabase.from("dose_logs").insert([
-        {
+      const { data, error } = await supabase.functions.invoke("update-reminder-status", {
+        body: {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
           scheduled_time: dose.nextDoseTime.toISOString(),
-          taken_at: null,
           status: "skipped",
         },
-      ]);
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.info(`${dose.medication.name} marked as skipped`);
       fetchMedications();
     } catch (error: unknown) {
-      toast.error("Failed to log skip");
+      const message = error instanceof Error ? error.message : "Failed to log skip";
+      toast.error(message);
       console.error(error);
     }
   };
@@ -608,40 +585,32 @@ const Dashboard = () => {
     }
 
     try {
-      // Check if log already exists
-      const { data: existingLog } = await supabase
-        .from("dose_logs")
-        .select("id, status")
-        .eq("medication_id", dose.medication.id)
-        .eq("schedule_id", dose.schedule.id)
-        .eq("scheduled_time", dose.nextDoseTime.toISOString())
-        .maybeSingle();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-      if (existingLog) {
-        toast.info("This dose has already been logged");
-        return;
-      }
-
-      const snoozeUntil = new Date();
-      snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
-
-      const { error } = await supabase.from("dose_logs").insert([
-        {
+      const { data, error } = await supabase.functions.invoke("update-reminder-status", {
+        body: {
           medication_id: dose.medication.id,
           schedule_id: dose.schedule.id,
           scheduled_time: dose.nextDoseTime.toISOString(),
-          taken_at: null,
           status: "snoozed",
-          snooze_until: snoozeUntil.toISOString(),
+          snooze_minutes: minutes,
         },
-      ]);
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
+      const snoozeUntil = new Date();
+      snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
       toast.success(`⏰ ${dose.medication.name} snoozed until ${snoozeUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
       fetchMedications();
     } catch (error: unknown) {
-      toast.error("Failed to snooze");
+      const message = error instanceof Error ? error.message : "Failed to snooze";
+      toast.error(message);
       console.error(error);
     }
   };
