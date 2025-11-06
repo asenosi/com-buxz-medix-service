@@ -15,6 +15,8 @@ import { AdherenceStats } from "@/components/AdherenceStats";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { DoseActionDialog } from "@/components/DoseActionDialog";
 import { BulkPrescriptionUpload } from "@/components/BulkPrescriptionUpload";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -100,6 +102,7 @@ const Dashboard = () => {
   const [userName, setUserName] = useState<string>("");
   const { permission, preferences, requestPermission, sendNotification } = useNotification();
   const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(false);
+  const [collapsedPeriods, setCollapsedPeriods] = useState<Set<string>>(new Set());
   
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
@@ -745,6 +748,18 @@ const Dashboard = () => {
     };
   };
 
+  const togglePeriod = (period: string) => {
+    setCollapsedPeriods(prev => {
+      const next = new Set(prev);
+      if (next.has(period)) {
+        next.delete(period);
+      } else {
+        next.add(period);
+      }
+      return next;
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -1094,86 +1109,99 @@ const Dashboard = () => {
                         if (doses.length === 0) return null;
                         
                         const info = getPeriodInfo(period, doses);
+                        const isOpen = !collapsedPeriods.has(period) || !info.isComplete;
                         
                         return (
-                          <div 
-                            key={period} 
-                            className="animate-fade-in space-y-4"
-                            style={{ animationDelay: `${periodIdx * 0.1}s` }}
+                          <Collapsible 
+                            key={period}
+                            open={isOpen}
+                            onOpenChange={() => togglePeriod(period)}
                           >
-                            {/* Period Header with Status */}
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-3">
-                                <span className="text-3xl">{info.icon}</span>
-                                <div className="flex-1">
-                                  <h3 className="text-xl font-bold">{info.title}</h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    {info.takenCount} of {info.totalCount} completed
-                                  </p>
+                            <div 
+                              className="animate-fade-in space-y-4"
+                              style={{ animationDelay: `${periodIdx * 0.1}s` }}
+                            >
+                              {/* Period Header with Status */}
+                              <CollapsibleTrigger className="w-full">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+                                    <span className="text-3xl">{info.icon}</span>
+                                    <div className="flex-1 text-left">
+                                      <h3 className="text-xl font-bold">{info.title}</h3>
+                                      <p className="text-sm text-muted-foreground">
+                                        {info.takenCount} of {info.totalCount} completed
+                                      </p>
+                                    </div>
+                                    <ChevronDown 
+                                      className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                                    />
+                                  </div>
+                                  
+                                  {/* Celebratory or Encouraging Message */}
+                                  {info.isComplete ? (
+                                    <Card className="bg-success/10 border-success/20">
+                                      <CardContent className="py-3 px-4">
+                                        <p className="text-sm font-medium text-success-foreground">
+                                          {info.celebrationMsg}
+                                        </p>
+                                      </CardContent>
+                                    </Card>
+                                  ) : info.hasDue || info.hasUpcoming ? (
+                                    <Card className="bg-primary/10 border-primary/20">
+                                      <CardContent className="py-3 px-4">
+                                        <p className="text-sm font-medium text-primary-foreground">
+                                          {info.encourageMsg}
+                                        </p>
+                                      </CardContent>
+                                    </Card>
+                                  ) : null}
                                 </div>
-                              </div>
+                              </CollapsibleTrigger>
                               
-                              {/* Celebratory or Encouraging Message */}
-                              {info.isComplete ? (
-                                <Card className="bg-success/10 border-success/20">
-                                  <CardContent className="py-3 px-4">
-                                    <p className="text-sm font-medium text-success-foreground">
-                                      {info.celebrationMsg}
-                                    </p>
-                                  </CardContent>
-                                </Card>
-                              ) : info.hasDue || info.hasUpcoming ? (
-                                <Card className="bg-primary/10 border-primary/20">
-                                  <CardContent className="py-3 px-4">
-                                    <p className="text-sm font-medium text-primary-foreground">
-                                      {info.encourageMsg}
-                                    </p>
-                                  </CardContent>
-                                </Card>
-                              ) : null}
-                            </div>
-                            
-                            {/* Mobile: SimpleDoseCard layout */}
-                            <div className="sm:hidden space-y-2">
-                              {doses.map((dose, idx) => (
-                                <SimpleDoseCard
-                                  key={`${dose.schedule.id}-${idx}`}
-                                  medication={dose.medication}
-                                  schedule={dose.schedule}
-                                  onClick={() => handleDoseClick(dose)}
-                                  isTaken={dose.isTaken}
-                                  isSkipped={dose.isSkipped}
-                                  isSnoozed={dose.isSnoozed}
-                                  className={cn(
-                                    dose.isTaken && "bg-success/5 border-l-success",
-                                    (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
-                                    !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "overdue" && "bg-destructive/5 border-l-destructive",
-                                    !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "due" && "bg-accent/5 border-l-accent"
-                                  )}
-                                />
-                              ))}
-                            </div>
-                            
-                            {/* Desktop: DoseCard layout */}
-                            <div className="hidden sm:grid gap-3 sm:gap-4">
-                              {doses.map((dose, idx) => (
-                                <div 
-                                  key={`${dose.schedule.id}-${idx}`}
-                                  className="animate-slide-in-right"
-                                  style={{ animationDelay: `${idx * 0.05}s` }}
-                                >
-                                  <DoseCard
-                                    dose={dose}
-                                    onMarkTaken={markAsTaken}
-                                    onMarkSkipped={markAsSkipped}
-                                    onMarkSnoozed={markAsSnoozed}
-                                    onEdit={handleEditMedication}
-                                    onOpenDetails={(id) => navigate(`/medications/${id}`)}
-                                  />
+                              <CollapsibleContent>
+                                {/* Mobile: SimpleDoseCard layout */}
+                                <div className="sm:hidden space-y-2">
+                                  {doses.map((dose, idx) => (
+                                    <SimpleDoseCard
+                                      key={`${dose.schedule.id}-${idx}`}
+                                      medication={dose.medication}
+                                      schedule={dose.schedule}
+                                      onClick={() => handleDoseClick(dose)}
+                                      isTaken={dose.isTaken}
+                                      isSkipped={dose.isSkipped}
+                                      isSnoozed={dose.isSnoozed}
+                                      className={cn(
+                                        dose.isTaken && "bg-success/5 border-l-success",
+                                        (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
+                                        !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "overdue" && "bg-destructive/5 border-l-destructive",
+                                        !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "due" && "bg-accent/5 border-l-accent"
+                                      )}
+                                    />
+                                  ))}
                                 </div>
-                              ))}
+                                
+                                {/* Desktop: DoseCard layout */}
+                                <div className="hidden sm:grid gap-3 sm:gap-4">
+                                  {doses.map((dose, idx) => (
+                                    <div 
+                                      key={`${dose.schedule.id}-${idx}`}
+                                      className="animate-slide-in-right"
+                                      style={{ animationDelay: `${idx * 0.05}s` }}
+                                    >
+                                      <DoseCard
+                                        dose={dose}
+                                        onMarkTaken={markAsTaken}
+                                        onMarkSkipped={markAsSkipped}
+                                        onMarkSnoozed={markAsSnoozed}
+                                        onEdit={handleEditMedication}
+                                        onOpenDetails={(id) => navigate(`/medications/${id}`)}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </CollapsibleContent>
                             </div>
-                          </div>
+                          </Collapsible>
                         );
                       });
                     })()}
