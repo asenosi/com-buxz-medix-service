@@ -102,7 +102,7 @@ const Dashboard = () => {
   const [userName, setUserName] = useState<string>("");
   const { permission, preferences, requestPermission, sendNotification } = useNotification();
   const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(false);
-  const [expandedPeriods, setExpandedPeriods] = useState<Set<string>>(new Set());
+  const [periodStates, setPeriodStates] = useState<Map<string, boolean>>(new Map());
   
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
@@ -748,14 +748,10 @@ const Dashboard = () => {
     };
   };
 
-  const togglePeriod = (period: string) => {
-    setExpandedPeriods(prev => {
-      const next = new Set(prev);
-      if (next.has(period)) {
-        next.delete(period);
-      } else {
-        next.add(period);
-      }
+  const togglePeriod = (period: string, currentState: boolean) => {
+    setPeriodStates(prev => {
+      const next = new Map(prev);
+      next.set(period, !currentState);
       return next;
     });
   };
@@ -1109,14 +1105,14 @@ const Dashboard = () => {
                         if (doses.length === 0) return null;
                         
                         const info = getPeriodInfo(period, doses);
-                        // Auto-collapse complete periods unless user has explicitly expanded them
-                        const isOpen = info.isComplete ? expandedPeriods.has(period) : true;
+                        // If user has manually toggled, use their preference. Otherwise, open only if incomplete
+                        const isOpen = periodStates.has(period) ? periodStates.get(period)! : !info.isComplete;
                         
                         return (
                           <Collapsible 
                             key={period}
                             open={isOpen}
-                            onOpenChange={() => togglePeriod(period)}
+                            onOpenChange={() => togglePeriod(period, isOpen)}
                           >
                             <div 
                               className="animate-fade-in space-y-4"
