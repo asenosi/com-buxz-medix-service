@@ -508,7 +508,27 @@ const Dashboard = () => {
   };
 
   const markAsTaken = async (dose: TodayDose) => {
+    // Prevent duplicate actions
+    if (dose.isTaken) {
+      toast.info("This dose is already marked as taken");
+      return;
+    }
+
     try {
+      // Check if log already exists
+      const { data: existingLog } = await supabase
+        .from("dose_logs")
+        .select("id, status")
+        .eq("medication_id", dose.medication.id)
+        .eq("schedule_id", dose.schedule.id)
+        .eq("scheduled_time", dose.nextDoseTime.toISOString())
+        .maybeSingle();
+
+      if (existingLog) {
+        toast.info("This dose has already been logged");
+        return;
+      }
+
       const { error } = await supabase.from("dose_logs").insert([
         {
           medication_id: dose.medication.id,
@@ -539,7 +559,27 @@ const Dashboard = () => {
   };
 
   const markAsSkipped = async (dose: TodayDose) => {
+    // Prevent duplicate actions
+    if (dose.isSkipped) {
+      toast.info("This dose is already marked as skipped");
+      return;
+    }
+
     try {
+      // Check if log already exists
+      const { data: existingLog } = await supabase
+        .from("dose_logs")
+        .select("id, status")
+        .eq("medication_id", dose.medication.id)
+        .eq("schedule_id", dose.schedule.id)
+        .eq("scheduled_time", dose.nextDoseTime.toISOString())
+        .maybeSingle();
+
+      if (existingLog) {
+        toast.info("This dose has already been logged");
+        return;
+      }
+
       const { error } = await supabase.from("dose_logs").insert([
         {
           medication_id: dose.medication.id,
@@ -561,7 +601,27 @@ const Dashboard = () => {
   };
 
   const markAsSnoozed = async (dose: TodayDose, minutes: number) => {
+    // Prevent duplicate actions
+    if (dose.isSnoozed) {
+      toast.info("This dose is already snoozed");
+      return;
+    }
+
     try {
+      // Check if log already exists
+      const { data: existingLog } = await supabase
+        .from("dose_logs")
+        .select("id, status")
+        .eq("medication_id", dose.medication.id)
+        .eq("schedule_id", dose.schedule.id)
+        .eq("scheduled_time", dose.nextDoseTime.toISOString())
+        .maybeSingle();
+
+      if (existingLog) {
+        toast.info("This dose has already been logged");
+        return;
+      }
+
       const snoozeUntil = new Date();
       snoozeUntil.setMinutes(snoozeUntil.getMinutes() + minutes);
 
