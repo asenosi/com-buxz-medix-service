@@ -83,6 +83,7 @@ const Dashboard = () => {
   const [showStats, setShowStats] = useState(false);
   const [selectedDose, setSelectedDose] = useState<TodayDose | null>(null);
   const [showDoseDialog, setShowDoseDialog] = useState(false);
+  const [doseLogs, setDoseLogs] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
   const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
@@ -619,13 +620,36 @@ const Dashboard = () => {
     navigate(`/medications/add?edit=${medicationId}`);
   };
 
-  const handleDoseClick = (dose: TodayDose) => {
-    // Don't open dialog for already completed doses
-    if (dose.isTaken || dose.isSkipped || dose.isSnoozed) {
-      return;
-    }
+  const handleDoseClick = async (dose: TodayDose) => {
     setSelectedDose(dose);
     setShowDoseDialog(true);
+    
+    // Fetch dose logs for this medication and schedule
+    if (dose.isTaken || dose.isSkipped) {
+      try {
+        const startOfDay = new Date(dose.nextDoseTime);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(dose.nextDoseTime);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const { data: logs, error } = await supabase
+          .from("dose_logs")
+          .select("*")
+          .eq("medication_id", dose.medication.id)
+          .eq("schedule_id", dose.schedule.id)
+          .gte("scheduled_time", startOfDay.toISOString())
+          .lte("scheduled_time", endOfDay.toISOString())
+          .order("taken_at", { ascending: false });
+
+        if (error) throw error;
+        setDoseLogs(logs || []);
+      } catch (error) {
+        console.error("Failed to fetch dose logs:", error);
+        setDoseLogs([]);
+      }
+    } else {
+      setDoseLogs([]);
+    }
   };
 
   const groupDosesByTime = (doses: TodayDose[]) => {
@@ -1084,6 +1108,7 @@ const Dashboard = () => {
           isTaken={selectedDose.isTaken}
           isSkipped={selectedDose.isSkipped}
           isSnoozed={selectedDose.isSnoozed}
+          doseLogs={doseLogs}
           onTake={() => markAsTaken(selectedDose)}
           onSkip={() => markAsSkipped(selectedDose)}
           onReschedule={() => {

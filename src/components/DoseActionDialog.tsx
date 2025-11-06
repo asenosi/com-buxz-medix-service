@@ -26,6 +26,14 @@ interface Schedule {
   with_food: boolean;
 }
 
+interface DoseLog {
+  id: string;
+  taken_at: string | null;
+  scheduled_time: string;
+  status: string;
+  dose_status?: string | null;
+}
+
 interface DoseActionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,6 +47,7 @@ interface DoseActionDialogProps {
   isTaken?: boolean;
   isSkipped?: boolean;
   isSnoozed?: boolean;
+  doseLogs?: DoseLog[];
   onTake: () => void;
   onSkip: () => void;
   onReschedule: () => void;
@@ -60,6 +69,7 @@ export const DoseActionDialog = ({
   isTaken = false,
   isSkipped = false,
   isSnoozed = false,
+  doseLogs = [],
   onTake,
   onSkip,
   onReschedule,
@@ -67,7 +77,7 @@ export const DoseActionDialog = ({
   onDelete,
   onInfo,
 }: DoseActionDialogProps) => {
-  const isCompleted = isTaken || isSkipped || isSnoozed;
+  const isCompleted = isTaken || isSkipped;
   
   // Calculate time difference and dose status
   const now = new Date();
@@ -290,6 +300,55 @@ export const DoseActionDialog = ({
           </div>
         </div>
 
+        {/* Dose History Section */}
+        {(isTaken || isSkipped) && doseLogs && doseLogs.length > 0 && (
+          <div className="p-4 border-t">
+            <h3 className="text-sm font-semibold mb-3">Dose History</h3>
+            <div className="space-y-2">
+              {doseLogs.map((log) => {
+                const logDate = new Date(log.taken_at || log.scheduled_time);
+                const scheduledDate = new Date(log.scheduled_time);
+                const minutesLate = Math.floor((logDate.getTime() - scheduledDate.getTime()) / (60 * 1000));
+                
+                let statusLabel = "";
+                let statusColor = "";
+                
+                if (log.status === "taken") {
+                  if (minutesLate <= gracePeriodMinutes) {
+                    statusLabel = "On Time";
+                    statusColor = "text-success";
+                  } else if (minutesLate <= missedDoseCutoffMinutes) {
+                    statusLabel = `Late (${minutesLate}m)`;
+                    statusColor = "text-warning";
+                  } else {
+                    statusLabel = `Missed (${minutesLate}m)`;
+                    statusColor = "text-destructive";
+                  }
+                } else if (log.status === "skipped") {
+                  statusLabel = "Skipped";
+                  statusColor = "text-warning";
+                }
+
+                return (
+                  <div key={log.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {logDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {logDate.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className={cn("text-xs", statusColor)}>
+                      {statusLabel}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="sticky bottom-0 bg-background border-t p-3">
           {isCompleted ? (
@@ -297,7 +356,6 @@ export const DoseActionDialog = ({
               <p className="text-sm text-muted-foreground">
                 {isTaken && "✓ This dose has been taken"}
                 {isSkipped && "⚠️ This dose was skipped"}
-                {isSnoozed && "⏰ This dose is snoozed"}
               </p>
             </div>
           ) : (
