@@ -235,10 +235,6 @@ export type Database = {
           created_at: string
           enabled: boolean
           id: string
-          enabled_types: string[] | null
-          default_type: string | null
-          use_actions: boolean | null
-          action_settings: Json | null
           quiet_hours_end: string | null
           quiet_hours_start: string | null
           remind_for_missed: boolean
@@ -252,10 +248,6 @@ export type Database = {
           created_at?: string
           enabled?: boolean
           id?: string
-          enabled_types?: string[] | null
-          default_type?: string | null
-          use_actions?: boolean | null
-          action_settings?: Json | null
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           remind_for_missed?: boolean
@@ -269,10 +261,6 @@ export type Database = {
           created_at?: string
           enabled?: boolean
           id?: string
-          enabled_types?: string[] | null
-          default_type?: string | null
-          use_actions?: boolean | null
-          action_settings?: Json | null
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           remind_for_missed?: boolean
@@ -314,6 +302,33 @@ export type Database = {
           id?: string
           is_caregiver?: boolean | null
           phone_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          subscription: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          subscription: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          subscription?: Json
           updated_at?: string
           user_id?: string
         }

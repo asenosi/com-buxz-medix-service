@@ -146,7 +146,7 @@ export function useNotification() {
       // Save subscription to database
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        await supabase
+        await (supabase as any)
           .from("push_subscriptions")
           .upsert({
             user_id: session.user.id,
@@ -176,7 +176,7 @@ export function useNotification() {
 
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          await supabase
+          await (supabase as any)
             .from("push_subscriptions")
             .delete()
             .eq("user_id", session.user.id);

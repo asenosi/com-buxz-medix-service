@@ -20,9 +20,12 @@ export const NotificationSettings = () => {
     permission, 
     preferences, 
     loading,
+    pushSubscription,
     requestPermission,
     updatePreferences,
-    sendNotification
+    sendNotification,
+    subscribeToPush,
+    unsubscribeFromPush,
   } = useNotification();
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -179,6 +182,27 @@ export const NotificationSettings = () => {
               <div className="text-xs text-muted-foreground line-clamp-1">Play a sound with notifications</div>
             </div>
             <Switch checked={preferences.sound_enabled} onCheckedChange={(checked) => updatePreferences({ sound_enabled: checked })} className="shrink-0" />
+          </div>
+
+          {/* Push Notifications */}
+          <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm truncate">Push Notifications</div>
+              <div className="text-xs text-muted-foreground line-clamp-1">
+                {pushSubscription ? "Background notifications enabled" : "Enable background push"}
+              </div>
+            </div>
+            <Switch
+              checked={!!pushSubscription}
+              onCheckedChange={async (checked) => {
+                if (checked) {
+                  await subscribeToPush();
+                } else {
+                  await unsubscribeFromPush();
+                }
+              }}
+              className="shrink-0"
+            />
           </div>
         </CardContent>
       </Card>
