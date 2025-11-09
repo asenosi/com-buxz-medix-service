@@ -1122,9 +1122,9 @@ const Dashboard = () => {
                               <CollapsibleTrigger className="w-full group">
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-3 cursor-pointer group-hover:opacity-70 transition-all duration-200">
-                                    <span className="text-2xl">{info.icon}</span>
+                                    <span className="text-xl">{info.icon}</span>
                                     <div className="flex-1 text-left">
-                                      <h3 className="text-lg font-semibold">{info.title}</h3>
+                                      <h3 className="text-base font-medium">{info.title}</h3>
                                       <p className="text-xs text-muted-foreground">
                                         {info.takenCount} of {info.totalCount} completed
                                       </p>

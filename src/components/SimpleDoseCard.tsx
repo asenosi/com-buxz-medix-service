@@ -61,7 +61,7 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className, isTak
       onClick={onClick}
       className={cn(
         "p-4 transition-colors border-l-4 border-l-transparent relative cursor-pointer hover:bg-accent/50",
-        isCompleted && "bg-muted/30 opacity-60 saturate-0",
+        isCompleted && "bg-muted/30 opacity-85 saturate-[0.6] grayscale-[0.2]",
         className
       )}
     >
