@@ -1,8 +1,11 @@
 // Service Worker for Push Notifications
 /// <reference lib="webworker" />
 
+// Precache manifest will be injected here by Workbox
+const manifest = self.__WB_MANIFEST || [];
+
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
+  console.log('[SW] Installing service worker...', manifest.length, 'files to precache');
   self.skipWaiting();
 });
 
