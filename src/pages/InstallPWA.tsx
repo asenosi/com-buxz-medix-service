@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Bell, Smartphone, Check } from "lucide-react";
+import { Download, Bell, Smartphone, Check, Info } from "lucide-react";
 import { useNotification } from "@/hooks/use-notification";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -13,6 +14,8 @@ interface BeforeInstallPromptEvent extends Event {
 const InstallPWA = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const { permission, requestPermission } = useNotification();
 
   useEffect(() => {
@@ -20,6 +23,11 @@ const InstallPWA = () => {
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
     }
+
+    // Detect platform
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    setIsAndroid(/android/.test(userAgent));
+    setIsIOS(/iphone|ipad|ipod/.test(userAgent));
 
     // Listen for install prompt
     const handler = (e: Event) => {
@@ -36,9 +44,11 @@ const InstallPWA = () => {
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
-      toast.info(
-        "To install on iOS: Tap the Share button and select 'Add to Home Screen'"
-      );
+      if (isIOS) {
+        toast.info("Tap the Share button (⎘) and select 'Add to Home Screen'");
+      } else if (isAndroid) {
+        toast.info("Look for 'Install app' or 'Add to Home screen' in your browser menu");
+      }
       return;
     }
 
@@ -118,9 +128,31 @@ const InstallPWA = () => {
                   <Download className="w-4 h-4 mr-2" />
                   Install App
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  On iOS: Tap Share → Add to Home Screen
-                </p>
+                
+                {/* Platform-specific instructions */}
+                {isAndroid && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      <strong>Android:</strong> Tap the browser menu (⋮) → "Install app" or "Add to Home screen"
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {isIOS && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      <strong>iOS:</strong> Tap Share (⎘) → "Add to Home Screen"
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {!isAndroid && !isIOS && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Click the button above or look for install option in your browser menu
+                  </p>
+                )}
               </>
             )}
           </CardContent>
