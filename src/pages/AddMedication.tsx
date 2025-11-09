@@ -451,6 +451,7 @@ const Medications = () => {
             medicationIcon={medicationIcon}
             setMedicationIcon={setMedicationIcon}
             imagePreviews={imagePreviews}
+            medicationName={name}
             onAddImages={(files) => {
               const arr = Array.from(files);
               const remaining = Math.max(0, 5 - imagePreviews.length);
