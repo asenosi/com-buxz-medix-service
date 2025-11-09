@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Bell, BellOff, Volume2, VolumeX, Clock, Moon, Check, ChevronDown } from "lucide-react";
+import { Bell, BellOff, Volume2, VolumeX, Clock, Moon, Check, ChevronDown, Smartphone, ExternalLink } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { useNotification } from "@/hooks/use-notification";
@@ -12,18 +12,25 @@ import { toast } from "sonner";
 import { NOTIFICATION_TYPES } from "@/constants/notification-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import * as AccordionUI from "@/components/ui/accordion";
+import { useNavigate } from "react-router-dom";
 
 export const NotificationSettings = () => {
+  const navigate = useNavigate();
   const { 
     permission, 
     preferences, 
     loading,
+    pushSubscription,
     requestPermission,
     updatePreferences,
-    sendNotification
+    sendNotification,
+    subscribeToPush,
+    unsubscribeFromPush,
   } = useNotification();
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  const isInstalled = window.matchMedia("(display-mode: standalone)").matches;
 
   const testNotification = async () => {
     try {
@@ -86,6 +93,38 @@ export const NotificationSettings = () => {
 
   return (
     <div className="space-y-6">
+      {/* Install PWA Banner */}
+      {(!isInstalled || permission !== "granted") && (
+        <Card className="border-primary/20 bg-primary/5 animate-fade-in">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                <Smartphone className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm mb-1">
+                  {!isInstalled ? "Install App for Better Notifications" : "Enable System Notifications"}
+                </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {!isInstalled 
+                    ? "Install MedTracker as an app to receive notifications in your phone's notification tray, just like other apps."
+                    : "Allow notifications to receive medication reminders in your system notification tray."
+                  }
+                </p>
+                <Button 
+                  size="sm" 
+                  onClick={() => navigate("/install")}
+                  className="h-8 text-xs"
+                >
+                  <ExternalLink className="w-3 h-3 mr-1.5" />
+                  {!isInstalled ? "Install App" : "Setup Guide"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* System Settings Card */}
       <Card className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
         <CardHeader>
@@ -143,6 +182,27 @@ export const NotificationSettings = () => {
               <div className="text-xs text-muted-foreground line-clamp-1">Play a sound with notifications</div>
             </div>
             <Switch checked={preferences.sound_enabled} onCheckedChange={(checked) => updatePreferences({ sound_enabled: checked })} className="shrink-0" />
+          </div>
+
+          {/* Push Notifications */}
+          <div className="flex items-center justify-between p-3 gap-3 rounded-lg hover:bg-muted/30 transition-colors">
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm truncate">Push Notifications</div>
+              <div className="text-xs text-muted-foreground line-clamp-1">
+                {pushSubscription ? "Background notifications enabled" : "Enable background push"}
+              </div>
+            </div>
+            <Switch
+              checked={!!pushSubscription}
+              onCheckedChange={async (checked) => {
+                if (checked) {
+                  await subscribeToPush();
+                } else {
+                  await unsubscribeFromPush();
+                }
+              }}
+              className="shrink-0"
+            />
           </div>
         </CardContent>
       </Card>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 interface NotificationPreferences {
@@ -21,6 +22,7 @@ export function useNotification() {
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pushSubscription, setPushSubscription] = useState<PushSubscription | null>(null);
 
   // Check notification permission status
   useEffect(() => {
@@ -107,6 +109,102 @@ export function useNotification() {
       toast.error("Failed to request notification permission");
       return false;
     }
+  }, []);
+
+  // Subscribe to push notifications
+  const subscribeToPush = useCallback(async () => {
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        throw new Error("Push notifications are not supported");
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      
+      // Check if already subscribed
+      let subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        // Subscribe to push notifications
+        // Note: You'll need to generate VAPID keys for production
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-vapid-public-key`, {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error("Failed to get VAPID public key");
+        }
+        
+        const { publicKey } = await response.json();
+        
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: publicKey,
+        });
+      }
+
+      // Save subscription to database
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase
+          .from("push_subscriptions")
+          .upsert([{
+            user_id: session.user.id,
+            subscription: subscription.toJSON() as Json,
+            endpoint: subscription.endpoint,
+          }], {
+            onConflict: 'user_id'
+          });
+      }
+
+      setPushSubscription(subscription);
+      toast.success("Push notifications enabled!");
+      return subscription;
+    } catch (error) {
+      console.error("Failed to subscribe to push notifications:", error);
+      toast.error("Failed to enable push notifications");
+      return null;
+    }
+  }, []);
+
+  // Unsubscribe from push notifications
+  const unsubscribeFromPush = useCallback(async () => {
+    try {
+      if (pushSubscription) {
+        await pushSubscription.unsubscribe();
+        setPushSubscription(null);
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await supabase
+            .from("push_subscriptions")
+            .delete()
+            .eq("user_id", session.user.id);
+        }
+
+        toast.success("Push notifications disabled");
+      }
+    } catch (error) {
+      console.error("Failed to unsubscribe from push notifications:", error);
+      toast.error("Failed to disable push notifications");
+    }
+  }, [pushSubscription]);
+
+  // Load push subscription on mount
+  useEffect(() => {
+    const loadPushSubscription = async () => {
+      if ("serviceWorker" in navigator && "PushManager" in window) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          const subscription = await registration.pushManager.getSubscription();
+          setPushSubscription(subscription);
+        } catch (error) {
+          console.error("Failed to load push subscription:", error);
+        }
+      }
+    };
+    loadPushSubscription();
   }, []);
 
   // Update preferences
@@ -222,16 +320,22 @@ export function useNotification() {
     }
 
     try {
-      const notification = new Notification(title, {
+      const notificationOptions: NotificationOptions = {
         icon: "/favicon.ico",
         badge: "/favicon.ico",
+        requireInteraction: true, // Keeps notification in tray until dismissed
+        tag: options?.tag || 'medication-reminder', // Groups similar notifications
+        silent: !preferences?.sound_enabled,
         ...options,
-      });
+      };
+
+      const notification = new Notification(title, notificationOptions);
 
       if (options?.url) {
         notification.onclick = () => {
           window.focus();
-          window.open(options.url!, "_blank");
+          window.location.href = options.url!;
+          notification.close();
         };
       }
 
@@ -253,10 +357,13 @@ export function useNotification() {
     permission,
     preferences,
     loading,
+    pushSubscription,
     requestPermission,
     updatePreferences,
     sendNotification,
     isQuietHours,
     loadPreferences,
+    subscribeToPush,
+    unsubscribeFromPush,
   };
 }
