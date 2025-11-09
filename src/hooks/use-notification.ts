@@ -222,16 +222,22 @@ export function useNotification() {
     }
 
     try {
-      const notification = new Notification(title, {
+      const notificationOptions: NotificationOptions = {
         icon: "/favicon.ico",
         badge: "/favicon.ico",
+        requireInteraction: true, // Keeps notification in tray until dismissed
+        tag: options?.tag || 'medication-reminder', // Groups similar notifications
+        silent: !preferences?.sound_enabled,
         ...options,
-      });
+      };
+
+      const notification = new Notification(title, notificationOptions);
 
       if (options?.url) {
         notification.onclick = () => {
           window.focus();
-          window.open(options.url!, "_blank");
+          window.location.href = options.url!;
+          notification.close();
         };
       }
 
