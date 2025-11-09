@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
 interface NotificationPreferences {
@@ -146,13 +147,13 @@ export function useNotification() {
       // Save subscription to database
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        await (supabase as any)
+        await supabase
           .from("push_subscriptions")
-          .upsert({
+          .upsert([{
             user_id: session.user.id,
-            subscription: subscription.toJSON(),
+            subscription: subscription.toJSON() as Json,
             endpoint: subscription.endpoint,
-          }, {
+          }], {
             onConflict: 'user_id'
           });
       }
@@ -176,7 +177,7 @@ export function useNotification() {
 
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          await (supabase as any)
+          await supabase
             .from("push_subscriptions")
             .delete()
             .eq("user_id", session.user.id);
