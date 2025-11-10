@@ -69,19 +69,19 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className, isTak
     >
       <div className="flex items-center gap-4">
         {/* Icon/Image */}
-        <div className={cn("w-20 h-20 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden border-2 border-border/50", getIconColor(medication.form))}>
+        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative overflow-hidden", getIconColor(medication.form))}>
           {((medication.image_urls && medication.image_urls.length > 0) || medication.image_url || primaryImage) ? (
             <div className="w-full h-full">
               <MedicationImageCarousel
                 images={medication.image_urls || []}
                 fallbackImage={medication.image_url || primaryImage}
                 alt={medication.name}
-                className="w-20 h-20"
-                imageClassName={cn("rounded-lg", isCompleted && "opacity-50")}
+                className="w-12 h-12"
+                imageClassName={cn("rounded-full", isCompleted && "opacity-50")}
               />
             </div>
           ) : (
-            <Pill className={cn("w-8 h-8", isCompleted && "opacity-50")} />
+            <Pill className={cn("w-6 h-6", isCompleted && "opacity-50")} />
           )}
           {isTaken && (
             <div className="absolute -bottom-1 -right-1 bg-success rounded-full p-0.5">
