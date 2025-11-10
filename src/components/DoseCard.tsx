@@ -101,7 +101,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
         <div className="flex items-start gap-3">
           <div className="shrink-0">
             {((dose.medication.image_urls && dose.medication.image_urls.length > 0) || dose.medication.image_url || primaryImage) ? (
-              <div className="w-12 h-12 rounded-lg overflow-hidden border">
+              <div className="w-12 h-12 rounded-lg overflow-hidden border relative">
                 <MedicationImageCarousel
                   images={dose.medication.image_urls || []}
                   fallbackImage={dose.medication.image_url || primaryImage}
@@ -109,6 +109,11 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
                   className="w-12 h-12"
                   imageClassName="rounded-lg"
                 />
+                {((dose.medication.image_urls?.filter(img => img && img.trim() !== "").length || 0) > 1) && (
+                  <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-sm border border-background">
+                    {dose.medication.image_urls?.filter(img => img && img.trim() !== "").length}
+                  </div>
+                )}
               </div>
             ) : (
               <div className={cn("p-2 rounded-lg border bg-muted")}> 
