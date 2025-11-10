@@ -14,6 +14,7 @@ interface MedicationImageCarouselProps {
   className?: string;
   imageClassName?: string;
   alt?: string;
+  onImageClick?: () => void;
 }
 
 export function MedicationImageCarousel({
@@ -22,6 +23,7 @@ export function MedicationImageCarousel({
   className,
   imageClassName,
   alt = "Medication",
+  onImageClick,
 }: MedicationImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   
@@ -40,7 +42,8 @@ export function MedicationImageCarousel({
         <img
           src={displayImages[0]}
           alt={alt}
-          className={cn("w-full h-full object-cover", imageClassName)}
+          className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer", imageClassName)}
+          onClick={onImageClick}
         />
       </div>
     );
@@ -68,7 +71,8 @@ export function MedicationImageCarousel({
                 <img
                   src={image}
                   alt={`${alt} ${index + 1}`}
-                  className={cn("w-full h-full object-cover", imageClassName)}
+                  className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer", imageClassName)}
+                  onClick={onImageClick}
                 />
               </div>
             </CarouselItem>

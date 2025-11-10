@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ArrowLeft, Edit, Trash2, Clock, Calendar, Pill } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Clock, Calendar, Pill, X } from "lucide-react";
 import { MedicationDetailsSkeleton } from "@/components/LoadingSkeletons";
 import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 type Medication = {
   id: string;
@@ -47,6 +48,7 @@ const MedicationDetails = () => {
   const [med, setMed] = useState<Medication | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [images, setImages] = useState<string[]>([]);
+  const [showFullImage, setShowFullImage] = useState(false);
   const defaultImageForForm = (form?: string | null) => {
     if (!form) return "";
     const f = (form || "").toLowerCase();
@@ -199,6 +201,7 @@ const MedicationDetails = () => {
                   alt={med.name}
                   className="w-32 h-32"
                   imageClassName="rounded-xl"
+                  onImageClick={() => setShowFullImage(true)}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -413,6 +416,29 @@ const MedicationDetails = () => {
           </Card>
         )}
       </div>
+
+      {/* Full-screen Image Dialog */}
+      <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 z-50 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+            onClick={() => setShowFullImage(false)}
+          >
+            <X className="w-6 h-6" />
+          </Button>
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <MedicationImageCarousel
+              images={[...images, ...(med?.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
+              fallbackImage={med?.image_url || defaultImageForForm(med?.form)}
+              alt={med?.name}
+              className="w-full h-full max-h-[90vh]"
+              imageClassName="rounded-lg object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
