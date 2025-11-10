@@ -129,13 +129,13 @@ export const DoseActionDialog = ({
           {/* Image and Name */}
           <div className="flex flex-col items-center gap-3">
             {((medication.image_urls && medication.image_urls.length > 0) || medication.image_url || primaryImage) && (
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center shadow-md overflow-hidden">
+              <div className="w-32 h-32 rounded-xl bg-primary/10 flex items-center justify-center shadow-md overflow-hidden border-2 border-border/50">
                 <MedicationImageCarousel
                   images={medication.image_urls || []}
                   fallbackImage={medication.image_url || primaryImage}
                   alt={medication.name}
-                  className="w-20 h-20"
-                  imageClassName="rounded-full object-contain w-14 h-14"
+                  className="w-32 h-32"
+                  imageClassName="rounded-xl object-cover"
                 />
               </div>
             )}

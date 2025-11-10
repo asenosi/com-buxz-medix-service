@@ -192,12 +192,12 @@ const MedicationDetails = () => {
         <Card className="overflow-hidden">
           <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6">
             <div className="flex items-start gap-4">
-              <div className="shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
+              <div className="shrink-0 w-32 h-32 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
                 <MedicationImageCarousel
                   images={[...images, ...(med.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
                   fallbackImage={med.image_url || defaultImageForForm(med.form)}
                   alt={med.name}
-                  className="w-20 h-20"
+                  className="w-32 h-32"
                   imageClassName="rounded-xl"
                 />
               </div>

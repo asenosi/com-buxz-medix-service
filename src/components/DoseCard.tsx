@@ -101,18 +101,18 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
         <div className="flex items-start gap-3">
           <div className="shrink-0">
             {((dose.medication.image_urls && dose.medication.image_urls.length > 0) || dose.medication.image_url || primaryImage) ? (
-              <div className="w-12 h-12 rounded-lg overflow-hidden border">
+              <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-border/50">
                 <MedicationImageCarousel
                   images={dose.medication.image_urls || []}
                   fallbackImage={dose.medication.image_url || primaryImage}
                   alt={dose.medication.name}
-                  className="w-12 h-12"
+                  className="w-24 h-24"
                   imageClassName="rounded-lg"
                 />
               </div>
             ) : (
-              <div className={cn("p-2 rounded-lg border bg-muted")}> 
-                <Pill className="w-5 h-5 text-primary" />
+              <div className={cn("p-3 rounded-lg border-2 bg-muted")}> 
+                <Pill className="w-8 h-8 text-primary" />
               </div>
             )}
           </div>
