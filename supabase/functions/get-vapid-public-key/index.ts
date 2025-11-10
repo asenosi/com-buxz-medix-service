@@ -11,11 +11,17 @@ serve(async (req) => {
   }
 
   try {
-    // In production, you should generate VAPID keys and store them as secrets
-    // For now, returning a placeholder - you'll need to generate actual VAPID keys
-    // Use: npx web-push generate-vapid-keys
-    const publicKey = Deno.env.get("VAPID_PUBLIC_KEY") || 
-      "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U";
+    const publicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+    
+    if (!publicKey) {
+      return new Response(
+        JSON.stringify({ error: "VAPID public key not configured" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
 
     return new Response(
       JSON.stringify({ publicKey }),
