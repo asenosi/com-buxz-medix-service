@@ -411,7 +411,24 @@ const Medications = () => {
             {showPrescriptionUpload && !editId && (
               <PrescriptionUpload onMedicationsExtracted={handlePrescriptionExtracted} />
             )}
-            <Step1Name name={name} setName={setName} />
+            <Step1Name 
+              name={name} 
+              setName={setName}
+              onImageSelect={(dataUrl) => {
+                // Convert data URL to File
+                fetch(dataUrl)
+                  .then(res => res.blob())
+                  .then(blob => {
+                    const file = new File([blob], `${name}-image.jpg`, { type: 'image/jpeg' });
+                    setImageFiles(prev => [...prev, file]);
+                    setImagePreviews(prev => [...prev, dataUrl]);
+                    toast.success("Image added successfully");
+                  })
+                  .catch(err => {
+                    console.error("Error adding image:", err);
+                  });
+              }}
+            />
           </div>
         );
       case 2:
