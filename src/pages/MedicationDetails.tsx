@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { ArrowLeft, Edit, Trash2, Clock, Calendar, Pill } from "lucide-react";
 import { MedicationDetailsSkeleton } from "@/components/LoadingSkeletons";
+import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 
 type Medication = {
   id: string;
@@ -26,6 +27,7 @@ type Medication = {
   medication_color: string | null;
   medication_icon: string | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   user_id: string;
 };
 
@@ -190,11 +192,13 @@ const MedicationDetails = () => {
         <Card className="overflow-hidden">
           <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6">
             <div className="flex items-start gap-4">
-              <div className="shrink-0">
-                <img 
-                  src={(images[0] || med.image_url || defaultImageForForm(med.form))} 
-                  alt={med.name} 
-                  className="w-20 h-20 rounded-xl object-cover border-2 border-primary/20 shadow-lg" 
+              <div className="shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
+                <MedicationImageCarousel
+                  images={[...images, ...(med.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
+                  fallbackImage={med.image_url || defaultImageForForm(med.form)}
+                  alt={med.name}
+                  className="w-20 h-20"
+                  imageClassName="rounded-xl"
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -210,21 +214,6 @@ const MedicationDetails = () => {
               </div>
             </div>
           </div>
-
-          {images.length > 1 && (
-            <CardContent className="pt-4">
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {images.map((src, idx) => (
-                  <img 
-                    key={idx} 
-                    src={src} 
-                    alt={`${med.name} ${idx+1}`} 
-                    className="w-20 h-20 rounded-lg object-cover border shrink-0" 
-                  />
-                ))}
-              </div>
-            </CardContent>
-          )}
         </Card>
 
         {/* Medication Info */}

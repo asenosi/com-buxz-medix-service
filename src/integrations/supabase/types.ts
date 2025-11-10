@@ -150,6 +150,7 @@ export type Database = {
           grace_period_minutes: number | null
           id: string
           image_url: string | null
+          image_urls: string[] | null
           instructions: string | null
           medication_color: string | null
           medication_icon: string | null
@@ -179,6 +180,7 @@ export type Database = {
           grace_period_minutes?: number | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           instructions?: string | null
           medication_color?: string | null
           medication_icon?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           grace_period_minutes?: number | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           instructions?: string | null
           medication_color?: string | null
           medication_icon?: string | null

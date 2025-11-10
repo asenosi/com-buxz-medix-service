@@ -4,12 +4,14 @@ import { X, Check, Clock as ClockIcon, Trash2, Edit, Info, Pill, Utensils, Steth
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 
 interface Medication {
   id: string;
   name: string;
   form: string | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   images?: string[];
   pills_remaining: number | null;
   reason_for_taking?: string | null;
@@ -126,9 +128,15 @@ export const DoseActionDialog = ({
         <div className="p-4 space-y-4">
           {/* Image and Name */}
           <div className="flex flex-col items-center gap-3">
-            {primaryImage && (
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center shadow-md">
-                <img src={primaryImage} alt={medication.name} className="w-14 h-14 object-contain" />
+            {((medication.image_urls && medication.image_urls.length > 0) || medication.image_url || primaryImage) && (
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center shadow-md overflow-hidden">
+                <MedicationImageCarousel
+                  images={medication.image_urls || []}
+                  fallbackImage={medication.image_url || primaryImage}
+                  alt={medication.name}
+                  className="w-20 h-20"
+                  imageClassName="rounded-full object-contain w-14 h-14"
+                />
               </div>
             )}
             <div className="text-center">
