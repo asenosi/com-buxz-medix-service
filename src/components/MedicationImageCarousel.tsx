@@ -74,12 +74,12 @@ export function MedicationImageCarousel({
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="left-2" />
-        <CarouselNext className="right-2" />
+        <CarouselPrevious className="absolute left-1/2 -translate-x-12 -bottom-12 bg-background/90 backdrop-blur-sm hover:bg-background border-2" />
+        <CarouselNext className="absolute left-1/2 translate-x-4 -bottom-12 bg-background/90 backdrop-blur-sm hover:bg-background border-2" />
       </Carousel>
       
       {/* Image counter */}
-      <div className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm text-xs px-2 py-1 rounded-full">
+      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm text-xs px-2 py-1 rounded-full">
         {currentIndex + 1} / {displayImages.length}
       </div>
     </div>
