@@ -46,12 +46,13 @@ export const MedicationImageSearch = ({ medicationName, onImageSelect }: Medicat
     setHasSearched(true);
 
     try {
-      const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query + " medication pill")}`, {
-        method: "GET",
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-medication-images`, {
+        method: "POST",
         headers: {
-          "Accept": "application/json",
-          "X-Subscription-Token": "BSAb8L9yD5L4Pf_RLY3HKGbqwyCIeYd"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
+        body: JSON.stringify({ query }),
       });
 
       if (!response.ok) {
