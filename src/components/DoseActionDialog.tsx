@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Check, Clock as ClockIcon, Trash2, Edit, Info, Pill, Utensils, Stethoscope, Syringe } from "lucide-react";
@@ -79,6 +80,7 @@ export const DoseActionDialog = ({
   onDelete,
   onInfo,
 }: DoseActionDialogProps) => {
+  const [showFullImage, setShowFullImage] = useState(false);
   const isCompleted = isTaken || isSkipped;
   
   // Calculate time difference and dose status
@@ -136,6 +138,7 @@ export const DoseActionDialog = ({
                   alt={medication.name}
                   className="w-32 h-32"
                   imageClassName="rounded-xl object-cover"
+                  onImageClick={() => setShowFullImage(true)}
                 />
               </div>
             )}
@@ -416,6 +419,29 @@ export const DoseActionDialog = ({
           )}
         </div>
       </DialogContent>
+
+      {/* Full-screen Image Dialog */}
+      <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 z-50 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+            onClick={() => setShowFullImage(false)}
+          >
+            <X className="w-6 h-6" />
+          </Button>
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <MedicationImageCarousel
+              images={medication.image_urls || []}
+              fallbackImage={medication.image_url || primaryImage}
+              alt={medication.name}
+              className="w-full h-full max-h-[90vh]"
+              imageClassName="rounded-lg object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
