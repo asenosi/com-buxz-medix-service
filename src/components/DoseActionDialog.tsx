@@ -131,7 +131,7 @@ export const DoseActionDialog = ({
           {/* Image and Name */}
           <div className="flex flex-col items-center gap-3">
             {((medication.image_urls && medication.image_urls.length > 0) || medication.image_url || primaryImage) && (
-              <div className="w-32 h-32 rounded-xl bg-primary/10 flex items-center justify-center shadow-md overflow-hidden border-2 border-border/50">
+              <div className="w-32 h-32 rounded-xl bg-primary/10 flex items-center justify-center shadow-md overflow-hidden border-2 border-border/50 relative">
                 <MedicationImageCarousel
                   images={medication.image_urls || []}
                   fallbackImage={medication.image_url || primaryImage}
@@ -140,6 +140,11 @@ export const DoseActionDialog = ({
                   imageClassName="rounded-xl object-cover"
                   onImageClick={() => setShowFullImage(true)}
                 />
+                {((medication.image_urls?.filter(img => img && img.trim() !== "").length || 0) > 1) && (
+                  <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-semibold rounded-full w-6 h-6 flex items-center justify-center shadow-md border-2 border-background">
+                    {medication.image_urls?.filter(img => img && img.trim() !== "").length}
+                  </div>
+                )}
               </div>
             )}
             <div className="text-center">
