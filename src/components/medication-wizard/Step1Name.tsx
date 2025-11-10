@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 interface Step1NameProps {
   name: string;
   setName: (value: string) => void;
+  onImageSelect?: (imageUrl: string) => void;
 }
 
 export const Step1Name = ({ name, setName }: Step1NameProps) => {
