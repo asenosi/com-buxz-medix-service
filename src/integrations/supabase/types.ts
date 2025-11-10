@@ -229,6 +229,42 @@ export type Database = {
         }
         Relationships: []
       }
+      medications_database: {
+        Row: {
+          brand_names: string[] | null
+          common_dosages: string[] | null
+          created_at: string | null
+          form: string
+          generic_name: string
+          id: string
+          indications: string | null
+          route_of_administration: string | null
+          therapeutic_category: string | null
+        }
+        Insert: {
+          brand_names?: string[] | null
+          common_dosages?: string[] | null
+          created_at?: string | null
+          form: string
+          generic_name: string
+          id?: string
+          indications?: string | null
+          route_of_administration?: string | null
+          therapeutic_category?: string | null
+        }
+        Update: {
+          brand_names?: string[] | null
+          common_dosages?: string[] | null
+          created_at?: string | null
+          form?: string
+          generic_name?: string
+          id?: string
+          indications?: string | null
+          route_of_administration?: string | null
+          therapeutic_category?: string | null
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           browser_enabled: boolean
