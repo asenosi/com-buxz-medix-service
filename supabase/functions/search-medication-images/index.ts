@@ -21,6 +21,8 @@ serve(async (req) => {
     }
 
     const braveApiKey = Deno.env.get('BRAVE_SEARCH_API_KEY');
+    console.log('API key exists:', !!braveApiKey);
+    
     if (!braveApiKey) {
       return new Response(
         JSON.stringify({ error: 'API key not configured' }),
@@ -28,19 +30,23 @@ serve(async (req) => {
       );
     }
 
-    const response = await fetch(
-      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query + " medication pill")}`,
-      {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'X-Subscription-Token': braveApiKey,
-        },
-      }
-    );
+    const searchUrl = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query + " medication pill")}`;
+    console.log('Searching:', searchUrl);
+
+    const response = await fetch(searchUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Subscription-Token': braveApiKey,
+      },
+    });
+
+    console.log('Brave API response status:', response.status);
 
     if (!response.ok) {
-      throw new Error(`Brave API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Brave API error response:', errorText);
+      throw new Error(`Brave API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
