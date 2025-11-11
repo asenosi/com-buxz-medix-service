@@ -882,21 +882,21 @@ const Dashboard = () => {
                   value="list" 
                   className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <List className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <List className="w-5 h-5" />
                   List
                 </TabsTrigger>
                 <TabsTrigger 
                   value="calendar" 
                   className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+                  <Calendar className="w-5 h-5" />
                   Calendar
                 </TabsTrigger>
                 <TabsTrigger 
                   value="stats" 
                   className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <BarChart3 className="w-5 h-5" />
                   Stats
                 </TabsTrigger>
               </TabsList>
