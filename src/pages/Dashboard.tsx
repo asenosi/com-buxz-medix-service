@@ -889,7 +889,7 @@ const Dashboard = () => {
                   value="calendar" 
                   className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />
                   Calendar
                 </TabsTrigger>
                 <TabsTrigger 
