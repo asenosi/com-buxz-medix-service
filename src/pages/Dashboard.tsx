@@ -92,11 +92,11 @@ const Dashboard = () => {
   const { mode, setMode } = useTheme();
   const scheduledRef = useRef<Set<string>>(new Set());
   const timersRef = useRef<Map<string, number>>(new Map());
-  const [showStats, setShowStats] = useState(false);
+  
   const [selectedDose, setSelectedDose] = useState<TodayDose | null>(null);
   const [showDoseDialog, setShowDoseDialog] = useState(false);
   const [doseLogs, setDoseLogs] = useState<DoseLog[]>([]);
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [viewMode, setViewMode] = useState<"list" | "calendar" | "stats">("list");
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
   const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
   const [userName, setUserName] = useState<string>("");
@@ -795,7 +795,7 @@ const Dashboard = () => {
         {/* Streak Card - Only show if there are medications */}
         {medications.length > 0 && (
           <div className="mb-6 animate-fade-in">
-            <StreakCard streak={streak} onClick={() => setShowStats(true)} />
+            <StreakCard streak={streak} onClick={() => setViewMode("stats")} />
           </div>
         )}
 
@@ -876,31 +876,29 @@ const Dashboard = () => {
         {/* Tabs - Only show if there are medications */}
         {medications.length > 0 && (
           <div className="mb-6">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar" | "stats")}>
               <TabsList className="grid h-auto w-full max-w-3xl mx-auto grid-cols-3 bg-muted">
                 <TabsTrigger 
                   value="list" 
                   className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <List className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <List className="w-5 h-5" />
                   List
                 </TabsTrigger>
                 <TabsTrigger 
                   value="calendar" 
                   className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Calendar className="w-5 h-5" />
                   Calendar
                 </TabsTrigger>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setShowStats(s => !s)}
-                  className="h-auto min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground"
+                <TabsTrigger 
+                  value="stats" 
+                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <BarChart3 className="w-5 h-5" />
                   Stats
-                </Button>
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -963,7 +961,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar" | "stats")}>
             <TabsContent value="calendar">
             <div className="animate-fade-in">
               <div className="mb-4">
@@ -1069,14 +1067,6 @@ const Dashboard = () => {
               </Card>
             ) : (
               <>
-                {showStats && (
-              <AdherenceStats
-                streak={streak}
-                todayProgress={todayProgress}
-                weeklyAdherence={weeklyAdherence}
-                totalTaken={totalTaken}
-              />
-            )}
 
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
@@ -1216,6 +1206,44 @@ const Dashboard = () => {
             </div>
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="stats">
+            <div className="animate-fade-in">
+              <AdherenceStats
+                streak={streak}
+                todayProgress={todayProgress}
+                weeklyAdherence={weeklyAdherence}
+                totalTaken={totalTaken}
+              />
+              
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Your Health Journey</CardTitle>
+                  <CardDescription>
+                    Keep track of your medication adherence and build healthy habits
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between pb-2 border-b">
+                      <span className="text-sm font-medium">Active Medications</span>
+                      <span className="text-2xl font-bold">{medications.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between pb-2 border-b">
+                      <span className="text-sm font-medium">Today's Doses</span>
+                      <span className="text-2xl font-bold">{todayDoses.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between pb-2 border-b">
+                      <span className="text-sm font-medium">Completed Today</span>
+                      <span className="text-2xl font-bold">
+                        {todayDoses.filter(d => d.isTaken).length}/{todayDoses.length}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
         )}
