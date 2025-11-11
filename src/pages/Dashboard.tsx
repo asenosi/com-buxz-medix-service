@@ -1069,14 +1069,6 @@ const Dashboard = () => {
               </Card>
             ) : (
               <>
-                {showStats && (
-              <AdherenceStats
-                streak={streak}
-                todayProgress={todayProgress}
-                weeklyAdherence={weeklyAdherence}
-                totalTaken={totalTaken}
-              />
-            )}
 
             <div className="mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
