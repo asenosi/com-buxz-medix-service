@@ -1,0 +1,157 @@
+import { useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { format, isSameDay } from "date-fns";
+import { Clock, MapPin } from "lucide-react";
+
+interface AppointmentCalendarProps {
+  appointments: any[];
+  onAppointmentClick: (appointment: any) => void;
+  onDateClick: (date: Date) => void;
+}
+
+const appointmentTypeColors: Record<string, string> = {
+  checkup: "bg-blue-500",
+  follow_up: "bg-green-500",
+  lab_test: "bg-purple-500",
+  imaging: "bg-orange-500",
+  procedure: "bg-red-500",
+  consultation: "bg-teal-500",
+  vaccination: "bg-pink-500",
+  therapy: "bg-indigo-500",
+  other: "bg-gray-500",
+};
+
+export function AppointmentCalendar({
+  appointments,
+  onAppointmentClick,
+  onDateClick,
+}: AppointmentCalendarProps) {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const appointmentDates = appointments.map((apt) => new Date(apt.appointment_date));
+
+  const appointmentsForDate = appointments.filter((apt) =>
+    isSameDay(new Date(apt.appointment_date), selectedDate)
+  );
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      const hasAppointment = appointments.some((apt) =>
+        isSameDay(new Date(apt.appointment_date), date)
+      );
+      if (!hasAppointment) {
+        onDateClick(date);
+      }
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2">
+        <Card>
+          <CardContent className="p-6">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              modifiers={{
+                hasAppointment: appointmentDates,
+              }}
+              modifiersStyles={{
+                hasAppointment: {
+                  fontWeight: "bold",
+                  position: "relative",
+                },
+              }}
+              className="rounded-md border-0"
+            />
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span>Has appointments</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground">
+          {format(selectedDate, "MMMM d, yyyy")}
+        </h3>
+
+        {appointmentsForDate.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center text-muted-foreground">
+              No appointments on this day
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {appointmentsForDate.map((appointment) => (
+              <Card
+                key={appointment.id}
+                className="cursor-pointer transition-all hover:shadow-md"
+                onClick={() => onAppointmentClick(appointment)}
+              >
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground">
+                        {appointment.title}
+                      </h4>
+                      {appointment.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {appointment.description}
+                        </p>
+                      )}
+                    </div>
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        appointmentTypeColors[appointment.appointment_type]
+                      }`}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      <span>
+                        {format(
+                          new Date(`2000-01-01T${appointment.appointment_time}`),
+                          "h:mm a"
+                        )}
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {appointment.duration_minutes} min
+                      </Badge>
+                    </div>
+
+                    {appointment.location && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="w-3 h-3" />
+                        <span className="line-clamp-1">{appointment.location}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Badge
+                    variant="outline"
+                    className="text-xs"
+                  >
+                    {appointment.appointment_type.replace("_", " ")}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
