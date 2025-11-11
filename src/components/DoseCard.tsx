@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useCountdown } from "@/hooks/use-countdown";
 import { Badge } from "@/components/ui/badge";
+import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 
 interface Medication {
   id: string;
@@ -14,6 +15,7 @@ interface Medication {
   form: string | null;
   pills_remaining: number | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   images?: string[];
   grace_period_minutes?: number | null;
   reminder_window_minutes?: number | null;
@@ -98,17 +100,19 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
       <CardHeader className="p-0 pb-2 pointer-events-none">
         <div className="flex items-start gap-3">
           <div className="shrink-0">
-            {primaryImage ? (
-              <div className="relative">
-                <img
-                  src={primaryImage}
+            {((dose.medication.image_urls && dose.medication.image_urls.length > 0) || dose.medication.image_url || primaryImage) ? (
+              <div className="w-12 h-12 rounded-lg overflow-hidden border relative">
+                <MedicationImageCarousel
+                  images={dose.medication.image_urls || []}
+                  fallbackImage={dose.medication.image_url || primaryImage}
                   alt={dose.medication.name}
-                  className="w-12 h-12 rounded-lg object-cover border"
+                  className="w-12 h-12"
+                  imageClassName="rounded-lg"
                 />
-                {Array.isArray(dose.medication.images) && dose.medication.images.length > 1 && (
-                  <Badge className="absolute -bottom-1 -right-1 text-[9px] px-1.5 py-0 rounded-full shadow-md h-4">
-                    {dose.medication.images.length}
-                  </Badge>
+                {((dose.medication.image_urls?.filter(img => img && img.trim() !== "").length || 0) > 1) && (
+                  <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-sm border border-background">
+                    {dose.medication.image_urls?.filter(img => img && img.trim() !== "").length}
+                  </div>
                 )}
               </div>
             ) : (

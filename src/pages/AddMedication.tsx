@@ -248,7 +248,10 @@ const Medications = () => {
             treatment_duration_days: treatmentDays ? parseInt(treatmentDays) : null,
             medication_color: medicationColor,
             medication_icon: medicationIcon,
-            ...(uploadedImageUrls.length > 0 ? { image_url: uploadedImageUrls[0] } : {}),
+            ...(uploadedImageUrls.length > 0 ? { 
+              image_url: uploadedImageUrls[0],
+              image_urls: uploadedImageUrls 
+            } : {}),
           })
           .eq("id", editId);
         if (updErr) throw updErr;
@@ -299,7 +302,10 @@ const Medications = () => {
           if (uploadedImageUrls.length > 0) {
             const { error: patchErr } = await supabase
               .from("medications")
-              .update({ image_url: uploadedImageUrls[0] })
+              .update({ 
+                image_url: uploadedImageUrls[0],
+                image_urls: uploadedImageUrls
+              })
               .eq("id", medId);
             if (patchErr) throw patchErr;
           }

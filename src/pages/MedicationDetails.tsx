@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ArrowLeft, Edit, Trash2, Clock, Calendar, Pill } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Clock, Calendar, Pill, X } from "lucide-react";
 import { MedicationDetailsSkeleton } from "@/components/LoadingSkeletons";
+import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 type Medication = {
   id: string;
@@ -26,6 +28,7 @@ type Medication = {
   medication_color: string | null;
   medication_icon: string | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   user_id: string;
 };
 
@@ -45,6 +48,7 @@ const MedicationDetails = () => {
   const [med, setMed] = useState<Medication | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [images, setImages] = useState<string[]>([]);
+  const [showFullImage, setShowFullImage] = useState(false);
   const defaultImageForForm = (form?: string | null) => {
     if (!form) return "";
     const f = (form || "").toLowerCase();
@@ -190,11 +194,14 @@ const MedicationDetails = () => {
         <Card className="overflow-hidden">
           <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6">
             <div className="flex items-start gap-4">
-              <div className="shrink-0">
-                <img 
-                  src={(images[0] || med.image_url || defaultImageForForm(med.form))} 
-                  alt={med.name} 
-                  className="w-20 h-20 rounded-xl object-cover border-2 border-primary/20 shadow-lg" 
+              <div className="shrink-0 w-32 h-32 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
+                <MedicationImageCarousel
+                  images={[...images, ...(med.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
+                  fallbackImage={med.image_url || defaultImageForForm(med.form)}
+                  alt={med.name}
+                  className="w-32 h-32"
+                  imageClassName="rounded-xl"
+                  onImageClick={() => setShowFullImage(true)}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -210,21 +217,6 @@ const MedicationDetails = () => {
               </div>
             </div>
           </div>
-
-          {images.length > 1 && (
-            <CardContent className="pt-4">
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {images.map((src, idx) => (
-                  <img 
-                    key={idx} 
-                    src={src} 
-                    alt={`${med.name} ${idx+1}`} 
-                    className="w-20 h-20 rounded-lg object-cover border shrink-0" 
-                  />
-                ))}
-              </div>
-            </CardContent>
-          )}
         </Card>
 
         {/* Medication Info */}
@@ -424,6 +416,29 @@ const MedicationDetails = () => {
           </Card>
         )}
       </div>
+
+      {/* Full-screen Image Dialog */}
+      <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 z-50 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+            onClick={() => setShowFullImage(false)}
+          >
+            <X className="w-6 h-6" />
+          </Button>
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <MedicationImageCarousel
+              images={[...images, ...(med?.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
+              fallbackImage={med?.image_url || defaultImageForForm(med?.form)}
+              alt={med?.name}
+              className="w-full h-full max-h-[90vh]"
+              imageClassName="rounded-lg object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Check, Clock as ClockIcon, Trash2, Edit, Info, Pill, Utensils, Stethoscope, Syringe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 
 interface Medication {
   id: string;
   name: string;
   form: string | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   images?: string[];
   pills_remaining: number | null;
   reason_for_taking?: string | null;
@@ -77,6 +80,7 @@ export const DoseActionDialog = ({
   onDelete,
   onInfo,
 }: DoseActionDialogProps) => {
+  const [showFullImage, setShowFullImage] = useState(false);
   const isCompleted = isTaken || isSkipped;
   
   // Calculate time difference and dose status
@@ -126,9 +130,21 @@ export const DoseActionDialog = ({
         <div className="p-4 space-y-4">
           {/* Image and Name */}
           <div className="flex flex-col items-center gap-3">
-            {primaryImage && (
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center shadow-md">
-                <img src={primaryImage} alt={medication.name} className="w-14 h-14 object-contain" />
+            {((medication.image_urls && medication.image_urls.length > 0) || medication.image_url || primaryImage) && (
+              <div className="w-32 h-32 rounded-xl bg-primary/10 flex items-center justify-center shadow-md overflow-hidden border-2 border-border/50 relative">
+                <MedicationImageCarousel
+                  images={medication.image_urls || []}
+                  fallbackImage={medication.image_url || primaryImage}
+                  alt={medication.name}
+                  className="w-32 h-32"
+                  imageClassName="rounded-xl object-cover"
+                  onImageClick={() => setShowFullImage(true)}
+                />
+                {((medication.image_urls?.filter(img => img && img.trim() !== "").length || 0) > 1) && (
+                  <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-semibold rounded-full w-6 h-6 flex items-center justify-center shadow-md border-2 border-background">
+                    {medication.image_urls?.filter(img => img && img.trim() !== "").length}
+                  </div>
+                )}
               </div>
             )}
             <div className="text-center">
@@ -408,6 +424,29 @@ export const DoseActionDialog = ({
           )}
         </div>
       </DialogContent>
+
+      {/* Full-screen Image Dialog */}
+      <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 z-50 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+            onClick={() => setShowFullImage(false)}
+          >
+            <X className="w-6 h-6" />
+          </Button>
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <MedicationImageCarousel
+              images={medication.image_urls || []}
+              fallbackImage={medication.image_url || primaryImage}
+              alt={medication.name}
+              className="w-full h-full max-h-[90vh]"
+              imageClassName="rounded-lg object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

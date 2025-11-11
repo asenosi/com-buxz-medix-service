@@ -1,0 +1,91 @@
+import { useState } from "react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
+
+interface MedicationImageCarouselProps {
+  images: string[];
+  fallbackImage?: string | null;
+  className?: string;
+  imageClassName?: string;
+  alt?: string;
+  onImageClick?: () => void;
+}
+
+export function MedicationImageCarousel({
+  images,
+  fallbackImage,
+  className,
+  imageClassName,
+  alt = "Medication",
+  onImageClick,
+}: MedicationImageCarouselProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // Filter out empty/null images and use fallback if needed
+  const validImages = images?.filter(img => img && img.trim() !== "") || [];
+  const displayImages = validImages.length > 0 ? validImages : (fallbackImage ? [fallbackImage] : []);
+  
+  if (displayImages.length === 0) {
+    return null;
+  }
+
+  // Single image - no carousel needed
+  if (displayImages.length === 1) {
+    return (
+      <div className={cn("relative w-full", className)}>
+        <img
+          src={displayImages[0]}
+          alt={alt}
+          className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer", imageClassName)}
+          onClick={onImageClick}
+        />
+      </div>
+    );
+  }
+
+  // Multiple images - show carousel
+  return (
+    <div className={cn("relative w-full", className)}>
+      <Carousel
+        opts={{
+          align: "start",
+          loop: true,
+        }}
+        className="w-full"
+        setApi={(api) => {
+          api?.on("select", () => {
+            setCurrentIndex(api.selectedScrollSnap());
+          });
+        }}
+      >
+        <CarouselContent>
+          {displayImages.map((image, index) => (
+            <CarouselItem key={index}>
+              <div className="relative w-full h-full">
+                <img
+                  src={image}
+                  alt={`${alt} ${index + 1}`}
+                  className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer", imageClassName)}
+                  onClick={onImageClick}
+                />
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="absolute left-1/2 -translate-x-12 -bottom-12 bg-background/90 backdrop-blur-sm hover:bg-background border-2" />
+        <CarouselNext className="absolute left-1/2 translate-x-4 -bottom-12 bg-background/90 backdrop-blur-sm hover:bg-background border-2" />
+      </Carousel>
+      
+      {/* Image counter */}
+      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm text-xs px-2 py-1 rounded-full">
+        {currentIndex + 1} / {displayImages.length}
+      </div>
+    </div>
+  );
+}

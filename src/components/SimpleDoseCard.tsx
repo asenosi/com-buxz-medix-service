@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Pill, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 
 interface Medication {
   id: string;
@@ -9,6 +10,7 @@ interface Medication {
   dosage: string;
   form: string | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   images?: string[];
 }
 
@@ -67,9 +69,22 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className, isTak
     >
       <div className="flex items-center gap-4">
         {/* Icon/Image */}
-        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative", getIconColor(medication.form))}>
-          {primaryImage ? (
-            <img src={primaryImage} alt={medication.name} className={cn("w-8 h-8 object-contain", isCompleted && "opacity-50")} />
+        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative overflow-hidden", getIconColor(medication.form))}>
+          {((medication.image_urls && medication.image_urls.length > 0) || medication.image_url || primaryImage) ? (
+            <div className="w-full h-full relative">
+              <MedicationImageCarousel
+                images={medication.image_urls || []}
+                fallbackImage={medication.image_url || primaryImage}
+                alt={medication.name}
+                className="w-12 h-12"
+                imageClassName={cn("rounded-full", isCompleted && "opacity-50")}
+              />
+              {((medication.image_urls?.filter(img => img && img.trim() !== "").length || 0) > 1) && (
+                <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-sm border border-background z-10">
+                  {medication.image_urls?.filter(img => img && img.trim() !== "").length}
+                </div>
+              )}
+            </div>
           ) : (
             <Pill className={cn("w-6 h-6", isCompleted && "opacity-50")} />
           )}
