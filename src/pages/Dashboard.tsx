@@ -966,6 +966,14 @@ const Dashboard = () => {
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar")}>
             <TabsContent value="calendar">
             <div className="animate-fade-in">
+              {showStats && (
+                <AdherenceStats
+                  streak={streak}
+                  todayProgress={todayProgress}
+                  weeklyAdherence={weeklyAdherence}
+                  totalTaken={totalTaken}
+                />
+              )}
               <div className="mb-4">
                 <Tabs value={calendarViewType} onValueChange={(v) => setCalendarViewType(v as "week" | "month")} className="w-full">
                   <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2">
