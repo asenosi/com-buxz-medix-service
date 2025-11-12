@@ -246,6 +246,17 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     } else if (step === 1) {
       form.setValue("appointment_time", selectedTime);
       
+      // Check if the selected date/time is in the past
+      const now = new Date();
+      const selectedDateTime = new Date(selectedDate);
+      const [hours, minutes] = selectedTime.split(":").map(Number);
+      selectedDateTime.setHours(hours, minutes, 0, 0);
+      
+      if (selectedDateTime < now) {
+        toast.error("Cannot schedule appointments in the past. Please select a future date and time.");
+        return;
+      }
+      
       // Check for conflicts before proceeding
       const conflict = checkAppointmentConflict();
       if (conflict) {
@@ -364,6 +375,11 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                       setSelectedDate(date);
                       form.setValue("appointment_date", date);
                     }
+                  }}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return date < today;
                   }}
                   className="rounded-md border pointer-events-auto"
                   modifiers={{
