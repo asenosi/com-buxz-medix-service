@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,7 +67,6 @@ export default function AppointmentDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { data: appointment, isLoading, refetch } = useQuery({
@@ -124,11 +122,6 @@ export default function AppointmentDetails() {
       toast.success("Appointment deleted");
       navigate("/appointments");
     }
-  };
-
-  const handleEditClose = () => {
-    setEditDialogOpen(false);
-    refetch();
   };
 
   if (isLoading) {
@@ -300,7 +293,7 @@ export default function AppointmentDetails() {
 
       <div className="flex gap-3">
         <Button
-          onClick={() => setEditDialogOpen(true)}
+          onClick={() => navigate("/appointments/add", { state: { appointment } })}
           className="flex-1"
           size="lg"
         >
@@ -317,12 +310,6 @@ export default function AppointmentDetails() {
           Delete
         </Button>
       </div>
-
-      <AppointmentWizard
-        open={editDialogOpen}
-        onOpenChange={handleEditClose}
-        appointment={appointment}
-      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
