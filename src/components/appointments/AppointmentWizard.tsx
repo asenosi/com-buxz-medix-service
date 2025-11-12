@@ -182,9 +182,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
 
       if (error) {
         console.error("Appointment error:", error);
-        toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`);
+        toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`, {
+          className: "bg-destructive text-destructive-foreground border-destructive",
+        });
       } else {
-        toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`);
+        toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`, {
+          className: "bg-success text-success-foreground border-success",
+        });
         onOpenChange(false);
         setStep(0);
       }
@@ -255,7 +259,9 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     } else if (step === 2) {
       // Validate time is not empty
       if (!selectedTime || selectedTime.trim() === "") {
-        toast.error("Please select a time for your appointment.");
+        toast.error("Please select a time for your appointment.", {
+          className: "bg-warning text-warning-foreground border-warning",
+        });
         return;
       }
       
@@ -269,7 +275,9 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       
       // Allow current day appointments as long as the time hasn't passed
       if (selectedDateTime <= now) {
-        toast.error("Cannot schedule appointments in the past. Please select a future time.");
+        toast.error("Cannot schedule appointments in the past. Please select a future time.", {
+          className: "bg-destructive text-destructive-foreground border-destructive",
+        });
         return;
       }
       
@@ -277,7 +285,9 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       const conflict = checkAppointmentConflict();
       if (conflict) {
         if (conflict.type === "error") {
-          toast.error(conflict.message);
+          toast.error(conflict.message, {
+            className: "bg-destructive text-destructive-foreground border-destructive",
+          });
           return;
         } else if (conflict.type === "warning") {
           toast.warning(conflict.message);

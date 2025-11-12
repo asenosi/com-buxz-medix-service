@@ -134,9 +134,13 @@ export default function AppointmentDetails() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Failed to delete appointment");
+      toast.error("Failed to delete appointment", {
+        className: "bg-destructive text-destructive-foreground border-destructive",
+      });
     } else {
-      toast.success("Appointment deleted");
+      toast.success("Appointment deleted", {
+        className: "bg-success text-success-foreground border-success",
+      });
       navigate("/appointments");
     }
   };
@@ -153,9 +157,13 @@ export default function AppointmentDetails() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Failed to cancel appointment");
+      toast.error("Failed to cancel appointment", {
+        className: "bg-destructive text-destructive-foreground border-destructive",
+      });
     } else {
-      toast.success("Appointment cancelled");
+      toast.success("Appointment cancelled", {
+        className: "bg-warning text-warning-foreground border-warning",
+      });
       setCancelDialogOpen(false);
       refetch();
     }

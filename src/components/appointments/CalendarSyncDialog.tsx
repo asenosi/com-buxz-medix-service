@@ -38,12 +38,16 @@ export function CalendarSyncDialog({ open, onOpenChange, appointmentId }: Calend
         window.location.href = data.authUrl;
       } else {
         // Already authorized, sync the event
-        toast.success("Appointment synced with your calendar");
+        toast.success("Appointment synced with your calendar", {
+          className: "bg-success text-success-foreground border-success",
+        });
         onOpenChange(false);
       }
     } catch (error) {
       console.error("Calendar sync error:", error);
-      toast.error("Failed to sync with calendar");
+      toast.error("Failed to sync with calendar", {
+        className: "bg-destructive text-destructive-foreground border-destructive",
+      });
     } finally {
       setIsLoading(false);
     }
