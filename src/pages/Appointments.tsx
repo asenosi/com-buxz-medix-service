@@ -143,9 +143,14 @@ export default function Appointments() {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="space-y-1">
+      <div className="space-y-3">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Appointments</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">Manage your medical appointments</p>
+        <div className="border-2 border-dashed border-border rounded-lg p-4 bg-muted/30">
+          <h3 className="font-semibold text-foreground mb-1">Track appointments and doctor visits</h3>
+          <p className="text-sm text-muted-foreground">
+            Keep all your health visits in one place. Get assistance preparing for and summarizing visits.
+          </p>
+        </div>
       </div>
 
       {/* Search and Filters */}
