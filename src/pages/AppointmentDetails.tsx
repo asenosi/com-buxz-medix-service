@@ -152,7 +152,7 @@ export default function AppointmentDetails() {
   }
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="space-y-3 pb-4">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -162,67 +162,79 @@ export default function AppointmentDetails() {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
             {appointment.title}
           </h1>
         </div>
+        <Button
+          onClick={() => setEditDialogOpen(true)}
+          variant="ghost"
+          size="icon"
+        >
+          <Edit className="w-5 h-5" />
+        </Button>
+        <Button
+          onClick={() => setDeleteDialogOpen(true)}
+          variant="ghost"
+          size="icon"
+        >
+          <Trash2 className="w-5 h-5 text-destructive" />
+        </Button>
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-4 h-4 rounded-full ${
-                  appointmentTypeColors[appointment.appointment_type]
-                }`}
-              />
-              <Badge variant="outline">
-                {appointmentTypeLabels[appointment.appointment_type]}
-              </Badge>
-              <Badge variant={appointment.status === "scheduled" ? "default" : "secondary"}>
-                {statusLabels[appointment.status]}
-              </Badge>
-            </div>
+        <CardHeader className="pb-2 pt-4 px-4">
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-3 h-3 rounded-full ${
+                appointmentTypeColors[appointment.appointment_type]
+              }`}
+            />
+            <Badge variant="outline" className="text-xs">
+              {appointmentTypeLabels[appointment.appointment_type]}
+            </Badge>
+            <Badge variant={appointment.status === "scheduled" ? "default" : "secondary"} className="text-xs">
+              {statusLabels[appointment.status]}
+            </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <CalendarIcon className="w-5 h-5 text-muted-foreground mt-0.5" />
+        <CardContent className="space-y-2 px-4 pb-4">
+          <div className="space-y-2">
+            <div className="flex items-start gap-2">
+              <CalendarIcon className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm text-muted-foreground">Date</p>
-                <p className="font-medium">
+                <p className="text-xs text-muted-foreground">Date</p>
+                <p className="text-sm font-medium">
                   {format(new Date(appointment.appointment_date), "EEEE, MMMM d, yyyy")}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
+            <div className="flex items-start gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm text-muted-foreground">Time</p>
-                <p className="font-medium">
+                <p className="text-xs text-muted-foreground">Time</p>
+                <p className="text-sm font-medium">
                   {format(
                     new Date(`2000-01-01T${appointment.appointment_time}`),
                     "h:mm a"
                   )}
                   {" "}
-                  ({appointment.duration_minutes} minutes)
+                  ({appointment.duration_minutes} min)
                 </p>
               </div>
             </div>
 
             {appointment.doctor_name && (
               <>
-                <Separator />
-                <div className="flex items-start gap-3">
-                  <User className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <Separator className="my-2" />
+                <div className="flex items-start gap-2">
+                  <User className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Doctor</p>
-                    <p className="font-medium">{appointment.doctor_name}</p>
+                    <p className="text-xs text-muted-foreground">Doctor</p>
+                    <p className="text-sm font-medium">{appointment.doctor_name}</p>
                     {appointment.doctor_specialty && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {appointment.doctor_specialty}
                       </p>
                     )}
@@ -233,12 +245,12 @@ export default function AppointmentDetails() {
 
             {appointment.location && (
               <>
-                <Separator />
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <Separator className="my-2" />
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Location</p>
-                    <p className="font-medium">{appointment.location}</p>
+                    <p className="text-xs text-muted-foreground">Location</p>
+                    <p className="text-sm font-medium">{appointment.location}</p>
                   </div>
                 </div>
               </>
@@ -246,12 +258,12 @@ export default function AppointmentDetails() {
 
             {appointment.medications && (
               <>
-                <Separator />
-                <div className="flex items-start gap-3">
-                  <Pill className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <Separator className="my-2" />
+                <div className="flex items-start gap-2">
+                  <Pill className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Related Medication</p>
-                    <p className="font-medium">{appointment.medications.name}</p>
+                    <p className="text-xs text-muted-foreground">Related Medication</p>
+                    <p className="text-sm font-medium">{appointment.medications.name}</p>
                   </div>
                 </div>
               </>
@@ -259,13 +271,13 @@ export default function AppointmentDetails() {
 
             {appointment.reminder_minutes_before && (
               <>
-                <Separator />
-                <div className="flex items-start gap-3">
-                  <Bell className="w-5 h-5 text-muted-foreground mt-0.5" />
+                <Separator className="my-2" />
+                <div className="flex items-start gap-2">
+                  <Bell className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Reminder</p>
-                    <p className="font-medium">
-                      {appointment.reminder_minutes_before} minutes before
+                    <p className="text-xs text-muted-foreground">Reminder</p>
+                    <p className="text-sm font-medium">
+                      {appointment.reminder_minutes_before} min before
                     </p>
                   </div>
                 </div>
@@ -274,19 +286,19 @@ export default function AppointmentDetails() {
 
             {(appointment.description || appointment.notes) && (
               <>
-                <Separator />
-                <div className="flex items-start gap-3">
-                  <FileText className="w-5 h-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1 space-y-2">
+                <Separator className="my-2" />
+                <div className="flex items-start gap-2">
+                  <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 space-y-1.5">
                     {appointment.description && (
                       <div>
-                        <p className="text-sm text-muted-foreground">Description</p>
+                        <p className="text-xs text-muted-foreground">Description</p>
                         <p className="text-sm">{appointment.description}</p>
                       </div>
                     )}
                     {appointment.notes && (
                       <div>
-                        <p className="text-sm text-muted-foreground">Notes</p>
+                        <p className="text-xs text-muted-foreground">Notes</p>
                         <p className="text-sm">{appointment.notes}</p>
                       </div>
                     )}
@@ -298,25 +310,6 @@ export default function AppointmentDetails() {
         </CardContent>
       </Card>
 
-      <div className="flex gap-3">
-        <Button
-          onClick={() => setEditDialogOpen(true)}
-          className="flex-1"
-          size="lg"
-        >
-          <Edit className="w-4 h-4 mr-2" />
-          Edit
-        </Button>
-        <Button
-          onClick={() => setDeleteDialogOpen(true)}
-          variant="destructive"
-          className="flex-1"
-          size="lg"
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          Delete
-        </Button>
-      </div>
 
       <AppointmentWizard
         open={editDialogOpen}
