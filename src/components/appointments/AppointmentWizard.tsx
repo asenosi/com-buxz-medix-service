@@ -380,7 +380,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                 </p>
               </div>
               
-              <div className="flex-1 flex items-center justify-center overflow-auto">
+              <div className="flex-1 flex items-center justify-center overflow-auto px-2">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -397,32 +397,32 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                   }}
                   fromDate={new Date()}
                   toYear={new Date().getFullYear() + 10}
-                  className="rounded-md border pointer-events-auto"
+                  className="rounded-md border pointer-events-auto max-w-full"
                   modifiers={{
                     hasAppointment: appointments?.map(apt => new Date(apt.appointment_date)) || [],
                   }}
                   modifiersClassNames={{
-                    hasAppointment: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-green-500",
+                    hasAppointment: "relative after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-green-500",
                   }}
                   classNames={{
-                    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                    month: "space-y-4",
+                    months: "flex flex-col w-full",
+                    month: "space-y-3 w-full",
                     caption: "flex justify-center items-center pt-1 mb-2 w-full px-1 relative",
-                    caption_label: "text-xl font-bold text-foreground",
+                    caption_label: "text-base sm:text-lg font-bold text-foreground",
                     nav: "absolute inset-x-0 flex items-center justify-between px-1",
                     nav_button: cn(
-                      "h-10 w-10 bg-background hover:bg-muted rounded-full p-0 shadow-sm border border-border/50 transition-all",
+                      "h-8 w-8 sm:h-9 sm:w-9 bg-background hover:bg-muted rounded-full p-0 shadow-sm border border-border/50 transition-all",
                     ),
                     nav_button_previous: "",
                     nav_button_next: "",
-                    table: "w-full border-collapse space-y-1 mt-4",
-                    head_row: "flex justify-between mb-2",
-                    head_cell: "text-muted-foreground w-12 font-medium text-xs uppercase",
-                    row: "flex justify-between w-full mt-1.5",
-                    cell: "h-12 w-12 text-center text-sm p-0 relative flex items-center justify-center",
+                    table: "w-full border-collapse mt-3",
+                    head_row: "flex justify-between mb-1.5",
+                    head_cell: "text-muted-foreground flex-1 font-medium text-[10px] sm:text-xs uppercase",
+                    row: "flex justify-between w-full mt-1",
+                    cell: "flex-1 aspect-square text-center text-sm p-0.5 relative flex items-center justify-center",
                     day: cn(
-                      "h-12 w-12 p-0 font-normal rounded-full transition-all hover:bg-muted",
-                      "aria-selected:opacity-100 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      "h-full w-full p-0 font-normal rounded-full transition-all hover:bg-muted text-xs sm:text-sm",
+                      "aria-selected:opacity-100 focus-visible:ring-1 focus-visible:ring-primary"
                     ),
                     day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-sm",
                     day_today: "bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary hover:text-primary-foreground",
