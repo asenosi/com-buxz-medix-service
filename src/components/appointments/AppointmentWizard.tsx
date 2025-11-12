@@ -65,7 +65,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     queryFn: async () => {
       const { data, error } = await supabase
         .from("appointments")
-        .select("appointment_date")
+        .select("id, appointment_date, appointment_time, duration_minutes")
         .order("appointment_date", { ascending: true });
       if (error) throw error;
       return data;
@@ -187,12 +187,76 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     }
   };
 
+  const checkAppointmentConflict = () => {
+    if (!appointments) return null;
+
+    const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+    const [selectedHours, selectedMinutes] = selectedTime.split(":").map(Number);
+    const selectedStartMinutes = selectedHours * 60 + selectedMinutes;
+    const selectedDuration = form.watch("duration_minutes") || 30;
+    const selectedEndMinutes = selectedStartMinutes + selectedDuration;
+
+    // Filter appointments on the same day (excluding current appointment if editing)
+    const sameDayAppointments = appointments.filter(
+      (apt) => apt.appointment_date === selectedDateStr && apt.id !== appointment?.id
+    );
+
+    for (const apt of sameDayAppointments) {
+      const [aptHours, aptMinutes] = apt.appointment_time.split(":").map(Number);
+      const aptStartMinutes = aptHours * 60 + aptMinutes;
+      const aptEndMinutes = aptStartMinutes + (apt.duration_minutes || 30);
+
+      // Check for exact same time
+      if (selectedStartMinutes === aptStartMinutes) {
+        return {
+          type: "error",
+          message: "An appointment already exists at this exact time. Please choose a different time.",
+        };
+      }
+
+      // Check for overlap
+      if (
+        (selectedStartMinutes >= aptStartMinutes && selectedStartMinutes < aptEndMinutes) ||
+        (selectedEndMinutes > aptStartMinutes && selectedEndMinutes <= aptEndMinutes) ||
+        (selectedStartMinutes <= aptStartMinutes && selectedEndMinutes >= aptEndMinutes)
+      ) {
+        return {
+          type: "error",
+          message: `This appointment overlaps with another appointment at ${apt.appointment_time}. Please choose a different time.`,
+        };
+      }
+
+      // Check for appointments within 30 minutes
+      const timeDiff = Math.abs(selectedStartMinutes - aptStartMinutes);
+      if (timeDiff < 30) {
+        return {
+          type: "warning",
+          message: `Warning: This appointment is only ${timeDiff} minutes away from another appointment at ${apt.appointment_time}. Make sure you have enough time.`,
+        };
+      }
+    }
+
+    return null;
+  };
+
   const handleNext = () => {
     if (step === 0) {
       form.setValue("appointment_date", selectedDate);
       setStep(1);
     } else if (step === 1) {
       form.setValue("appointment_time", selectedTime);
+      
+      // Check for conflicts before proceeding
+      const conflict = checkAppointmentConflict();
+      if (conflict) {
+        if (conflict.type === "error") {
+          toast.error(conflict.message);
+          return;
+        } else if (conflict.type === "warning") {
+          toast.warning(conflict.message);
+        }
+      }
+      
       setStep(2);
     } else if (step === 2) {
       setStep(3);

@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
+import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { useHaptic } from "@/hooks/use-haptic";
 
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
   medications?: { name: string } | null;
@@ -20,6 +22,7 @@ type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
 
 export default function Appointments() {
   const queryClient = useQueryClient();
+  const { triggerHaptic } = useHaptic();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Partial<Appointment> | null>(null);
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -139,15 +142,9 @@ export default function Appointments() {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Appointments</h1>
-          <p className="text-sm text-muted-foreground">Manage your medical appointments</p>
-        </div>
-        <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
-          <Plus className="w-5 h-5 mr-2" />
-          Add Appointment
-        </Button>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Appointments</h1>
+        <p className="text-sm text-muted-foreground">Manage your medical appointments</p>
       </div>
 
       {/* Search and Filters */}
@@ -274,9 +271,13 @@ export default function Appointments() {
               <CardContent className="pb-32 sm:pb-40">
                 <CalendarIcon className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
                 <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Appointments Yet</h2>
-                <p className="text-base sm:text-lg text-muted-foreground px-4 max-w-md mx-auto">
+                <p className="text-base sm:text-lg text-muted-foreground px-4 max-w-md mx-auto mb-6">
                   Start organizing your healthcare by adding your first appointment. Never miss a doctor's visit again.
                 </p>
+                <Button onClick={() => setDialogOpen(true)} size="lg" className="mx-auto">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Appointment
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -358,6 +359,20 @@ export default function Appointments() {
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         appointment={selectedAppointment}
+      />
+
+      <FloatingActionButton
+        actions={[
+          {
+            label: "Add Appointment",
+            icon: <Plus className="h-6 w-6" />,
+            onClick: () => {
+              triggerHaptic("light");
+              setDialogOpen(true);
+            },
+            color: "bg-primary hover:bg-primary/90",
+          },
+        ]}
       />
     </div>
   );
