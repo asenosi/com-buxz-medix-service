@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { Calendar as CalendarIcon, List, Plus, Filter, Search, X, Grid } from "lucide-react";
 import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
 import { AppointmentCard } from "@/components/appointments/AppointmentCard";
@@ -269,19 +270,15 @@ export default function Appointments() {
               Loading appointments...
             </div>
           ) : !appointments?.length ? (
-            <div className="text-center py-12 px-4 space-y-4">
-              <CalendarIcon className="w-16 h-16 mx-auto text-muted-foreground/50" />
-              <div>
-                <h3 className="text-lg font-medium text-foreground">No appointments yet</h3>
-                <p className="text-sm text-muted-foreground">
-                  Create your first appointment to get started
+            <Card className="text-center py-12 sm:py-16 animate-fade-in relative overflow-visible border-2 border-dashed border-muted-foreground/30">
+              <CardContent className="pb-32 sm:pb-40">
+                <CalendarIcon className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
+                <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Appointments Yet</h2>
+                <p className="text-base sm:text-lg text-muted-foreground px-4 max-w-md mx-auto">
+                  Start organizing your healthcare by adding your first appointment. Never miss a doctor's visit again.
                 </p>
-              </div>
-              <Button onClick={() => setDialogOpen(true)} size="lg">
-                <Plus className="w-5 h-5 mr-2" />
-                Add Your First Appointment
-              </Button>
-            </div>
+              </CardContent>
+            </Card>
           ) : (
             <>
               <div className="flex gap-2">
