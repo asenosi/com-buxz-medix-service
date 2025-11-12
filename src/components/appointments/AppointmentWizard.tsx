@@ -389,6 +389,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                     today.setHours(0, 0, 0, 0);
                     return date < today;
                   }}
+                  fromDate={new Date()}
                   className="rounded-md border pointer-events-auto"
                   modifiers={{
                     hasAppointment: appointments?.map(apt => new Date(apt.appointment_date)) || [],
