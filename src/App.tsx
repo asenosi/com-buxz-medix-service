@@ -21,6 +21,8 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Alerts = lazy(() => import("./pages/Alerts"));
 const NotificationSettingsPage = lazy(() => import("./pages/NotificationSettingsPage"));
 const InstallPWA = lazy(() => import("./pages/InstallPWA"));
+const Appointments = lazy(() => import("./pages/Appointments"));
+const AppointmentDetails = lazy(() => import("./pages/AppointmentDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -49,6 +51,8 @@ const App = () => (
               <Route path="/alerts" element={<Alerts />} />
               <Route path="/notification-settings" element={<NotificationSettingsPage />} />
               <Route path="/install" element={<InstallPWA />} />
+              <Route path="/appointments" element={<Appointments />} />
+              <Route path="/appointments/:id" element={<AppointmentDetails />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
