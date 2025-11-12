@@ -9,10 +9,15 @@ import { AppointmentCard } from "@/components/appointments/AppointmentCard";
 import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
 import { format } from "date-fns";
+import type { Database } from "@/integrations/supabase/types";
+
+type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
+  medications?: { name: string } | null;
+};
 
 export default function Appointments() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Partial<Appointment> | null>(null);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [filters, setFilters] = useState({
     status: "all",
@@ -32,10 +37,10 @@ export default function Appointments() {
         .order("appointment_time", { ascending: true });
 
       if (filters.status !== "all") {
-        query = query.eq("status", filters.status as any);
+        query = query.eq("status", filters.status as Database["public"]["Enums"]["appointment_status"]);
       }
       if (filters.type !== "all") {
-        query = query.eq("appointment_type", filters.type as any);
+        query = query.eq("appointment_type", filters.type as Database["public"]["Enums"]["appointment_type"]);
       }
       if (filters.dateFrom) {
         query = query.gte("appointment_date", format(filters.dateFrom, "yyyy-MM-dd"));
@@ -49,11 +54,6 @@ export default function Appointments() {
       return data;
     },
   });
-
-  const handleEdit = (appointment: any) => {
-    setSelectedAppointment(appointment);
-    setDialogOpen(true);
-  };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
