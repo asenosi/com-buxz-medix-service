@@ -142,19 +142,16 @@ export default function Appointments() {
   };
 
   return (
-    <div className="space-y-4 pb-4">
-      <div className="space-y-3">
+    <div className="space-y-3 pb-4">
+      <div className="space-y-2">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Appointments</h1>
-        <div className="border-2 border-dashed border-border rounded-lg p-4 bg-muted/30">
-          <h3 className="font-semibold text-foreground mb-1">Track appointments and doctor visits</h3>
-          <p className="text-sm text-muted-foreground">
-            Keep all your health visits in one place. Get assistance preparing for and summarizing visits.
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Track your health visits and doctor appointments
+        </p>
       </div>
 
       {/* Search and Filters */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -162,20 +159,20 @@ export default function Appointments() {
               placeholder="Search appointments..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11"
+              className="pl-10 h-10 transition-all"
             />
           </div>
           <Button
             variant="outline"
-            className="relative h-11 px-4"
+            className="relative h-10 px-3 transition-all"
             onClick={() => setShowFilters(!showFilters)}
           >
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
+            <Filter className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
               <Badge 
                 variant="destructive" 
-                className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full"
+                className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] rounded-full animate-scale-in"
               >
                 {activeFilterCount}
               </Badge>
@@ -255,59 +252,59 @@ export default function Appointments() {
         <AppointmentFilters filters={filters} setFilters={setFilters} />
       )}
 
-      <Tabs value={view} onValueChange={(v) => setView(v as "list" | "calendar")} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 h-11 bg-muted rounded-xl">
-          <TabsTrigger value="list" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+      <Tabs value={view} onValueChange={(v) => setView(v as "list" | "calendar")} className="space-y-3">
+        <TabsList className="grid w-full grid-cols-2 h-9 bg-muted/50 rounded-lg p-0.5">
+          <TabsTrigger value="list" className="gap-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm transition-all">
             <List className="w-4 h-4" />
             <span>List</span>
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="calendar" className="gap-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm transition-all">
             <CalendarIcon className="w-4 h-4" />
             <span>Calendar</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="list" className="space-y-4 mt-4">
+        <TabsContent value="list" className="space-y-3 mt-0">
           {isLoading ? (
-            <div className="text-center text-muted-foreground py-12">
+            <div className="text-center text-muted-foreground py-12 animate-fade-in">
               Loading appointments...
             </div>
           ) : !appointments?.length ? (
-            <Card className="text-center py-12 sm:py-16 animate-fade-in relative overflow-visible border-2 border-dashed border-border rounded-2xl">
-              <CardContent className="pb-32 sm:pb-40">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CalendarIcon className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
+            <Card className="text-center py-10 animate-fade-in relative overflow-visible border-2 border-dashed border-border rounded-xl">
+              <CardContent className="pb-24">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center animate-scale-in">
+                  <CalendarIcon className="w-8 h-8 text-primary" />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-semibold mb-3">No Appointments Yet</h2>
-                <p className="text-sm sm:text-base text-muted-foreground px-4 max-w-md mx-auto mb-8">
-                  Start organizing your healthcare by adding your first appointment. Never miss a doctor's visit again.
+                <h2 className="text-lg sm:text-xl font-semibold mb-2">No Appointments Yet</h2>
+                <p className="text-sm text-muted-foreground px-4 max-w-md mx-auto mb-6">
+                  Start organizing your healthcare by adding your first appointment.
                 </p>
-                <Button onClick={() => setDialogOpen(true)} size="lg" className="mx-auto rounded-xl h-12 px-6">
-                  <Plus className="w-5 h-5 mr-2" />
+                <Button onClick={() => setDialogOpen(true)} size="default" className="mx-auto rounded-lg">
+                  <Plus className="w-4 h-4 mr-2" />
                   Add Appointment
                 </Button>
               </CardContent>
             </Card>
           ) : (
             <>
-              <div className="inline-flex h-11 items-center justify-center rounded-xl bg-muted p-1 text-muted-foreground w-full">
+              <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted/50 p-0.5 text-muted-foreground w-full">
                 <button
                   onClick={() => setAppointmentView("upcoming")}
                   className={cn(
-                    "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1",
+                    "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all flex-1 gap-1.5",
                     appointmentView === "upcoming" && "bg-background text-foreground shadow-sm"
                   )}
                 >
-                  Upcoming <Badge variant="secondary" className="ml-2 text-xs">{upcomingAppointments?.length || 0}</Badge>
+                  Upcoming <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-xs">{upcomingAppointments?.length || 0}</Badge>
                 </button>
                 <button
                   onClick={() => setAppointmentView("past")}
                   className={cn(
-                    "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1",
+                    "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all flex-1 gap-1.5",
                     appointmentView === "past" && "bg-background text-foreground shadow-sm"
                   )}
                 >
-                  Past <Badge variant="secondary" className="ml-2 text-xs">{pastAppointments?.length || 0}</Badge>
+                  Past <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-xs">{pastAppointments?.length || 0}</Badge>
                 </button>
               </div>
 
@@ -323,24 +320,24 @@ export default function Appointments() {
                       ))}
                     </div>
                   ) : (
-                    <Card className="text-center py-12 animate-fade-in border-2 border-dashed border-border/50 rounded-2xl bg-muted/20">
-                      <CardContent className="space-y-4">
-                        <div className="relative mx-auto w-16 h-16">
-                          <div className="absolute inset-0 rounded-full bg-primary/20 animate-glow" />
-                          <div className="relative w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-float">
-                            <CalendarIcon className="w-8 h-8 text-primary" />
+                    <Card className="text-center py-8 animate-fade-in border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
+                      <CardContent className="space-y-3">
+                        <div className="relative mx-auto w-14 h-14">
+                          <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse" />
+                          <div className="relative w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                            <CalendarIcon className="w-7 h-7 text-primary" />
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold text-foreground">No Upcoming Appointments</h3>
+                        <div className="space-y-1.5">
+                          <h3 className="text-base font-semibold text-foreground">No Upcoming Appointments</h3>
                           <p className="text-sm text-muted-foreground px-4 max-w-sm mx-auto">
-                            Your schedule is clear. Add a new appointment to stay on top of your health visits.
+                            Your schedule is clear. Add a new appointment to stay organized.
                           </p>
                         </div>
                         <Button 
                           onClick={() => setDialogOpen(true)} 
-                          size="default" 
-                          className="mx-auto rounded-xl mt-4 animate-scale-in"
+                          size="sm" 
+                          className="mx-auto rounded-lg mt-2"
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Schedule Appointment
@@ -363,18 +360,18 @@ export default function Appointments() {
                       ))}
                     </div>
                   ) : (
-                    <Card className="text-center py-12 animate-fade-in border-2 border-dashed border-border/50 rounded-2xl bg-muted/20">
-                      <CardContent className="space-y-4">
-                        <div className="relative mx-auto w-16 h-16">
-                          <div className="absolute inset-0 rounded-full bg-muted-foreground/10 animate-pulse-slow" />
-                          <div className="relative w-16 h-16 rounded-full bg-muted-foreground/5 flex items-center justify-center">
-                            <Grid className="w-8 h-8 text-muted-foreground/50" />
+                    <Card className="text-center py-8 animate-fade-in border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
+                      <CardContent className="space-y-3">
+                        <div className="relative mx-auto w-14 h-14">
+                          <div className="absolute inset-0 rounded-full bg-muted-foreground/10 animate-pulse" />
+                          <div className="relative w-14 h-14 rounded-full bg-muted-foreground/5 flex items-center justify-center">
+                            <Grid className="w-7 h-7 text-muted-foreground/50" />
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold text-foreground">No Past Appointments</h3>
+                        <div className="space-y-1.5">
+                          <h3 className="text-base font-semibold text-foreground">No Past Appointments</h3>
                           <p className="text-sm text-muted-foreground px-4 max-w-sm mx-auto">
-                            Your appointment history will appear here once you complete or cancel scheduled appointments.
+                            Your appointment history will appear here.
                           </p>
                         </div>
                       </CardContent>
