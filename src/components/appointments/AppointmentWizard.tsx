@@ -5,7 +5,7 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -169,14 +169,15 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
     };
 
-    const { error } = appointment
+    const { error } = appointment?.id
       ? await supabase.from("appointments").update(appointmentData).eq("id", appointment.id)
       : await supabase.from("appointments").insert([appointmentData]);
 
     if (error) {
-      toast.error(`Failed to ${appointment ? "update" : "create"} appointment`);
+      console.error("Appointment error:", error);
+      toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`);
     } else {
-      toast.success(`Appointment ${appointment ? "updated" : "created"} successfully`);
+      toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`);
       if (syncWithCalendar) {
         toast.info("Calendar sync requested - please check your device calendar app");
       }
@@ -230,6 +231,11 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         {/* Intro Screen */}
         {step === 0 && !appointment && (
           <div className="flex flex-col h-[600px] bg-background">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Add Appointment</DialogTitle>
+              <DialogDescription>Track your medical appointments</DialogDescription>
+            </DialogHeader>
+            
             <div className="flex items-center justify-between p-4 border-b">
               <Button
                 variant="ghost"
@@ -276,11 +282,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         {step === 1 && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
+              <DialogTitle className="sr-only">Add Appointment - Select Date</DialogTitle>
+              <DialogDescription className="sr-only">Choose the date for your appointment</DialogDescription>
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <CalendarIcon className="h-6 w-6 text-primary" />
                 </div>
-                <DialogTitle className="text-2xl">Add appointment</DialogTitle>
+                <div className="text-2xl font-semibold">Add appointment</div>
               </div>
             </DialogHeader>
 
@@ -327,11 +335,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         {step === 2 && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
+              <DialogTitle className="sr-only">Add Appointment - Select Time</DialogTitle>
+              <DialogDescription className="sr-only">Choose the time for your appointment</DialogDescription>
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <Clock className="h-6 w-6 text-primary" />
                 </div>
-                <DialogTitle className="text-2xl">Add appointment</DialogTitle>
+                <div className="text-2xl font-semibold">Add appointment</div>
               </div>
             </DialogHeader>
 
@@ -360,11 +370,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         {step === 3 && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
+              <DialogTitle className="sr-only">Add Appointment - Details</DialogTitle>
+              <DialogDescription className="sr-only">Enter appointment details</DialogDescription>
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <FileText className="h-6 w-6 text-primary" />
                 </div>
-                <DialogTitle className="text-2xl">Add appointment</DialogTitle>
+                <div className="text-2xl font-semibold">Add appointment</div>
               </div>
             </DialogHeader>
 
@@ -447,11 +459,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         {step === 4 && !appointment && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
+              <DialogTitle className="sr-only">Add Appointment - Reminder</DialogTitle>
+              <DialogDescription className="sr-only">Set appointment reminder preferences</DialogDescription>
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <AlarmClock className="h-6 w-6 text-primary" />
                 </div>
-                <DialogTitle className="text-2xl">Add appointment</DialogTitle>
+                <div className="text-2xl font-semibold">Add appointment</div>
               </div>
             </DialogHeader>
 
@@ -494,13 +508,15 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         {(step === 5 || (step === 4 && appointment)) && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 border-b shrink-0">
+              <DialogTitle className="sr-only">{appointment?.id ? "Edit Appointment" : "Review Appointment"}</DialogTitle>
+              <DialogDescription className="sr-only">Review and finalize appointment details</DialogDescription>
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <CalendarIcon className="h-6 w-6 text-primary" />
                 </div>
-                <DialogTitle className="text-xl">
-                  {appointment ? "Edit Appointment" : "Review your appointment details"}
-                </DialogTitle>
+                <div className="text-xl font-semibold">
+                  {appointment?.id ? "Edit Appointment" : "Review your appointment details"}
+                </div>
               </div>
             </DialogHeader>
 
