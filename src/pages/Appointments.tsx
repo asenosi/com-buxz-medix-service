@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarIcon, List, Plus, Filter } from "lucide-react";
-import { AppointmentDialog } from "@/components/appointments/AppointmentDialog";
+import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
 import { AppointmentCard } from "@/components/appointments/AppointmentCard";
 import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
@@ -16,6 +16,7 @@ type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
 };
 
 export default function Appointments() {
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Partial<Appointment> | null>(null);
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -26,6 +27,7 @@ export default function Appointments() {
     dateTo: null as Date | null,
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [appointmentView, setAppointmentView] = useState<"upcoming" | "past">("upcoming");
 
   const { data: appointments, isLoading, refetch } = useQuery({
     queryKey: ["appointments", filters],
@@ -54,6 +56,29 @@ export default function Appointments() {
       return data;
     },
   });
+
+  // Real-time subscription for appointments
+  useEffect(() => {
+    const channel = supabase
+      .channel('appointments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments'
+        },
+        () => {
+          // Invalidate and refetch appointments when any change occurs
+          queryClient.invalidateQueries({ queryKey: ["appointments"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const handleDialogClose = () => {
     setDialogOpen(false);
@@ -129,36 +154,59 @@ export default function Appointments() {
             </div>
           ) : (
             <>
-              {upcomingAppointments && upcomingAppointments.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-lg sm:text-xl font-semibold text-foreground px-1">
-                    Upcoming
-                  </h2>
-                  <div className="space-y-3">
-                    {upcomingAppointments.map((appointment) => (
-                      <AppointmentCard
-                        key={appointment.id}
-                        appointment={appointment}
-                      />
-                    ))}
-                  </div>
-                </div>
+              <div className="flex gap-2 mb-4">
+                <Button
+                  variant={appointmentView === "upcoming" ? "default" : "outline"}
+                  onClick={() => setAppointmentView("upcoming")}
+                  className="flex-1"
+                >
+                  Upcoming ({upcomingAppointments?.length || 0})
+                </Button>
+                <Button
+                  variant={appointmentView === "past" ? "default" : "outline"}
+                  onClick={() => setAppointmentView("past")}
+                  className="flex-1"
+                >
+                  Past ({pastAppointments?.length || 0})
+                </Button>
+              </div>
+
+              {appointmentView === "upcoming" && (
+                <>
+                  {upcomingAppointments && upcomingAppointments.length > 0 ? (
+                    <div className="space-y-3">
+                      {upcomingAppointments.map((appointment) => (
+                        <AppointmentCard
+                          key={appointment.id}
+                          appointment={appointment}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      No upcoming appointments
+                    </div>
+                  )}
+                </>
               )}
 
-              {pastAppointments && pastAppointments.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-lg sm:text-xl font-semibold text-foreground px-1">
-                    Past
-                  </h2>
-                  <div className="space-y-3">
-                    {pastAppointments.map((appointment) => (
-                      <AppointmentCard
-                        key={appointment.id}
-                        appointment={appointment}
-                      />
-                    ))}
-                  </div>
-                </div>
+              {appointmentView === "past" && (
+                <>
+                  {pastAppointments && pastAppointments.length > 0 ? (
+                    <div className="space-y-3">
+                      {pastAppointments.map((appointment) => (
+                        <AppointmentCard
+                          key={appointment.id}
+                          appointment={appointment}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      No past appointments
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -179,7 +227,7 @@ export default function Appointments() {
         </TabsContent>
       </Tabs>
 
-      <AppointmentDialog
+      <AppointmentWizard
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         appointment={selectedAppointment}

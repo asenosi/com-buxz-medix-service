@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { AppointmentDialog } from "@/components/appointments/AppointmentDialog";
+import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,6 +67,7 @@ const statusLabels: Record<string, string> = {
 export default function AppointmentDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -83,6 +84,33 @@ export default function AppointmentDetails() {
       return data;
     },
   });
+
+  // Real-time subscription for this appointment
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`appointment-${id}-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments',
+          filter: `id=eq.${id}`
+        },
+        () => {
+          // Refetch appointment data when changes occur
+          queryClient.invalidateQueries({ queryKey: ["appointment", id] });
+          queryClient.invalidateQueries({ queryKey: ["appointments"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, queryClient]);
 
   const handleDelete = async () => {
     const { error } = await supabase
@@ -290,7 +318,7 @@ export default function AppointmentDetails() {
         </Button>
       </div>
 
-      <AppointmentDialog
+      <AppointmentWizard
         open={editDialogOpen}
         onOpenChange={handleEditClose}
         appointment={appointment}
