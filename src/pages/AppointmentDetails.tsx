@@ -362,7 +362,8 @@ export default function AppointmentDetails() {
           <Button
             onClick={handleReschedule}
             variant="outline"
-            className="w-full"
+            size="sm"
+            className="w-full rounded-full"
           >
             <CalendarClock className="w-4 h-4 mr-2" />
             Reschedule
@@ -370,7 +371,8 @@ export default function AppointmentDetails() {
           <Button
             onClick={() => setCancelDialogOpen(true)}
             variant="outline"
-            className="w-full text-destructive hover:text-destructive"
+            size="sm"
+            className="w-full rounded-full text-destructive hover:text-destructive"
           >
             <X className="w-4 h-4 mr-2" />
             Cancel
