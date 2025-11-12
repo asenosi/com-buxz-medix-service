@@ -39,15 +39,17 @@ export function CalendarSyncDialog({ open, onOpenChange, appointmentId }: Calend
       } else {
         // Already authorized, sync the event
         toast.success("Appointment synced with your calendar", {
-          className: "bg-success text-success-foreground border-success",
+          style: {
+            background: "hsl(var(--success))",
+            color: "hsl(var(--success-foreground))",
+            border: "1px solid hsl(var(--success))",
+          },
         });
         onOpenChange(false);
       }
     } catch (error) {
       console.error("Calendar sync error:", error);
-      toast.error("Failed to sync with calendar", {
-        className: "bg-destructive text-destructive-foreground border-destructive",
-      });
+      toast.error("Failed to sync with calendar");
     } finally {
       setIsLoading(false);
     }

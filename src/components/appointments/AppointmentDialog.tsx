@@ -164,12 +164,14 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
       : await supabase.from("appointments").insert([appointmentData]);
 
     if (error) {
-      toast.error(`Failed to ${appointment ? "update" : "create"} appointment`, {
-        className: "bg-destructive text-destructive-foreground border-destructive",
-      });
+      toast.error(`Failed to ${appointment ? "update" : "create"} appointment`);
     } else {
       toast.success(`Appointment ${appointment ? "updated" : "created"} successfully`, {
-        className: "bg-success text-success-foreground border-success",
+        style: {
+          background: "hsl(var(--success))",
+          color: "hsl(var(--success-foreground))",
+          border: "1px solid hsl(var(--success))",
+        },
       });
       onOpenChange(false);
     }

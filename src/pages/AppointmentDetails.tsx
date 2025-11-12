@@ -134,12 +134,14 @@ export default function AppointmentDetails() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Failed to delete appointment", {
-        className: "bg-destructive text-destructive-foreground border-destructive",
-      });
+      toast.error("Failed to delete appointment");
     } else {
       toast.success("Appointment deleted", {
-        className: "bg-success text-success-foreground border-success",
+        style: {
+          background: "hsl(var(--success))",
+          color: "hsl(var(--success-foreground))",
+          border: "1px solid hsl(var(--success))",
+        },
       });
       navigate("/appointments");
     }
@@ -157,12 +159,14 @@ export default function AppointmentDetails() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Failed to cancel appointment", {
-        className: "bg-destructive text-destructive-foreground border-destructive",
-      });
+      toast.error("Failed to cancel appointment");
     } else {
       toast.success("Appointment cancelled", {
-        className: "bg-warning text-warning-foreground border-warning",
+        style: {
+          background: "hsl(var(--warning))",
+          color: "hsl(var(--warning-foreground))",
+          border: "1px solid hsl(var(--warning))",
+        },
       });
       setCancelDialogOpen(false);
       refetch();
