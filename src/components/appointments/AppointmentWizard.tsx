@@ -389,27 +389,37 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                     today.setHours(0, 0, 0, 0);
                     return date < today;
                   }}
+                  fromDate={new Date()}
+                  toYear={new Date().getFullYear() + 10}
                   className="rounded-md border pointer-events-auto"
                   modifiers={{
                     hasAppointment: appointments?.map(apt => new Date(apt.appointment_date)) || [],
                   }}
                   modifiersClassNames={{
-                    hasAppointment: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary",
+                    hasAppointment: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-green-500",
                   }}
                   classNames={{
-                    months: "space-y-4",
+                    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                     month: "space-y-4",
-                    caption: "flex justify-center pt-1 relative items-center",
-                    caption_label: "text-base font-semibold",
-                    nav: "space-x-1 flex items-center",
-                    nav_button: "h-9 w-9",
-                    table: "w-full border-collapse space-y-1",
-                    head_row: "flex",
-                    head_cell: "text-muted-foreground rounded-md w-10 font-normal text-sm",
-                    row: "flex w-full mt-2",
-                    cell: "h-10 w-10 text-center text-sm p-0 relative",
-                    day: "h-10 w-10 p-0 font-normal",
-                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                    caption: "flex justify-center items-center pt-1 mb-2 w-full px-1 relative",
+                    caption_label: "text-xl font-bold text-foreground",
+                    nav: "absolute inset-x-0 flex items-center justify-between px-1",
+                    nav_button: cn(
+                      "h-10 w-10 bg-background hover:bg-muted rounded-full p-0 shadow-sm border border-border/50 transition-all",
+                    ),
+                    nav_button_previous: "",
+                    nav_button_next: "",
+                    table: "w-full border-collapse space-y-1 mt-4",
+                    head_row: "flex justify-between mb-2",
+                    head_cell: "text-muted-foreground w-12 font-medium text-xs uppercase",
+                    row: "flex justify-between w-full mt-1.5",
+                    cell: "h-12 w-12 text-center text-sm p-0 relative flex items-center justify-center",
+                    day: cn(
+                      "h-12 w-12 p-0 font-normal rounded-full transition-all hover:bg-muted",
+                      "aria-selected:opacity-100 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    ),
+                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-sm",
+                    day_today: "bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary hover:text-primary-foreground",
                   }}
                 />
               </div>
