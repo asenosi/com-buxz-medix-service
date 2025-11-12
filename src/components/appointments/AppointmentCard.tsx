@@ -107,12 +107,14 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
             >
               {appointment.appointment_type.replace("_", " ")}
             </Badge>
-            <Badge 
-              variant="secondary"
-              className={cn("text-xs font-normal", statusColors[appointment.status])}
-            >
-              {appointment.status}
-            </Badge>
+            {appointment.status !== "scheduled" && (
+              <Badge 
+                variant="secondary"
+                className={cn("text-xs font-normal", statusColors[appointment.status])}
+              >
+                {appointment.status}
+              </Badge>
+            )}
           </div>
 
           {/* Info rows with icons */}
