@@ -248,8 +248,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
 
         {/* Step 1: Date Selection */}
         {step === 1 && (
-          <div className="flex flex-col min-h-[600px]">
-            <DialogHeader className="p-6 pb-4 space-y-4">
+          <div className="flex flex-col h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <CalendarIcon className="h-6 w-6 text-primary" />
@@ -258,38 +258,38 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               </div>
             </DialogHeader>
 
-            <div className="flex-1 flex flex-col px-6 pb-6">
-              <h3 className="text-xl font-semibold mb-6">When is your appointment?</h3>
+            <div className="flex-1 flex flex-col px-6 pb-6 min-h-0">
+              <h3 className="text-xl font-semibold mb-4">When is your appointment?</h3>
               
-              <div className="flex-1 flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center overflow-auto">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md border scale-110"
+                  className="rounded-md border"
                   classNames={{
                     months: "space-y-4",
                     month: "space-y-4",
                     caption: "flex justify-center pt-1 relative items-center",
-                    caption_label: "text-lg font-semibold",
+                    caption_label: "text-base font-semibold",
                     nav: "space-x-1 flex items-center",
-                    nav_button: "h-10 w-10",
+                    nav_button: "h-9 w-9",
                     table: "w-full border-collapse space-y-1",
                     head_row: "flex",
-                    head_cell: "text-muted-foreground rounded-md w-12 font-normal text-base",
+                    head_cell: "text-muted-foreground rounded-md w-10 font-normal text-sm",
                     row: "flex w-full mt-2",
-                    cell: "h-12 w-12 text-center text-base p-0 relative",
-                    day: "h-12 w-12 p-0 font-normal",
+                    cell: "h-10 w-10 text-center text-sm p-0 relative",
+                    day: "h-10 w-10 p-0 font-normal",
                     day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                   }}
                 />
               </div>
 
-              <p className="text-center text-muted-foreground mb-6">
+              <p className="text-center text-muted-foreground my-4">
                 {getRelativeDate(selectedDate)}
               </p>
 
-              <Button onClick={handleNext} size="lg" className="w-full h-14 text-lg rounded-full">
+              <Button onClick={handleNext} size="lg" className="w-full h-14 text-lg rounded-full shrink-0">
                 Next
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
@@ -299,8 +299,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
 
         {/* Step 2: Time Selection */}
         {step === 2 && (
-          <div className="flex flex-col min-h-[600px]">
-            <DialogHeader className="p-6 pb-4 space-y-4">
+          <div className="flex flex-col h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <Clock className="h-6 w-6 text-primary" />
@@ -309,7 +309,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               </div>
             </DialogHeader>
 
-            <div className="flex-1 flex flex-col px-6 pb-6">
+            <div className="flex-1 flex flex-col px-6 pb-6 min-h-0">
               <h3 className="text-xl font-semibold mb-6">What time is your appointment?</h3>
               
               <div className="flex-1 flex items-center justify-center">
@@ -317,12 +317,12 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                   type="time"
                   value={selectedTime}
                   onChange={(e) => setSelectedTime(e.target.value)}
-                  className="text-6xl h-32 text-center font-light border-none shadow-none focus-visible:ring-0"
-                  style={{ fontSize: '4rem' }}
+                  className="text-5xl h-28 text-center font-light border-none shadow-none focus-visible:ring-0"
+                  style={{ fontSize: '3rem' }}
                 />
               </div>
 
-              <Button onClick={handleNext} size="lg" className="w-full h-14 text-lg rounded-full">
+              <Button onClick={handleNext} size="lg" className="w-full h-14 text-lg rounded-full shrink-0">
                 Next
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
@@ -330,10 +330,10 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
           </div>
         )}
 
-        {/* Step 3: Appointment Type */}
+        {/* Step 3: Appointment Details */}
         {step === 3 && (
-          <div className="flex flex-col min-h-[600px]">
-            <DialogHeader className="p-6 pb-4 space-y-4">
+          <div className="flex flex-col h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <FileText className="h-6 w-6 text-primary" />
@@ -342,7 +342,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               </div>
             </DialogHeader>
 
-            <div className="flex-1 flex flex-col px-6 pb-6 space-y-4">
+            <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
               <div>
                 <Label>Appointment Title *</Label>
                 <Input
@@ -376,8 +376,34 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                 </Select>
               </div>
 
-              <div className="flex-1" />
+              <div>
+                <Label className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Location
+                </Label>
+                <Input
+                  placeholder="e.g., City Hospital, Room 204"
+                  value={form.watch("location")}
+                  onChange={(e) => form.setValue("location", e.target.value)}
+                  className="h-12 text-base"
+                />
+              </div>
 
+              <div>
+                <Label className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Doctor Name
+                </Label>
+                <Input
+                  placeholder="e.g., Dr. Smith"
+                  value={form.watch("doctor_name")}
+                  onChange={(e) => form.setValue("doctor_name", e.target.value)}
+                  className="h-12 text-base"
+                />
+              </div>
+            </div>
+
+            <div className="px-6 pb-6 shrink-0">
               <Button
                 onClick={handleNext}
                 disabled={!form.watch("title")}
@@ -393,8 +419,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
 
         {/* Step 4: Reminder Selection */}
         {step === 4 && !appointment && (
-          <div className="flex flex-col min-h-[600px]">
-            <DialogHeader className="p-6 pb-4 space-y-4">
+          <div className="flex flex-col h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <AlarmClock className="h-6 w-6 text-primary" />
@@ -403,8 +429,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               </div>
             </DialogHeader>
 
-            <div className="flex-1 flex flex-col px-6 pb-6">
-              <h3 className="text-xl font-semibold mb-6">When would you like to be reminded?</h3>
+            <div className="flex-1 flex flex-col px-6 pb-6 min-h-0">
+              <h3 className="text-xl font-semibold mb-4">When would you like to be reminded?</h3>
               
               <div className="flex-1 space-y-2 overflow-y-auto">
                 {reminderOptions.map((option) => (
@@ -412,7 +438,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                     key={option.value}
                     onClick={() => setSelectedReminder(option.value)}
                     className={cn(
-                      "w-full p-4 text-left rounded-lg border transition-colors text-lg",
+                      "w-full p-4 text-left rounded-lg border transition-colors text-base",
                       selectedReminder === option.value
                         ? "bg-primary/10 border-primary"
                         : "hover:bg-accent"
@@ -429,7 +455,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                   setStep(5);
                 }}
                 size="lg"
-                className="w-full h-14 text-lg rounded-full mt-4"
+                className="w-full h-14 text-lg rounded-full mt-4 shrink-0"
               >
                 Next
                 <ChevronRight className="ml-2 h-5 w-5" />
@@ -440,87 +466,72 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
 
         {/* Step 5: Review & Additional Details */}
         {(step === 5 || (step === 4 && appointment)) && (
-          <div className="flex flex-col max-h-[90vh]">
-            <DialogHeader className="p-6 pb-4 space-y-4 border-b">
+          <div className="flex flex-col h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4 border-b shrink-0">
               <div className="flex items-center gap-4">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <CalendarIcon className="h-6 w-6 text-primary" />
                 </div>
-                <DialogTitle className="text-2xl">
+                <DialogTitle className="text-xl">
                   {appointment ? "Edit Appointment" : "Review your appointment details"}
                 </DialogTitle>
               </div>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
               {/* Main Details */}
-              <div className="space-y-3 pb-4 border-b">
+              <div className="space-y-2 pb-4 border-b">
                 <button
                   onClick={() => !appointment && setStep(3)}
                   className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
                 >
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-                  <span className="flex-1 font-medium">{form.watch("title") || "Appointment"}</span>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <span className="flex-1 font-medium text-sm">{form.watch("title") || "Appointment"}</span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                 </button>
 
                 <button
                   onClick={() => !appointment && setStep(1)}
                   className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
                 >
-                  <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+                  <CalendarIcon className="h-5 w-5 text-muted-foreground shrink-0" />
                   <div className="flex-1">
-                    <span className="font-medium">
-                      {format(selectedDate, "EEEE, d MMM")}
+                    <span className="font-medium text-sm">
+                      {format(selectedDate, "EEE, d MMM")}
                     </span>
-                    <span className="ml-4 font-medium">{selectedTime}</span>
+                    <span className="ml-3 font-medium text-sm">{selectedTime}</span>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+                </button>
+
+                <button
+                  onClick={() => !appointment && setStep(3)}
+                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
+                >
+                  <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <span className="flex-1 font-medium text-sm">{form.watch("location") || "Add location"}</span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                 </button>
 
                 <button
                   onClick={() => !appointment && setStep(4)}
                   className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
                 >
-                  <AlarmClock className="h-5 w-5 text-muted-foreground" />
-                  <span className="flex-1 font-medium">
+                  <AlarmClock className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <span className="flex-1 font-medium text-sm">
                     {reminderOptions.find(opt => opt.value === selectedReminder)?.label}
                   </span>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                 </button>
               </div>
 
               {/* Additional Details */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-primary">Add additional details:</h4>
+              <div className="space-y-3">
+                <h4 className="font-semibold text-primary text-sm">Add additional details:</h4>
 
                 <div>
-                  <Label className="flex items-center gap-2 mb-2">
-                    <User className="h-4 w-4" />
-                    Doctor Name
-                  </Label>
-                  <Input
-                    placeholder="Dr. Smith"
-                    value={form.watch("doctor_name")}
-                    onChange={(e) => form.setValue("doctor_name", e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Label className="flex items-center gap-2 mb-2">
-                    <MapPin className="h-4 w-4" />
-                    Location
-                  </Label>
-                  <Input
-                    placeholder="Medical Center"
-                    value={form.watch("location")}
-                    onChange={(e) => form.setValue("location", e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Label className="flex items-center gap-2 mb-2">
-                    <FileText className="h-4 w-4" />
+                  <Label className="flex items-center gap-2 mb-1.5 text-xs">
+                    <FileText className="h-3.5 w-3.5" />
                     Notes
                   </Label>
                   <Textarea
@@ -528,23 +539,24 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                     value={form.watch("notes")}
                     onChange={(e) => form.setValue("notes", e.target.value)}
                     rows={3}
+                    className="text-sm"
                   />
                 </div>
 
-                <div className="flex items-center space-x-2 p-4 rounded-lg bg-accent/50">
+                <div className="flex items-center space-x-2 p-3 rounded-lg bg-accent/50">
                   <Checkbox
                     id="sync-calendar"
                     checked={syncWithCalendar}
                     onCheckedChange={(checked) => setSyncWithCalendar(checked as boolean)}
                   />
-                  <Label htmlFor="sync-calendar" className="font-medium cursor-pointer">
+                  <Label htmlFor="sync-calendar" className="font-medium cursor-pointer text-sm">
                     Sync with your device Calendar
                   </Label>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t">
+            <div className="p-6 border-t shrink-0">
               <Button
                 onClick={() => form.handleSubmit(onSubmit)()}
                 size="lg"
