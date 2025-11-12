@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +16,7 @@ type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
 };
 
 export default function Appointments() {
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Partial<Appointment> | null>(null);
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -54,6 +55,29 @@ export default function Appointments() {
       return data;
     },
   });
+
+  // Real-time subscription for appointments
+  useEffect(() => {
+    const channel = supabase
+      .channel('appointments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments'
+        },
+        () => {
+          // Invalidate and refetch appointments when any change occurs
+          queryClient.invalidateQueries({ queryKey: ["appointments"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const handleDialogClose = () => {
     setDialogOpen(false);
