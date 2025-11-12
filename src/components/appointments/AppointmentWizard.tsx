@@ -244,6 +244,9 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       form.setValue("appointment_date", selectedDate);
       setStep(1);
     } else if (step === 1) {
+      form.setValue("appointment_date", selectedDate);
+      setStep(2);
+    } else if (step === 2) {
       form.setValue("appointment_time", selectedTime);
       
       // Check if the selected date/time is in the past
@@ -269,8 +272,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         }
       }
       
-      setStep(2);
-    } else if (step === 2) {
       setStep(3);
     } else if (step === 3) {
       setStep(4);
