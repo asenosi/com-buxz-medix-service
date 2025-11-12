@@ -27,6 +27,7 @@ export default function Appointments() {
     dateTo: null as Date | null,
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [appointmentView, setAppointmentView] = useState<"upcoming" | "past">("upcoming");
 
   const { data: appointments, isLoading, refetch } = useQuery({
     queryKey: ["appointments", filters],
@@ -153,36 +154,59 @@ export default function Appointments() {
             </div>
           ) : (
             <>
-              {upcomingAppointments && upcomingAppointments.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-lg sm:text-xl font-semibold text-foreground px-1">
-                    Upcoming
-                  </h2>
-                  <div className="space-y-3">
-                    {upcomingAppointments.map((appointment) => (
-                      <AppointmentCard
-                        key={appointment.id}
-                        appointment={appointment}
-                      />
-                    ))}
-                  </div>
-                </div>
+              <div className="flex gap-2 mb-4">
+                <Button
+                  variant={appointmentView === "upcoming" ? "default" : "outline"}
+                  onClick={() => setAppointmentView("upcoming")}
+                  className="flex-1"
+                >
+                  Upcoming ({upcomingAppointments?.length || 0})
+                </Button>
+                <Button
+                  variant={appointmentView === "past" ? "default" : "outline"}
+                  onClick={() => setAppointmentView("past")}
+                  className="flex-1"
+                >
+                  Past ({pastAppointments?.length || 0})
+                </Button>
+              </div>
+
+              {appointmentView === "upcoming" && (
+                <>
+                  {upcomingAppointments && upcomingAppointments.length > 0 ? (
+                    <div className="space-y-3">
+                      {upcomingAppointments.map((appointment) => (
+                        <AppointmentCard
+                          key={appointment.id}
+                          appointment={appointment}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      No upcoming appointments
+                    </div>
+                  )}
+                </>
               )}
 
-              {pastAppointments && pastAppointments.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-lg sm:text-xl font-semibold text-foreground px-1">
-                    Past
-                  </h2>
-                  <div className="space-y-3">
-                    {pastAppointments.map((appointment) => (
-                      <AppointmentCard
-                        key={appointment.id}
-                        appointment={appointment}
-                      />
-                    ))}
-                  </div>
-                </div>
+              {appointmentView === "past" && (
+                <>
+                  {pastAppointments && pastAppointments.length > 0 ? (
+                    <div className="space-y-3">
+                      {pastAppointments.map((appointment) => (
+                        <AppointmentCard
+                          key={appointment.id}
+                          appointment={appointment}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      No past appointments
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
