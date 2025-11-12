@@ -1,8 +1,7 @@
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, User, FileText, ChevronRight, Bell, MoreVertical } from "lucide-react";
+import { Calendar, MapPin, User, FileText, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -72,8 +71,8 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
         )} 
       />
       
-      <CardContent className="p-5 pl-6">
-        <div className="space-y-3">
+      <CardContent className="p-4 pl-5">
+        <div className="space-y-2.5">
           {/* Header: Relative time + Status chips */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 space-y-2">
@@ -117,7 +116,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
           </div>
 
           {/* Info rows with icons */}
-          <div className="space-y-2.5 text-sm pt-1">
+          <div className="space-y-2 text-sm pt-0.5">
             {/* Date & Time */}
             <div className="flex items-center gap-3 text-muted-foreground">
               <Calendar className="w-4 h-4 shrink-0" />
@@ -150,7 +149,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
             {/* Notes */}
             {appointment.notes && (
               <div 
-                className="flex items-start gap-3 pt-2 border-t border-border/50 cursor-pointer"
+                className="flex items-start gap-3 pt-1.5 border-t border-border/50 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowFullNotes(!showFullNotes);
@@ -165,34 +164,6 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
                 </p>
               </div>
             )}
-          </div>
-
-          {/* Quick action buttons */}
-          <div className="flex items-center gap-2 pt-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 px-3 text-xs gap-1.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                // TODO: Implement reminder
-              }}
-            >
-              <Bell className="w-3.5 h-3.5" />
-              Remind
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 px-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/appointments/${appointment.id}`);
-              }}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </CardContent>
