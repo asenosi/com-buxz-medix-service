@@ -17,6 +17,7 @@ import { CalendarIcon, Clock, AlarmClock, FileText, MapPin, User, X, ChevronRigh
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { CalendarSyncDialog } from "./CalendarSyncDialog";
 
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 
@@ -49,6 +50,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
   const [selectedTime, setSelectedTime] = useState("09:00");
   const [selectedReminder, setSelectedReminder] = useState(60);
   const [syncWithCalendar, setSyncWithCalendar] = useState(false);
+  const [showCalendarSync, setShowCalendarSync] = useState(false);
+  const [createdAppointmentData, setCreatedAppointmentData] = useState<any>(null);
 
   const { data: medications } = useQuery({
     queryKey: ["medications"],
@@ -181,20 +184,36 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
     };
 
-    const { error } = appointment?.id
-      ? await supabase.from("appointments").update(appointmentData).eq("id", appointment.id)
-      : await supabase.from("appointments").insert([appointmentData]);
+    const { data: insertedAppointment, error } = appointment?.id
+      ? await supabase.from("appointments").update(appointmentData).eq("id", appointment.id).select().single()
+      : await supabase.from("appointments").insert([appointmentData]).select().single();
 
     if (error) {
       console.error("Appointment error:", error);
       toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`);
     } else {
       toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`);
-      if (syncWithCalendar) {
-        toast.info("Calendar sync requested - please check your device calendar app");
+      
+      // Only show calendar sync for new appointments
+      if (!appointment?.id) {
+        setCreatedAppointmentData({
+          title: values.title,
+          date: format(values.appointment_date, "yyyy-MM-dd"),
+          time: values.appointment_time,
+          location: values.location,
+          description: values.description,
+          duration_minutes: values.duration_minutes,
+        });
+        onOpenChange(false);
+        setStep(0);
+        // Show calendar sync dialog after a brief delay
+        setTimeout(() => {
+          setShowCalendarSync(true);
+        }, 300);
+      } else {
+        onOpenChange(false);
+        setStep(0);
       }
-      onOpenChange(false);
-      setStep(0);
     }
   };
 
@@ -238,6 +257,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
         {/* Intro Screen */}
@@ -651,5 +671,12 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         )}
       </DialogContent>
     </Dialog>
+    
+    <CalendarSyncDialog
+      open={showCalendarSync}
+      onOpenChange={setShowCalendarSync}
+      appointmentData={createdAppointmentData}
+    />
+    </>
   );
 }
