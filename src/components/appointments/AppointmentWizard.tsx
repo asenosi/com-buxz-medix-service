@@ -11,13 +11,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { CalendarIcon, Clock, AlarmClock, FileText, MapPin, User, X, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
-import { CalendarSyncDialog } from "./CalendarSyncDialog";
 
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 
@@ -35,7 +33,6 @@ const appointmentSchema = z.object({
   notes: z.string().optional(),
   reminder_minutes_before: z.coerce.number().min(0).default(60),
   medication_id: z.string().optional(),
-  sync_with_calendar: z.boolean().default(false),
 });
 
 interface AppointmentWizardProps {
@@ -49,9 +46,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState("09:00");
   const [selectedReminder, setSelectedReminder] = useState(60);
-  const [syncWithCalendar, setSyncWithCalendar] = useState(false);
-  const [showCalendarSyncDialog, setShowCalendarSyncDialog] = useState(false);
-  const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
 
   const { data: medications } = useQuery({
     queryKey: ["medications"],
@@ -94,7 +88,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       notes: "",
       reminder_minutes_before: 60,
       medication_id: "none",
-      sync_with_calendar: false,
     },
   });
 
@@ -122,7 +115,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         notes: appointment.notes || "",
         reminder_minutes_before: appointment.reminder_minutes_before || 60,
         medication_id: appointment.medication_id || "none",
-        sync_with_calendar: false,
       });
       setStep(4); // Skip to review for editing
     } else if (appointment && appointment.appointment_date) {
@@ -131,7 +123,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       setSelectedDate(appointmentDate);
       setSelectedTime("09:00");
       setSelectedReminder(60);
-      setSyncWithCalendar(false);
       form.reset({
         title: "",
         description: "",
@@ -146,7 +137,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         notes: "",
         reminder_minutes_before: 60,
         medication_id: "none",
-        sync_with_calendar: false,
       });
       setStep(1); // Start from date selection (already pre-filled)
     } else {
@@ -155,7 +145,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       setSelectedDate(new Date());
       setSelectedTime("09:00");
       setSelectedReminder(60);
-      setSyncWithCalendar(false);
       form.reset();
     }
   }, [appointment, form, open]);
@@ -193,20 +182,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`);
     } else {
       toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`);
-      
-      // Only show calendar sync for new appointments
-      if (!appointment?.id && insertedAppointment?.id) {
-        setCreatedAppointmentId(insertedAppointment.id);
-        onOpenChange(false);
-        setStep(0);
-        // Show calendar sync dialog after a brief delay
-        setTimeout(() => {
-          setShowCalendarSyncDialog(true);
-        }, 300);
-      } else {
-        onOpenChange(false);
-        setStep(0);
-      }
+      onOpenChange(false);
+      setStep(0);
     }
   };
 
@@ -635,17 +612,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                     className="text-sm"
                   />
                 </div>
-
-                <div className="flex items-center space-x-2 p-3 rounded-lg bg-accent/50">
-                  <Checkbox
-                    id="sync-calendar"
-                    checked={syncWithCalendar}
-                    onCheckedChange={(checked) => setSyncWithCalendar(checked as boolean)}
-                  />
-                  <Label htmlFor="sync-calendar" className="font-medium cursor-pointer text-sm">
-                    Sync with your device Calendar
-                  </Label>
-                </div>
               </div>
             </div>
 
@@ -664,12 +630,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         )}
       </DialogContent>
     </Dialog>
-    
-    <CalendarSyncDialog
-      open={showCalendarSyncDialog}
-      onOpenChange={setShowCalendarSyncDialog}
-      appointmentId={createdAppointmentId || ""}
-    />
     </>
   );
 }
