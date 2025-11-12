@@ -116,7 +116,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         reminder_minutes_before: appointment.reminder_minutes_before || 60,
         medication_id: appointment.medication_id || "none",
       });
-      setStep(4); // Skip to review for editing
+      setStep(5); // Skip to review for editing
     } else if (appointment && appointment.appointment_date) {
       // Creating new appointment with pre-selected date - start from date step
       const appointmentDate = new Date(appointment.appointment_date);
@@ -246,6 +246,17 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     } else if (step === 1) {
       form.setValue("appointment_time", selectedTime);
       
+      // Check if the selected date/time is in the past
+      const now = new Date();
+      const selectedDateTime = new Date(selectedDate);
+      const [hours, minutes] = selectedTime.split(":").map(Number);
+      selectedDateTime.setHours(hours, minutes, 0, 0);
+      
+      if (selectedDateTime < now) {
+        toast.error("Cannot schedule appointments in the past. Please select a future date and time.");
+        return;
+      }
+      
       // Check for conflicts before proceeding
       const conflict = checkAppointmentConflict();
       if (conflict) {
@@ -261,7 +272,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     } else if (step === 2) {
       setStep(3);
     } else if (step === 3) {
-      form.setValue("reminder_minutes_before", selectedReminder);
       setStep(4);
     }
   };
@@ -296,47 +306,36 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
         {/* Intro Screen */}
         {step === 0 && !appointment && (
-          <div className="flex flex-col h-[600px] bg-background">
+          <div className="flex flex-col h-[calc(100vh-8rem)] max-h-[600px] bg-background">
             <DialogHeader className="sr-only">
               <DialogTitle>Add Appointment</DialogTitle>
               <DialogDescription>Track your medical appointments</DialogDescription>
             </DialogHeader>
-            
-            <div className="flex items-center justify-between p-4 border-b">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-                className="h-10 w-10"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div className="mb-8">
-                <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mb-6">
-                  <CalendarIcon className="h-16 w-16 text-primary" />
+            <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 text-center">
+              <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary/10 mb-4">
+                  <CalendarIcon className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
                 </div>
               </div>
 
-              <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
-                <CalendarIcon className="h-8 w-8" />
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3 flex items-center justify-center gap-2">
+                <CalendarIcon className="h-7 w-7 sm:h-8 sm:w-8" />
                 Appointments
               </h2>
 
-              <p className="text-xl font-semibold mb-2">
+              <p className="text-lg sm:text-xl font-semibold mb-2">
                 Track appointments and doctor visits
               </p>
 
-              <p className="text-muted-foreground max-w-md mb-12">
+              <p className="text-sm sm:text-base text-muted-foreground max-w-md mb-8">
                 Keep all your health visits in one place. Get assistance preparing for and summarizing visits.
               </p>
 
               <Button
                 onClick={() => setStep(1)}
                 size="lg"
-                className="w-full max-w-md h-14 text-lg rounded-full"
+                className="w-full max-w-md h-12 sm:h-14 text-base sm:text-lg rounded-full"
               >
                 Add an appointment
               </Button>
@@ -376,6 +375,11 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                       setSelectedDate(date);
                       form.setValue("appointment_date", date);
                     }
+                  }}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return date < today;
                   }}
                   className="rounded-md border pointer-events-auto"
                   modifiers={{
@@ -539,7 +543,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         )}
 
         {/* Step 4: Reminder Selection */}
-        {step === 4 && !appointment && (
+        {step === 4 && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
               <DialogTitle className="sr-only">Add Appointment - Reminder</DialogTitle>
@@ -588,7 +592,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         )}
 
         {/* Step 5: Review & Additional Details */}
-        {(step === 5 || (step === 4 && appointment)) && (
+        {step === 5 && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 border-b shrink-0">
               <DialogTitle className="sr-only">{appointment?.id ? "Edit Appointment" : "Review Appointment"}</DialogTitle>

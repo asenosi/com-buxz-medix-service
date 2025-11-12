@@ -1,9 +1,10 @@
-import { format } from "date-fns";
+import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, User, Pill, FileText, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, User, FileText, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
@@ -36,78 +37,133 @@ interface AppointmentCardProps {
 
 export function AppointmentCard({ appointment }: AppointmentCardProps) {
   const navigate = useNavigate();
-  const isPast = new Date(appointment.appointment_date) < new Date();
+  const [showFullNotes, setShowFullNotes] = useState(false);
+  const appointmentDate = new Date(appointment.appointment_date);
+  const isAppointmentPast = isPast(appointmentDate);
+  
+  // Format relative time
+  const getRelativeTime = () => {
+    if (isToday(appointmentDate)) return "Today";
+    if (isTomorrow(appointmentDate)) return "Tomorrow";
+    if (isAppointmentPast) return formatDistanceToNow(appointmentDate, { addSuffix: true });
+    return `In ${formatDistanceToNow(appointmentDate)}`;
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on action buttons
+    if ((e.target as HTMLElement).closest('button')) return;
+    navigate(`/appointments/${appointment.id}`);
+  };
 
   return (
     <Card 
       className={cn(
-        "transition-all active:scale-[0.98] cursor-pointer hover:shadow-md",
-        isPast && "opacity-75"
+        "relative overflow-hidden transition-all duration-200 active:scale-[0.98] cursor-pointer hover:shadow-md border-border/50",
+        "rounded-2xl"
       )}
-      onClick={() => navigate(`/appointments/${appointment.id}`)}
+      onClick={handleCardClick}
     >
-      <CardContent className="p-4">
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 truncate">
+      {/* Left colored border */}
+      <div 
+        className={cn(
+          "absolute left-0 top-0 bottom-0 w-1",
+          isAppointmentPast ? "bg-muted-foreground/30" : "bg-primary"
+        )} 
+      />
+      
+      <CardContent className="p-4 pl-5">
+        <div className="space-y-2.5">
+          {/* Header: Relative time + Status chips */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 space-y-2">
+              <p className={cn(
+                "text-sm font-medium",
+                isAppointmentPast ? "text-muted-foreground" : "text-primary"
+              )}>
+                {getRelativeTime()}
+              </p>
+              
+              <h3 className="text-lg font-semibold text-foreground leading-tight">
                 {appointment.title}
               </h3>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                <Badge className={cn("text-xs", appointmentTypeColors[appointment.appointment_type])}>
-                  {appointment.appointment_type.replace("_", " ")}
-                </Badge>
-                <Badge className={cn("text-xs", statusColors[appointment.status])}>
-                  {appointment.status}
-                </Badge>
-              </div>
+              
               {appointment.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
+                <p className="text-sm text-muted-foreground line-clamp-1">
                   {appointment.description}
                 </p>
               )}
             </div>
 
-            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-1">
+              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+            </div>
           </div>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="w-4 h-4 shrink-0" />
-              <span className="truncate">
-                {format(new Date(appointment.appointment_date), "MMM d, yyyy")} at{" "}
-                {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
+          {/* Status chips */}
+          <div className="flex flex-wrap gap-2">
+            <Badge 
+              variant="secondary" 
+              className={cn("text-xs font-normal", appointmentTypeColors[appointment.appointment_type])}
+            >
+              {appointment.appointment_type.replace("_", " ")}
+            </Badge>
+            {appointment.status !== "scheduled" && (
+              <Badge 
+                variant="secondary"
+                className={cn("text-xs font-normal", statusColors[appointment.status])}
+              >
+                {appointment.status}
+              </Badge>
+            )}
+          </div>
+
+          {/* Info rows with icons */}
+          <div className="space-y-2 text-sm pt-0.5">
+            {/* Date & Time */}
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Calendar className="w-4 h-4 shrink-0" />
+              <span className="font-medium">
+                {format(appointmentDate, "EEE, MMM d, yyyy")} — {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
               </span>
             </div>
 
-            {appointment.location && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MapPin className="w-4 h-4 shrink-0" />
-                <span className="truncate">{appointment.location}</span>
-              </div>
-            )}
-
+            {/* Doctor */}
             {appointment.doctor_name && (
-              <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="flex items-center gap-3 text-muted-foreground">
                 <User className="w-4 h-4 shrink-0" />
-                <span className="truncate">
+                <span>
                   {appointment.doctor_name}
-                  {appointment.doctor_specialty && ` - ${appointment.doctor_specialty}`}
+                  {appointment.doctor_specialty && (
+                    <span className="text-xs ml-1">({appointment.doctor_specialty})</span>
+                  )}
                 </span>
               </div>
             )}
 
-            {appointment.medications && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Pill className="w-4 h-4 shrink-0" />
-                <span className="truncate">{appointment.medications.name}</span>
+            {/* Location */}
+            {appointment.location && (
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <MapPin className="w-4 h-4 shrink-0" />
+                <span>{appointment.location}</span>
               </div>
             )}
 
+            {/* Notes */}
             {appointment.notes && (
-              <div className="flex items-start gap-2 pt-1 border-t">
+              <div 
+                className="flex items-start gap-3 pt-1.5 border-t border-border/50 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFullNotes(!showFullNotes);
+                }}
+              >
                 <FileText className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
-                <p className="text-muted-foreground line-clamp-2">{appointment.notes}</p>
+                <p className={cn(
+                  "text-muted-foreground text-sm",
+                  !showFullNotes && "line-clamp-1"
+                )}>
+                  {appointment.notes}
+                </p>
               </div>
             )}
           </div>
