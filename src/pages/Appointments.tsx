@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
+import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { useHaptic } from "@/hooks/use-haptic";
 
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
   medications?: { name: string } | null;
@@ -20,6 +22,7 @@ type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
 
 export default function Appointments() {
   const queryClient = useQueryClient();
+  const { triggerHaptic } = useHaptic();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Partial<Appointment> | null>(null);
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -358,6 +361,20 @@ export default function Appointments() {
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         appointment={selectedAppointment}
+      />
+
+      <FloatingActionButton
+        actions={[
+          {
+            label: "Add Appointment",
+            icon: <Plus className="h-6 w-6" />,
+            onClick: () => {
+              triggerHaptic("light");
+              setDialogOpen(true);
+            },
+            color: "bg-primary hover:bg-primary/90",
+          },
+        ]}
       />
     </div>
   );
