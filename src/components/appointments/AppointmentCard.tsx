@@ -38,15 +38,15 @@ interface AppointmentCardProps {
 export function AppointmentCard({ appointment }: AppointmentCardProps) {
   const navigate = useNavigate();
   const [showFullNotes, setShowFullNotes] = useState(false);
-  const appointmentDate = new Date(appointment.appointment_date);
-  const isAppointmentPast = isPast(appointmentDate);
+  const appointmentDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+  const isAppointmentPast = isPast(appointmentDateTime);
   
   // Format relative time
   const getRelativeTime = () => {
-    if (isToday(appointmentDate)) return "Today";
-    if (isTomorrow(appointmentDate)) return "Tomorrow";
-    if (isAppointmentPast) return formatDistanceToNow(appointmentDate, { addSuffix: true });
-    return `In ${formatDistanceToNow(appointmentDate)}`;
+    if (isToday(appointmentDateTime)) return "Today";
+    if (isTomorrow(appointmentDateTime)) return "Tomorrow";
+    if (isAppointmentPast) return formatDistanceToNow(appointmentDateTime, { addSuffix: true });
+    return `In ${formatDistanceToNow(appointmentDateTime)}`;
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -123,7 +123,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
             <div className="flex items-center gap-3 text-muted-foreground">
               <Calendar className="w-4 h-4 shrink-0" />
               <span className="font-medium">
-                {format(appointmentDate, "EEE, MMM d, yyyy")} — {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
+                {format(appointmentDateTime, "EEE, MMM d, yyyy")} — {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
               </span>
             </div>
 
