@@ -60,11 +60,8 @@ export function AppointmentCalendar({
               modifiers={{
                 hasAppointment: appointmentDates,
               }}
-              modifiersStyles={{
-                hasAppointment: {
-                  fontWeight: "bold",
-                  position: "relative",
-                },
+              modifiersClassNames={{
+                hasAppointment: "bg-primary/10 text-primary font-semibold rounded-md border border-primary/30",
               }}
               className="rounded-md border-0"
             />
