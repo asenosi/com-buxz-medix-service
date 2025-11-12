@@ -50,8 +50,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
   const [selectedTime, setSelectedTime] = useState("09:00");
   const [selectedReminder, setSelectedReminder] = useState(60);
   const [syncWithCalendar, setSyncWithCalendar] = useState(false);
-  const [showCalendarSync, setShowCalendarSync] = useState(false);
-  const [createdAppointmentData, setCreatedAppointmentData] = useState<any>(null);
+  const [showCalendarSyncDialog, setShowCalendarSyncDialog] = useState(false);
+  const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
 
   const { data: medications } = useQuery({
     queryKey: ["medications"],
@@ -195,20 +195,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`);
       
       // Only show calendar sync for new appointments
-      if (!appointment?.id) {
-        setCreatedAppointmentData({
-          title: values.title,
-          date: format(values.appointment_date, "yyyy-MM-dd"),
-          time: values.appointment_time,
-          location: values.location,
-          description: values.description,
-          duration_minutes: values.duration_minutes,
-        });
+      if (!appointment?.id && insertedAppointment?.id) {
+        setCreatedAppointmentId(insertedAppointment.id);
         onOpenChange(false);
         setStep(0);
         // Show calendar sync dialog after a brief delay
         setTimeout(() => {
-          setShowCalendarSync(true);
+          setShowCalendarSyncDialog(true);
         }, 300);
       } else {
         onOpenChange(false);
@@ -673,9 +666,9 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     </Dialog>
     
     <CalendarSyncDialog
-      open={showCalendarSync}
-      onOpenChange={setShowCalendarSync}
-      appointmentData={createdAppointmentData}
+      open={showCalendarSyncDialog}
+      onOpenChange={setShowCalendarSyncDialog}
+      appointmentId={createdAppointmentId || ""}
     />
     </>
   );
