@@ -64,6 +64,18 @@ const statusLabels: Record<string, string> = {
   no_show: "No Show",
 };
 
+const formatReminderTime = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes} min before`;
+  } else if (minutes < 1440) {
+    const hours = Math.floor(minutes / 60);
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} before`;
+  } else {
+    const days = Math.floor(minutes / 1440);
+    return `${days} ${days === 1 ? 'day' : 'days'} before`;
+  }
+};
+
 export default function AppointmentDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -277,7 +289,7 @@ export default function AppointmentDetails() {
                   <div>
                     <p className="text-xs text-muted-foreground">Reminder</p>
                     <p className="text-sm font-medium">
-                      {appointment.reminder_minutes_before} min before
+                      {formatReminderTime(appointment.reminder_minutes_before)}
                     </p>
                   </div>
                 </div>
