@@ -54,8 +54,8 @@ export function AppointmentCalendar({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
       <div className="lg:col-span-2">
-        <Card>
-          <CardContent className="p-3 sm:p-6">
+        <Card className="shadow-sm border-border/50">
+          <CardContent className="p-4 sm:p-6">
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -64,14 +64,14 @@ export function AppointmentCalendar({
                 hasAppointment: appointmentDates,
               }}
               modifiersClassNames={{
-                hasAppointment: "bg-primary/10 text-primary font-semibold rounded-md border border-primary/30",
+                hasAppointment: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-success after:rounded-full",
               }}
               className="rounded-md border-0"
             />
-            <div className="mt-4 pt-4 border-t">
+            <div className="mt-4 pt-4 border-t border-border/50">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-success" />
                   <span>Has appointments</span>
                 </div>
               </div>
