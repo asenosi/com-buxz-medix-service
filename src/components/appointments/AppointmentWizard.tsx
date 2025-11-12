@@ -247,19 +247,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               <DialogTitle>Add Appointment</DialogTitle>
               <DialogDescription>Track your medical appointments</DialogDescription>
             </DialogHeader>
-            
-            <div className="flex items-center justify-between p-4 border-b">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-                className="h-10 w-10"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
               <div className="mx-auto max-w-md w-full border-2 border-dashed border-border rounded-2xl p-8">
                 <div className="mb-8">
                   <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mb-6">
