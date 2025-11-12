@@ -46,6 +46,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState("09:00");
   const [selectedReminder, setSelectedReminder] = useState(60);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: medications } = useQuery({
     queryKey: ["medications"],
@@ -150,40 +151,45 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
   }, [appointment, form, open]);
 
   const onSubmit = async (values: z.infer<typeof appointmentSchema>) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("You must be logged in");
-      return;
-    }
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in");
+        return;
+      }
 
-    const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] = {
-      title: values.title,
-      appointment_date: format(values.appointment_date, "yyyy-MM-dd"),
-      appointment_time: values.appointment_time,
-      appointment_type: values.appointment_type as Database["public"]["Enums"]["appointment_type"],
-      status: values.status as Database["public"]["Enums"]["appointment_status"],
-      user_id: user.id,
-      description: values.description,
-      duration_minutes: values.duration_minutes,
-      location: values.location,
-      doctor_name: values.doctor_name,
-      doctor_specialty: values.doctor_specialty,
-      notes: values.notes,
-      reminder_minutes_before: values.reminder_minutes_before,
-      medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
-    };
+      const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] = {
+        title: values.title,
+        appointment_date: format(values.appointment_date, "yyyy-MM-dd"),
+        appointment_time: values.appointment_time,
+        appointment_type: values.appointment_type as Database["public"]["Enums"]["appointment_type"],
+        status: values.status as Database["public"]["Enums"]["appointment_status"],
+        user_id: user.id,
+        description: values.description,
+        duration_minutes: values.duration_minutes,
+        location: values.location,
+        doctor_name: values.doctor_name,
+        doctor_specialty: values.doctor_specialty,
+        notes: values.notes,
+        reminder_minutes_before: values.reminder_minutes_before,
+        medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
+      };
 
-    const { data: insertedAppointment, error } = appointment?.id
-      ? await supabase.from("appointments").update(appointmentData).eq("id", appointment.id).select().single()
-      : await supabase.from("appointments").insert([appointmentData]).select().single();
+      const { data: insertedAppointment, error } = appointment?.id
+        ? await supabase.from("appointments").update(appointmentData).eq("id", appointment.id).select().single()
+        : await supabase.from("appointments").insert([appointmentData]).select().single();
 
-    if (error) {
-      console.error("Appointment error:", error);
-      toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`);
-    } else {
-      toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`);
-      onOpenChange(false);
-      setStep(0);
+      if (error) {
+        console.error("Appointment error:", error);
+        toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`);
+      } else {
+        toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`);
+        onOpenChange(false);
+        setStep(0);
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -428,7 +434,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                 {getRelativeDate(selectedDate)}
               </p>
 
-              <Button onClick={handleNext} size="lg" className="w-full h-14 text-lg rounded-full shrink-0">
+              <Button onClick={handleNext} size="lg" className="w-full h-11 text-base rounded-full shrink-0">
                 Next
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
@@ -463,7 +469,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                 />
               </div>
 
-              <Button onClick={handleNext} size="lg" className="w-full h-14 text-lg rounded-full shrink-0">
+              <Button onClick={handleNext} size="lg" className="w-full h-11 text-base rounded-full shrink-0">
                 Next
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
@@ -551,7 +557,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                 onClick={handleNext}
                 disabled={!form.watch("title")}
                 size="lg"
-                className="w-full h-14 text-lg rounded-full"
+                className="w-full h-11 text-base rounded-full"
               >
                 Next
                 <ChevronRight className="ml-2 h-5 w-5" />
@@ -600,7 +606,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                   setStep(5);
                 }}
                 size="lg"
-                className="w-full h-14 text-lg rounded-full mt-4 shrink-0"
+                className="w-full h-11 text-base rounded-full mt-4 shrink-0"
               >
                 Next
                 <ChevronRight className="ml-2 h-5 w-5" />
@@ -703,12 +709,12 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
 
             <Button
               onClick={() => form.handleSubmit(onSubmit)()}
-              disabled={!form.watch("title")}
+              disabled={!form.watch("title") || isSaving}
               size="lg"
-              className="w-full h-14 text-lg rounded-full mx-6 mb-6 mt-4 shrink-0"
+              className="w-full h-11 text-base rounded-full mx-6 mb-6 mt-4 shrink-0"
             >
-              Save
-              <ChevronRight className="ml-2 h-5 w-5" />
+              {isSaving ? "Saving..." : "Save"}
+              {!isSaving && <ChevronRight className="ml-2 h-5 w-5" />}
             </Button>
           </div>
         )}
