@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarIcon, List, Plus, Filter } from "lucide-react";
-import { AppointmentDialog } from "@/components/appointments/AppointmentDialog";
+import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
 import { AppointmentCard } from "@/components/appointments/AppointmentCard";
 import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
@@ -179,7 +179,7 @@ export default function Appointments() {
         </TabsContent>
       </Tabs>
 
-      <AppointmentDialog
+      <AppointmentWizard
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         appointment={selectedAppointment}

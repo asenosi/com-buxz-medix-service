@@ -1,0 +1,562 @@
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { CalendarIcon, Clock, AlarmClock, FileText, MapPin, User, X, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+
+type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
+
+const appointmentSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  appointment_date: z.date({ required_error: "Date is required" }),
+  appointment_time: z.string().min(1, "Time is required"),
+  duration_minutes: z.coerce.number().min(5).default(30),
+  location: z.string().optional(),
+  doctor_name: z.string().optional(),
+  doctor_specialty: z.string().optional(),
+  appointment_type: z.string(),
+  status: z.string(),
+  notes: z.string().optional(),
+  reminder_minutes_before: z.coerce.number().min(0).default(60),
+  medication_id: z.string().optional(),
+  sync_with_calendar: z.boolean().default(false),
+});
+
+interface AppointmentWizardProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  appointment?: Partial<Appointment>;
+}
+
+export function AppointmentWizard({ open, onOpenChange, appointment }: AppointmentWizardProps) {
+  const [step, setStep] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedTime, setSelectedTime] = useState("09:00");
+  const [selectedReminder, setSelectedReminder] = useState(60);
+  const [syncWithCalendar, setSyncWithCalendar] = useState(false);
+
+  const { data: medications } = useQuery({
+    queryKey: ["medications"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medications")
+        .select("id, name")
+        .eq("active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const form = useForm<z.infer<typeof appointmentSchema>>({
+    resolver: zodResolver(appointmentSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      appointment_date: new Date(),
+      appointment_time: "09:00",
+      duration_minutes: 30,
+      location: "",
+      doctor_name: "",
+      doctor_specialty: "",
+      appointment_type: "checkup",
+      status: "scheduled",
+      notes: "",
+      reminder_minutes_before: 60,
+      medication_id: "none",
+      sync_with_calendar: false,
+    },
+  });
+
+  useEffect(() => {
+    if (appointment) {
+      const appointmentDate = appointment.appointment_date
+        ? new Date(appointment.appointment_date)
+        : new Date();
+      setSelectedDate(appointmentDate);
+      setSelectedTime(appointment.appointment_time || "09:00");
+      setSelectedReminder(appointment.reminder_minutes_before || 60);
+      
+      form.reset({
+        title: appointment.title || "",
+        description: appointment.description || "",
+        appointment_date: appointmentDate,
+        appointment_time: appointment.appointment_time || "09:00",
+        duration_minutes: appointment.duration_minutes || 30,
+        location: appointment.location || "",
+        doctor_name: appointment.doctor_name || "",
+        doctor_specialty: appointment.doctor_specialty || "",
+        appointment_type: appointment.appointment_type || "checkup",
+        status: appointment.status || "scheduled",
+        notes: appointment.notes || "",
+        reminder_minutes_before: appointment.reminder_minutes_before || 60,
+        medication_id: appointment.medication_id || "none",
+        sync_with_calendar: false,
+      });
+      setStep(4); // Skip to review for editing
+    } else {
+      setStep(0);
+      setSelectedDate(new Date());
+      setSelectedTime("09:00");
+      setSelectedReminder(60);
+      setSyncWithCalendar(false);
+      form.reset();
+    }
+  }, [appointment, form, open]);
+
+  const onSubmit = async (values: z.infer<typeof appointmentSchema>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("You must be logged in");
+      return;
+    }
+
+    const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] = {
+      title: values.title,
+      appointment_date: format(values.appointment_date, "yyyy-MM-dd"),
+      appointment_time: values.appointment_time,
+      appointment_type: values.appointment_type as Database["public"]["Enums"]["appointment_type"],
+      status: values.status as Database["public"]["Enums"]["appointment_status"],
+      user_id: user.id,
+      description: values.description,
+      duration_minutes: values.duration_minutes,
+      location: values.location,
+      doctor_name: values.doctor_name,
+      doctor_specialty: values.doctor_specialty,
+      notes: values.notes,
+      reminder_minutes_before: values.reminder_minutes_before,
+      medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
+    };
+
+    const { error } = appointment
+      ? await supabase.from("appointments").update(appointmentData).eq("id", appointment.id)
+      : await supabase.from("appointments").insert([appointmentData]);
+
+    if (error) {
+      toast.error(`Failed to ${appointment ? "update" : "create"} appointment`);
+    } else {
+      toast.success(`Appointment ${appointment ? "updated" : "created"} successfully`);
+      if (syncWithCalendar) {
+        toast.info("Calendar sync requested - please check your device calendar app");
+      }
+      onOpenChange(false);
+      setStep(0);
+    }
+  };
+
+  const handleNext = () => {
+    if (step === 0) {
+      form.setValue("appointment_date", selectedDate);
+      setStep(1);
+    } else if (step === 1) {
+      form.setValue("appointment_time", selectedTime);
+      setStep(2);
+    } else if (step === 2) {
+      setStep(3);
+    } else if (step === 3) {
+      form.setValue("reminder_minutes_before", selectedReminder);
+      setStep(4);
+    }
+  };
+
+  const reminderOptions = [
+    { value: 30, label: "30 minutes before" },
+    { value: 60, label: "1 hour before" },
+    { value: 480, label: "8 hours before" },
+    { value: 720, label: "12 hours before" },
+    { value: 1440, label: "1 day before" },
+    { value: 10080, label: "1 week before" },
+    { value: 0, label: "No need for reminder" },
+  ];
+
+  const getRelativeDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(date);
+    selected.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    if (diffDays > 1) return `in ${diffDays} days`;
+    return `${Math.abs(diffDays)} days ago`;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
+        {/* Intro Screen */}
+        {step === 0 && !appointment && (
+          <div className="flex flex-col h-[600px] bg-background">
+            <div className="flex items-center justify-between p-4 border-b">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onOpenChange(false)}
+                className="h-10 w-10"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <div className="mb-8">
+                <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mb-6">
+                  <CalendarIcon className="h-16 w-16 text-primary" />
+                </div>
+              </div>
+
+              <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
+                <CalendarIcon className="h-8 w-8" />
+                Appointments
+              </h2>
+
+              <p className="text-xl font-semibold mb-2">
+                Track appointments and doctor visits
+              </p>
+
+              <p className="text-muted-foreground max-w-md mb-12">
+                Keep all your health visits in one place. Get assistance preparing for and summarizing visits.
+              </p>
+
+              <Button
+                onClick={() => setStep(1)}
+                size="lg"
+                className="w-full max-w-md h-14 text-lg rounded-full"
+              >
+                Add an appointment
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 1: Date Selection */}
+        {step === 1 && (
+          <div className="flex flex-col min-h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                  <CalendarIcon className="h-6 w-6 text-primary" />
+                </div>
+                <DialogTitle className="text-2xl">Add appointment</DialogTitle>
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 flex flex-col px-6 pb-6">
+              <h3 className="text-xl font-semibold mb-6">When is your appointment?</h3>
+              
+              <div className="flex-1 flex items-center justify-center">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  className="rounded-md border scale-110"
+                  classNames={{
+                    months: "space-y-4",
+                    month: "space-y-4",
+                    caption: "flex justify-center pt-1 relative items-center",
+                    caption_label: "text-lg font-semibold",
+                    nav: "space-x-1 flex items-center",
+                    nav_button: "h-10 w-10",
+                    table: "w-full border-collapse space-y-1",
+                    head_row: "flex",
+                    head_cell: "text-muted-foreground rounded-md w-12 font-normal text-base",
+                    row: "flex w-full mt-2",
+                    cell: "h-12 w-12 text-center text-base p-0 relative",
+                    day: "h-12 w-12 p-0 font-normal",
+                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                  }}
+                />
+              </div>
+
+              <p className="text-center text-muted-foreground mb-6">
+                {getRelativeDate(selectedDate)}
+              </p>
+
+              <Button onClick={handleNext} size="lg" className="w-full h-14 text-lg rounded-full">
+                Next
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Time Selection */}
+        {step === 2 && (
+          <div className="flex flex-col min-h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                  <Clock className="h-6 w-6 text-primary" />
+                </div>
+                <DialogTitle className="text-2xl">Add appointment</DialogTitle>
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 flex flex-col px-6 pb-6">
+              <h3 className="text-xl font-semibold mb-6">What time is your appointment?</h3>
+              
+              <div className="flex-1 flex items-center justify-center">
+                <Input
+                  type="time"
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="text-6xl h-32 text-center font-light border-none shadow-none focus-visible:ring-0"
+                  style={{ fontSize: '4rem' }}
+                />
+              </div>
+
+              <Button onClick={handleNext} size="lg" className="w-full h-14 text-lg rounded-full">
+                Next
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Appointment Type */}
+        {step === 3 && (
+          <div className="flex flex-col min-h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <DialogTitle className="text-2xl">Add appointment</DialogTitle>
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 flex flex-col px-6 pb-6 space-y-4">
+              <div>
+                <Label>Appointment Title *</Label>
+                <Input
+                  placeholder="e.g., Annual checkup"
+                  value={form.watch("title")}
+                  onChange={(e) => form.setValue("title", e.target.value)}
+                  className="h-12 text-lg"
+                />
+              </div>
+
+              <div>
+                <Label>Appointment Type</Label>
+                <Select
+                  value={form.watch("appointment_type")}
+                  onValueChange={(value) => form.setValue("appointment_type", value)}
+                >
+                  <SelectTrigger className="h-12 text-base">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="checkup">Checkup</SelectItem>
+                    <SelectItem value="follow_up">Follow Up</SelectItem>
+                    <SelectItem value="lab_test">Lab Test</SelectItem>
+                    <SelectItem value="imaging">Imaging</SelectItem>
+                    <SelectItem value="procedure">Procedure</SelectItem>
+                    <SelectItem value="consultation">Consultation</SelectItem>
+                    <SelectItem value="vaccination">Vaccination</SelectItem>
+                    <SelectItem value="therapy">Therapy</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1" />
+
+              <Button
+                onClick={handleNext}
+                disabled={!form.watch("title")}
+                size="lg"
+                className="w-full h-14 text-lg rounded-full"
+              >
+                Next
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Reminder Selection */}
+        {step === 4 && !appointment && (
+          <div className="flex flex-col min-h-[600px]">
+            <DialogHeader className="p-6 pb-4 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                  <AlarmClock className="h-6 w-6 text-primary" />
+                </div>
+                <DialogTitle className="text-2xl">Add appointment</DialogTitle>
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 flex flex-col px-6 pb-6">
+              <h3 className="text-xl font-semibold mb-6">When would you like to be reminded?</h3>
+              
+              <div className="flex-1 space-y-2 overflow-y-auto">
+                {reminderOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedReminder(option.value)}
+                    className={cn(
+                      "w-full p-4 text-left rounded-lg border transition-colors text-lg",
+                      selectedReminder === option.value
+                        ? "bg-primary/10 border-primary"
+                        : "hover:bg-accent"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                onClick={() => {
+                  form.setValue("reminder_minutes_before", selectedReminder);
+                  setStep(5);
+                }}
+                size="lg"
+                className="w-full h-14 text-lg rounded-full mt-4"
+              >
+                Next
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Review & Additional Details */}
+        {(step === 5 || (step === 4 && appointment)) && (
+          <div className="flex flex-col max-h-[90vh]">
+            <DialogHeader className="p-6 pb-4 space-y-4 border-b">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                  <CalendarIcon className="h-6 w-6 text-primary" />
+                </div>
+                <DialogTitle className="text-2xl">
+                  {appointment ? "Edit Appointment" : "Review your appointment details"}
+                </DialogTitle>
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {/* Main Details */}
+              <div className="space-y-3 pb-4 border-b">
+                <button
+                  onClick={() => !appointment && setStep(3)}
+                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
+                >
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <span className="flex-1 font-medium">{form.watch("title") || "Appointment"}</span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+
+                <button
+                  onClick={() => !appointment && setStep(1)}
+                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
+                >
+                  <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <span className="font-medium">
+                      {format(selectedDate, "EEEE, d MMM")}
+                    </span>
+                    <span className="ml-4 font-medium">{selectedTime}</span>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+
+                <button
+                  onClick={() => !appointment && setStep(4)}
+                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
+                >
+                  <AlarmClock className="h-5 w-5 text-muted-foreground" />
+                  <span className="flex-1 font-medium">
+                    {reminderOptions.find(opt => opt.value === selectedReminder)?.label}
+                  </span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Additional Details */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-primary">Add additional details:</h4>
+
+                <div>
+                  <Label className="flex items-center gap-2 mb-2">
+                    <User className="h-4 w-4" />
+                    Doctor Name
+                  </Label>
+                  <Input
+                    placeholder="Dr. Smith"
+                    value={form.watch("doctor_name")}
+                    onChange={(e) => form.setValue("doctor_name", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4" />
+                    Location
+                  </Label>
+                  <Input
+                    placeholder="Medical Center"
+                    value={form.watch("location")}
+                    onChange={(e) => form.setValue("location", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label className="flex items-center gap-2 mb-2">
+                    <FileText className="h-4 w-4" />
+                    Notes
+                  </Label>
+                  <Textarea
+                    placeholder="Add any notes..."
+                    value={form.watch("notes")}
+                    onChange={(e) => form.setValue("notes", e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2 p-4 rounded-lg bg-accent/50">
+                  <Checkbox
+                    id="sync-calendar"
+                    checked={syncWithCalendar}
+                    onCheckedChange={(checked) => setSyncWithCalendar(checked as boolean)}
+                  />
+                  <Label htmlFor="sync-calendar" className="font-medium cursor-pointer">
+                    Sync with your device Calendar
+                  </Label>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t">
+              <Button
+                onClick={() => form.handleSubmit(onSubmit)()}
+                size="lg"
+                className="w-full h-14 text-lg rounded-full"
+              >
+                Save
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
