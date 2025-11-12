@@ -1,24 +1,9 @@
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Clock,
-  MapPin,
-  User,
-  Pill,
-  MoreVertical,
-  Edit,
-  Trash,
-  FileText,
-} from "lucide-react";
+import { Clock, MapPin, User, Pill, FileText, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const appointmentTypeColors: Record<string, string> = {
   checkup: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -42,15 +27,20 @@ const statusColors: Record<string, string> = {
 
 interface AppointmentCardProps {
   appointment: any;
-  onEdit: (appointment: any) => void;
-  onDelete: (id: string) => void;
 }
 
-export function AppointmentCard({ appointment, onEdit, onDelete }: AppointmentCardProps) {
+export function AppointmentCard({ appointment }: AppointmentCardProps) {
+  const navigate = useNavigate();
   const isPast = new Date(appointment.appointment_date) < new Date();
 
   return (
-    <Card className={cn("transition-all active:scale-[0.98]", isPast && "opacity-75")}>
+    <Card 
+      className={cn(
+        "transition-all active:scale-[0.98] cursor-pointer hover:shadow-md",
+        isPast && "opacity-75"
+      )}
+      onClick={() => navigate(`/appointments/${appointment.id}`)}
+    >
       <CardContent className="p-4">
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-2">
@@ -73,26 +63,7 @@ export function AppointmentCard({ appointment, onEdit, onDelete }: AppointmentCa
               )}
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(appointment)}>
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onDelete(appointment.id)}
-                  className="text-destructive"
-                >
-                  <Trash className="w-4 h-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
           </div>
 
           <div className="space-y-2 text-sm">

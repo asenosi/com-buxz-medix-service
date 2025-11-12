@@ -9,7 +9,6 @@ import { AppointmentCard } from "@/components/appointments/AppointmentCard";
 import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
 import { format } from "date-fns";
-import { toast } from "sonner";
 
 export default function Appointments() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,16 +53,6 @@ export default function Appointments() {
   const handleEdit = (appointment: any) => {
     setSelectedAppointment(appointment);
     setDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("appointments").delete().eq("id", id);
-    if (error) {
-      toast.error("Failed to delete appointment");
-    } else {
-      toast.success("Appointment deleted");
-      refetch();
-    }
   };
 
   const handleDialogClose = () => {
@@ -150,8 +139,6 @@ export default function Appointments() {
                       <AppointmentCard
                         key={appointment.id}
                         appointment={appointment}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
                       />
                     ))}
                   </div>
@@ -168,8 +155,6 @@ export default function Appointments() {
                       <AppointmentCard
                         key={appointment.id}
                         appointment={appointment}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
                       />
                     ))}
                   </div>
@@ -182,7 +167,10 @@ export default function Appointments() {
         <TabsContent value="calendar">
           <AppointmentCalendar
             appointments={appointments || []}
-            onAppointmentClick={handleEdit}
+            onAppointmentClick={(appointment) => {
+              setSelectedAppointment(appointment);
+              setDialogOpen(true);
+            }}
             onDateClick={(date) => {
               setSelectedAppointment({ appointment_date: format(date, "yyyy-MM-dd") });
               setDialogOpen(true);
