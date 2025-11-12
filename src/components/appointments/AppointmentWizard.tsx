@@ -305,7 +305,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
             </DialogHeader>
 
             <div className="flex-1 flex flex-col px-6 pb-6 min-h-0">
-              <h3 className="text-xl font-semibold mb-4">When is your appointment?</h3>
+              <div className="mb-4">
+                <h3 className="text-xl font-semibold mb-2">When is your appointment?</h3>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  Dates with existing appointments
+                </p>
+              </div>
               
               <div className="flex-1 flex items-center justify-center overflow-auto">
                 <Calendar
