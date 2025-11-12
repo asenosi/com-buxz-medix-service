@@ -317,7 +317,12 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setSelectedDate(date);
+                      form.setValue("appointment_date", date);
+                    }
+                  }}
                   className="rounded-md border pointer-events-auto"
                   modifiers={{
                     hasAppointment: appointments?.map(apt => new Date(apt.appointment_date)) || [],
