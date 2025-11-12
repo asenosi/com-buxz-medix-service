@@ -16,7 +16,9 @@ import {
   FileText,
   Edit,
   Trash2,
-  Bell
+  Bell,
+  X,
+  CalendarClock
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -82,6 +84,7 @@ export default function AppointmentDetails() {
   const queryClient = useQueryClient();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   const { data: appointment, isLoading, refetch } = useQuery({
     queryKey: ["appointment", id],
@@ -141,6 +144,25 @@ export default function AppointmentDetails() {
   const handleEditClose = () => {
     setEditDialogOpen(false);
     refetch();
+  };
+
+  const handleCancel = async () => {
+    const { error } = await supabase
+      .from("appointments")
+      .update({ status: "cancelled" })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to cancel appointment");
+    } else {
+      toast.success("Appointment cancelled");
+      setCancelDialogOpen(false);
+      refetch();
+    }
+  };
+
+  const handleReschedule = () => {
+    setEditDialogOpen(true);
   };
 
   if (isLoading) {
@@ -322,6 +344,27 @@ export default function AppointmentDetails() {
         </CardContent>
       </Card>
 
+      {/* Action Buttons */}
+      {appointment.status === "scheduled" && (
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            onClick={handleReschedule}
+            variant="outline"
+            className="w-full"
+          >
+            <CalendarClock className="w-4 h-4 mr-2" />
+            Reschedule
+          </Button>
+          <Button
+            onClick={() => setCancelDialogOpen(true)}
+            variant="outline"
+            className="w-full text-destructive hover:text-destructive"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Cancel
+          </Button>
+        </div>
+      )}
 
       <AppointmentWizard
         open={editDialogOpen}
@@ -341,6 +384,23 @@ export default function AppointmentDetails() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Appointment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark the appointment as cancelled. You can still view it in your past appointments.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Appointment</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancel}>
+              Cancel Appointment
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
