@@ -102,7 +102,7 @@ export default function AppHeader() {
   const badgeCls = "ml-auto inline-flex items-center justify-center min-w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] px-1.5 leading-none";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-[100] w-full border-b bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-14 max-w-screen-sm items-center gap-2 px-3 lg:max-w-screen-2xl lg:px-6">
         {/* Mobile: hamburger opens overlay sheet; hidden on large screens */}
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
