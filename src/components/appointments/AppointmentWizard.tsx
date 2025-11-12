@@ -84,7 +84,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
   });
 
   useEffect(() => {
-    if (appointment) {
+    if (appointment && appointment.id) {
+      // Editing existing appointment - pre-fill and go to review
       const appointmentDate = appointment.appointment_date
         ? new Date(appointment.appointment_date)
         : new Date();
@@ -109,7 +110,32 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         sync_with_calendar: false,
       });
       setStep(4); // Skip to review for editing
+    } else if (appointment && appointment.appointment_date) {
+      // Creating new appointment with pre-selected date - start from date step
+      const appointmentDate = new Date(appointment.appointment_date);
+      setSelectedDate(appointmentDate);
+      setSelectedTime("09:00");
+      setSelectedReminder(60);
+      setSyncWithCalendar(false);
+      form.reset({
+        title: "",
+        description: "",
+        appointment_date: appointmentDate,
+        appointment_time: "09:00",
+        duration_minutes: 30,
+        location: "",
+        doctor_name: "",
+        doctor_specialty: "",
+        appointment_type: "checkup",
+        status: "scheduled",
+        notes: "",
+        reminder_minutes_before: 60,
+        medication_id: "none",
+        sync_with_calendar: false,
+      });
+      setStep(1); // Start from date selection (already pre-filled)
     } else {
+      // Creating new appointment from scratch
       setStep(0);
       setSelectedDate(new Date());
       setSelectedTime("09:00");
