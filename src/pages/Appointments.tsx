@@ -105,13 +105,17 @@ export default function Appointments() {
     );
   });
 
-  const upcomingAppointments = filteredAppointments?.filter(
-    (apt) => apt.status === "scheduled" && new Date(apt.appointment_date) >= new Date()
-  );
+  const upcomingAppointments = filteredAppointments?.filter((apt) => {
+    if (apt.status !== "scheduled") return false;
+    const appointmentDateTime = new Date(`${apt.appointment_date}T${apt.appointment_time}`);
+    return appointmentDateTime > new Date();
+  });
 
-  const pastAppointments = filteredAppointments?.filter(
-    (apt) => apt.status !== "scheduled" || new Date(apt.appointment_date) < new Date()
-  );
+  const pastAppointments = filteredAppointments?.filter((apt) => {
+    if (apt.status !== "scheduled") return true;
+    const appointmentDateTime = new Date(`${apt.appointment_date}T${apt.appointment_time}`);
+    return appointmentDateTime <= new Date();
+  });
 
   // Count active filters
   const activeFilterCount = [
