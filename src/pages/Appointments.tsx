@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar as CalendarIcon, List, Plus, Filter, Search, X, Grid } from "lucide-react";
+import { Calendar as CalendarIcon, List, Plus, Filter, Search, X, CalendarCheck } from "lucide-react";
 import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
 import { AppointmentCard } from "@/components/appointments/AppointmentCard";
 import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -139,15 +140,8 @@ export default function Appointments() {
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Appointments</h1>
-          <p className="text-sm text-muted-foreground">Manage your medical appointments</p>
-        </div>
-        <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
-          <Plus className="w-5 h-5 mr-2" />
-          Add Appointment
-        </Button>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Appointments</h1>
       </div>
 
       {/* Search and Filters */}
@@ -156,7 +150,7 @@ export default function Appointments() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search appointments..."
+              placeholder="Search doctors, appointments..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-11"
@@ -164,11 +158,11 @@ export default function Appointments() {
           </div>
           <Button
             variant="outline"
-            className="relative h-11 px-4"
+            size="icon"
+            className="relative h-11 w-11 shrink-0"
             onClick={() => setShowFilters(!showFilters)}
           >
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
+            <Filter className="w-4 h-4" />
             {activeFilterCount > 0 && (
               <Badge 
                 variant="destructive" 
@@ -270,29 +264,42 @@ export default function Appointments() {
               Loading appointments...
             </div>
           ) : !appointments?.length ? (
-            <Card className="text-center py-12 sm:py-16 animate-fade-in relative overflow-visible border-2 border-dashed border-muted-foreground/30">
-              <CardContent className="pb-32 sm:pb-40">
-                <CalendarIcon className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
-                <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Appointments Yet</h2>
-                <p className="text-base sm:text-lg text-muted-foreground px-4 max-w-md mx-auto">
-                  Start organizing your healthcare by adding your first appointment. Never miss a doctor's visit again.
-                </p>
+            <Card className="text-center py-16 sm:py-20 animate-fade-in border-none shadow-none bg-background">
+              <CardContent className="space-y-6">
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/10">
+                  <CalendarCheck className="w-12 h-12 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground">No Appointments Yet</h2>
+                  <p className="text-sm sm:text-base text-muted-foreground px-4 max-w-md mx-auto leading-relaxed">
+                    Schedule your first appointment and take control of your healthcare journey. We'll remind you so you never miss a visit.
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => setDialogOpen(true)}
+                  size="lg"
+                  className="mt-4"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Schedule Your First Visit
+                </Button>
               </CardContent>
             </Card>
           ) : (
             <>
-              <div className="flex gap-2">
+              {/* Segmented Control */}
+              <div className="inline-flex w-full p-1 bg-muted rounded-lg">
                 <Button
-                  variant={appointmentView === "upcoming" ? "default" : "outline"}
+                  variant={appointmentView === "upcoming" ? "default" : "ghost"}
                   onClick={() => setAppointmentView("upcoming")}
-                  className="flex-1 h-11"
+                  className="flex-1 h-9 rounded-md transition-all"
                 >
                   Upcoming ({upcomingAppointments?.length || 0})
                 </Button>
                 <Button
-                  variant={appointmentView === "past" ? "default" : "outline"}
+                  variant={appointmentView === "past" ? "default" : "ghost"}
                   onClick={() => setAppointmentView("past")}
-                  className="flex-1 h-11"
+                  className="flex-1 h-9 rounded-md transition-all"
                 >
                   Past ({pastAppointments?.length || 0})
                 </Button>
@@ -358,6 +365,18 @@ export default function Appointments() {
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         appointment={selectedAppointment}
+      />
+
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        actions={[
+          {
+            label: "Add Appointment",
+            icon: <Plus className="h-6 w-6" />,
+            onClick: () => setDialogOpen(true),
+            color: "bg-primary hover:bg-primary/90",
+          },
+        ]}
       />
     </div>
   );
