@@ -41,7 +41,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
   return (
     <Card 
       className={cn(
-        "transition-all active:scale-[0.98] cursor-pointer hover:shadow-md",
+        "transition-all active:scale-[0.98] cursor-pointer hover:shadow-md border-dashed",
         isPast && "opacity-75"
       )}
       onClick={() => navigate(`/appointments/${appointment.id}`)}
