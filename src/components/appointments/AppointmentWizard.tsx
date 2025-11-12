@@ -63,6 +63,18 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     },
   });
 
+  const { data: appointments } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("appointment_date")
+        .order("appointment_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
@@ -300,7 +312,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md border"
+                  className="rounded-md border pointer-events-auto"
+                  modifiers={{
+                    hasAppointment: appointments?.map(apt => new Date(apt.appointment_date)) || [],
+                  }}
+                  modifiersClassNames={{
+                    hasAppointment: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary",
+                  }}
                   classNames={{
                     months: "space-y-4",
                     month: "space-y-4",
