@@ -260,32 +260,34 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div className="mb-8">
-                <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mb-6">
-                  <CalendarIcon className="h-16 w-16 text-primary" />
+              <div className="mx-auto max-w-md w-full border-2 border-dashed border-border rounded-2xl p-8">
+                <div className="mb-8">
+                  <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-primary/10 mb-6">
+                    <CalendarIcon className="h-16 w-16 text-primary" />
+                  </div>
                 </div>
+
+                <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2">
+                  <CalendarIcon className="h-8 w-8" />
+                  Appointments
+                </h2>
+
+                <p className="text-xl font-semibold mb-2">
+                  Track appointments and doctor visits
+                </p>
+
+                <p className="text-muted-foreground max-w-md mb-12">
+                  Keep all your health visits in one place. Get assistance preparing for and summarizing visits.
+                </p>
+
+                <Button
+                  onClick={() => setStep(1)}
+                  size="lg"
+                  className="w-full h-14 text-lg rounded-full"
+                >
+                  Add an appointment
+                </Button>
               </div>
-
-              <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
-                <CalendarIcon className="h-8 w-8" />
-                Appointments
-              </h2>
-
-              <p className="text-xl font-semibold mb-2">
-                Track appointments and doctor visits
-              </p>
-
-              <p className="text-muted-foreground max-w-md mb-12">
-                Keep all your health visits in one place. Get assistance preparing for and summarizing visits.
-              </p>
-
-              <Button
-                onClick={() => setStep(1)}
-                size="lg"
-                className="w-full max-w-md h-14 text-lg rounded-full"
-              >
-                Add an appointment
-              </Button>
             </div>
           </div>
         )}
