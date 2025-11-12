@@ -685,17 +685,15 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               </div>
             </div>
 
-            <div className="p-6 border-t shrink-0">
-              <Button
-                onClick={() => form.handleSubmit(onSubmit)()}
-                disabled={!form.watch("title")}
-                size="lg"
-                className="w-full h-14 text-lg rounded-full"
-              >
-                Save
-                <ChevronRight className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
+            <Button
+              onClick={() => form.handleSubmit(onSubmit)()}
+              disabled={!form.watch("title")}
+              size="lg"
+              className="w-full h-14 text-lg rounded-full mx-6 mb-6 mt-4 shrink-0"
+            >
+              Save
+              <ChevronRight className="ml-2 h-5 w-5" />
+            </Button>
           </div>
         )}
       </DialogContent>
