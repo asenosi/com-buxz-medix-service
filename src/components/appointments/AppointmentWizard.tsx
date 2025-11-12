@@ -521,58 +521,144 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
-              {/* Main Details */}
-              <div className="space-y-2 pb-4 border-b">
-                <button
-                  onClick={() => !appointment && setStep(3)}
-                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
-                >
-                  <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <span className="flex-1 font-medium text-sm">{form.watch("title") || "Appointment"}</span>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                </button>
+              {/* Main Details - All Editable */}
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5">Appointment Title *</Label>
+                  <Input
+                    placeholder="e.g., Annual checkup"
+                    value={form.watch("title")}
+                    onChange={(e) => form.setValue("title", e.target.value)}
+                    className="h-11"
+                  />
+                </div>
 
-                <button
-                  onClick={() => !appointment && setStep(1)}
-                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
-                >
-                  <CalendarIcon className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <div className="flex-1">
-                    <span className="font-medium text-sm">
-                      {format(selectedDate, "EEE, d MMM")}
-                    </span>
-                    <span className="ml-3 font-medium text-sm">{selectedTime}</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold mb-1.5">Date *</Label>
+                    <Input
+                      type="date"
+                      value={format(selectedDate, "yyyy-MM-dd")}
+                      onChange={(e) => {
+                        const newDate = new Date(e.target.value);
+                        setSelectedDate(newDate);
+                        form.setValue("appointment_date", newDate);
+                      }}
+                      className="h-11"
+                    />
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                </button>
-
-                <button
-                  onClick={() => !appointment && setStep(3)}
-                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
-                >
-                  <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <span className="flex-1 font-medium text-sm">{form.watch("location") || "Add location"}</span>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                </button>
-
-                <button
-                  onClick={() => !appointment && setStep(4)}
-                  className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-accent text-left"
-                >
-                  <AlarmClock className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <span className="flex-1 font-medium text-sm">
-                    {reminderOptions.find(opt => opt.value === selectedReminder)?.label}
-                  </span>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                </button>
-              </div>
-
-              {/* Additional Details */}
-              <div className="space-y-3">
-                <h4 className="font-semibold text-primary text-sm">Add additional details:</h4>
+                  <div>
+                    <Label className="text-xs font-semibold mb-1.5">Time *</Label>
+                    <Input
+                      type="time"
+                      value={selectedTime}
+                      onChange={(e) => {
+                        setSelectedTime(e.target.value);
+                        form.setValue("appointment_time", e.target.value);
+                      }}
+                      className="h-11"
+                    />
+                  </div>
+                </div>
 
                 <div>
-                  <Label className="flex items-center gap-2 mb-1.5 text-xs">
+                  <Label className="text-xs font-semibold mb-1.5">Appointment Type</Label>
+                  <Select
+                    value={form.watch("appointment_type")}
+                    onValueChange={(value) => form.setValue("appointment_type", value)}
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="checkup">Checkup</SelectItem>
+                      <SelectItem value="follow_up">Follow Up</SelectItem>
+                      <SelectItem value="lab_test">Lab Test</SelectItem>
+                      <SelectItem value="imaging">Imaging</SelectItem>
+                      <SelectItem value="procedure">Procedure</SelectItem>
+                      <SelectItem value="consultation">Consultation</SelectItem>
+                      <SelectItem value="vaccination">Vaccination</SelectItem>
+                      <SelectItem value="therapy">Therapy</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5 flex items-center gap-2">
+                    <MapPin className="h-3.5 w-3.5" />
+                    Location
+                  </Label>
+                  <Input
+                    placeholder="e.g., City Hospital, Room 204"
+                    value={form.watch("location")}
+                    onChange={(e) => form.setValue("location", e.target.value)}
+                    className="h-11"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5 flex items-center gap-2">
+                    <User className="h-3.5 w-3.5" />
+                    Doctor Name
+                  </Label>
+                  <Input
+                    placeholder="e.g., Dr. Smith"
+                    value={form.watch("doctor_name")}
+                    onChange={(e) => form.setValue("doctor_name", e.target.value)}
+                    className="h-11"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5">Doctor Specialty</Label>
+                  <Input
+                    placeholder="e.g., Cardiologist"
+                    value={form.watch("doctor_specialty")}
+                    onChange={(e) => form.setValue("doctor_specialty", e.target.value)}
+                    className="h-11"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5 flex items-center gap-2">
+                    <AlarmClock className="h-3.5 w-3.5" />
+                    Reminder
+                  </Label>
+                  <Select
+                    value={selectedReminder.toString()}
+                    onValueChange={(value) => {
+                      const numValue = parseInt(value);
+                      setSelectedReminder(numValue);
+                      form.setValue("reminder_minutes_before", numValue);
+                    }}
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {reminderOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5">Duration (minutes)</Label>
+                  <Input
+                    type="number"
+                    min="5"
+                    value={form.watch("duration_minutes")}
+                    onChange={(e) => form.setValue("duration_minutes", parseInt(e.target.value))}
+                    className="h-11"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5 flex items-center gap-2">
                     <FileText className="h-3.5 w-3.5" />
                     Notes
                   </Label>
@@ -581,7 +667,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                     value={form.watch("notes")}
                     onChange={(e) => form.setValue("notes", e.target.value)}
                     rows={3}
-                    className="text-sm"
                   />
                 </div>
 
@@ -601,6 +686,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
             <div className="p-6 border-t shrink-0">
               <Button
                 onClick={() => form.handleSubmit(onSubmit)()}
+                disabled={!form.watch("title")}
                 size="lg"
                 className="w-full h-14 text-lg rounded-full"
               >
