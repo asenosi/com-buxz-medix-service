@@ -107,13 +107,17 @@ export default function Appointments() {
 
   const upcomingAppointments = filteredAppointments?.filter((apt) => {
     if (apt.status !== "scheduled") return false;
-    const appointmentDateTime = new Date(`${apt.appointment_date}T${apt.appointment_time}`);
+    const [year, month, day] = apt.appointment_date.split('-').map(Number);
+    const [hours, minutes] = apt.appointment_time.split(':').map(Number);
+    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
     return appointmentDateTime > new Date();
   });
 
   const pastAppointments = filteredAppointments?.filter((apt) => {
     if (apt.status !== "scheduled") return true;
-    const appointmentDateTime = new Date(`${apt.appointment_date}T${apt.appointment_time}`);
+    const [year, month, day] = apt.appointment_date.split('-').map(Number);
+    const [hours, minutes] = apt.appointment_time.split(':').map(Number);
+    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
     return appointmentDateTime <= new Date();
   });
 
