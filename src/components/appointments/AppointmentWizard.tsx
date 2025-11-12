@@ -390,6 +390,8 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                     return date < today;
                   }}
                   fromDate={new Date()}
+                  toYear={new Date().getFullYear() + 10}
+                  captionLayout="dropdown-buttons"
                   className="rounded-md border pointer-events-auto"
                   modifiers={{
                     hasAppointment: appointments?.map(apt => new Date(apt.appointment_date)) || [],
