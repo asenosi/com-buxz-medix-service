@@ -323,9 +323,30 @@ export default function Appointments() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      No upcoming appointments
-                    </div>
+                    <Card className="text-center py-12 animate-fade-in border-2 border-dashed border-border/50 rounded-2xl bg-muted/20">
+                      <CardContent className="space-y-4">
+                        <div className="relative mx-auto w-16 h-16">
+                          <div className="absolute inset-0 rounded-full bg-primary/20 animate-glow" />
+                          <div className="relative w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-float">
+                            <CalendarIcon className="w-8 h-8 text-primary" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-foreground">No Upcoming Appointments</h3>
+                          <p className="text-sm text-muted-foreground px-4 max-w-sm mx-auto">
+                            Your schedule is clear. Add a new appointment to stay on top of your health visits.
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => setDialogOpen(true)} 
+                          size="default" 
+                          className="mx-auto rounded-xl mt-4 animate-scale-in"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Schedule Appointment
+                        </Button>
+                      </CardContent>
+                    </Card>
                   )}
                 </>
               )}
@@ -342,9 +363,22 @@ export default function Appointments() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      No past appointments
-                    </div>
+                    <Card className="text-center py-12 animate-fade-in border-2 border-dashed border-border/50 rounded-2xl bg-muted/20">
+                      <CardContent className="space-y-4">
+                        <div className="relative mx-auto w-16 h-16">
+                          <div className="absolute inset-0 rounded-full bg-muted-foreground/10 animate-pulse-slow" />
+                          <div className="relative w-16 h-16 rounded-full bg-muted-foreground/5 flex items-center justify-center">
+                            <Grid className="w-8 h-8 text-muted-foreground/50" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-foreground">No Past Appointments</h3>
+                          <p className="text-sm text-muted-foreground px-4 max-w-sm mx-auto">
+                            Your appointment history will appear here once you complete or cancel scheduled appointments.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
                 </>
               )}
