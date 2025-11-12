@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarIcon, List, Plus, Filter } from "lucide-react";
-import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
 import { AppointmentCard } from "@/components/appointments/AppointmentCard";
 import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
@@ -16,9 +16,8 @@ type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
 };
 
 export default function Appointments() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<Partial<Appointment> | null>(null);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [filters, setFilters] = useState({
     status: "all",
@@ -80,12 +79,6 @@ export default function Appointments() {
     };
   }, [queryClient]);
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    setSelectedAppointment(null);
-    refetch();
-  };
-
   const upcomingAppointments = appointments?.filter(
     (apt) => apt.status === "scheduled" && new Date(apt.appointment_date) >= new Date()
   );
@@ -110,7 +103,7 @@ export default function Appointments() {
           >
             <Filter className="w-5 h-5" />
           </Button>
-          <Button onClick={() => setDialogOpen(true)} className="flex-1 sm:flex-none">
+          <Button onClick={() => navigate("/appointments/add")} className="flex-1 sm:flex-none">
             <Plus className="w-5 h-5 sm:mr-2" />
             <span className="sm:inline">Add</span>
           </Button>
@@ -147,7 +140,7 @@ export default function Appointments() {
                   Create your first appointment to get started
                 </p>
               </div>
-              <Button onClick={() => setDialogOpen(true)} size="lg">
+              <Button onClick={() => navigate("/appointments/add")} size="lg">
                 <Plus className="w-5 h-5 mr-2" />
                 Add Your First Appointment
               </Button>
@@ -216,22 +209,14 @@ export default function Appointments() {
           <AppointmentCalendar
             appointments={appointments || []}
             onAppointmentClick={(appointment) => {
-              setSelectedAppointment(appointment);
-              setDialogOpen(true);
+              navigate("/appointments/add", { state: { appointment } });
             }}
             onDateClick={(date) => {
-              setSelectedAppointment({ appointment_date: format(date, "yyyy-MM-dd") });
-              setDialogOpen(true);
+              navigate("/appointments/add", { state: { appointment: { appointment_date: format(date, "yyyy-MM-dd") } } });
             }}
           />
         </TabsContent>
       </Tabs>
-
-      <AppointmentWizard
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        appointment={selectedAppointment}
-      />
     </div>
   );
 }

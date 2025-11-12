@@ -22,6 +22,7 @@ const Alerts = lazy(() => import("./pages/Alerts"));
 const NotificationSettingsPage = lazy(() => import("./pages/NotificationSettingsPage"));
 const InstallPWA = lazy(() => import("./pages/InstallPWA"));
 const Appointments = lazy(() => import("./pages/Appointments"));
+const AddAppointment = lazy(() => import("./pages/AddAppointment"));
 const AppointmentDetails = lazy(() => import("./pages/AppointmentDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/notification-settings" element={<NotificationSettingsPage />} />
               <Route path="/install" element={<InstallPWA />} />
               <Route path="/appointments" element={<Appointments />} />
+              <Route path="/appointments/add" element={<AddAppointment />} />
               <Route path="/appointments/:id" element={<AppointmentDetails />} />
             </Route>
 
