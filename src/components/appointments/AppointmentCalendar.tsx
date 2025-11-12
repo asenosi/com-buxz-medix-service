@@ -4,10 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, isSameDay } from "date-fns";
 import { Clock, MapPin } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+
+type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 
 interface AppointmentCalendarProps {
-  appointments: any[];
-  onAppointmentClick: (appointment: any) => void;
+  appointments: Appointment[];
+  onAppointmentClick: (appointment: Appointment) => void;
   onDateClick: (date: Date) => void;
 }
 

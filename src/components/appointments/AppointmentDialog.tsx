@@ -38,6 +38,9 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+
+type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 
 const appointmentSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -58,7 +61,7 @@ const appointmentSchema = z.object({
 interface AppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  appointment?: any;
+  appointment?: Partial<Appointment>;
 }
 
 export function AppointmentDialog({ open, onOpenChange, appointment }: AppointmentDialogProps) {
@@ -139,10 +142,20 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
       return;
     }
 
-    const appointmentData: any = {
-      ...values,
-      user_id: user.id,
+    const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] = {
+      title: values.title,
       appointment_date: format(values.appointment_date, "yyyy-MM-dd"),
+      appointment_time: values.appointment_time,
+      appointment_type: values.appointment_type as Database["public"]["Enums"]["appointment_type"],
+      status: values.status as Database["public"]["Enums"]["appointment_status"],
+      user_id: user.id,
+      description: values.description,
+      duration_minutes: values.duration_minutes,
+      location: values.location,
+      doctor_name: values.doctor_name,
+      doctor_specialty: values.doctor_specialty,
+      notes: values.notes,
+      reminder_minutes_before: values.reminder_minutes_before,
       medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
     };
 

@@ -18,14 +18,16 @@ import { CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
+type AppointmentFilters = {
+  status: string;
+  type: string;
+  dateFrom: Date | null;
+  dateTo: Date | null;
+};
+
 interface AppointmentFiltersProps {
-  filters: {
-    status: string;
-    type: string;
-    dateFrom: Date | null;
-    dateTo: Date | null;
-  };
-  setFilters: (filters: any) => void;
+  filters: AppointmentFilters;
+  setFilters: (filters: AppointmentFilters) => void;
 }
 
 export function AppointmentFilters({ filters, setFilters }: AppointmentFiltersProps) {

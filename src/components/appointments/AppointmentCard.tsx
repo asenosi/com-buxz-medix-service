@@ -4,6 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, User, Pill, FileText, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import type { Database } from "@/integrations/supabase/types";
+
+type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
+  medications?: { name: string } | null;
+};
 
 const appointmentTypeColors: Record<string, string> = {
   checkup: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -26,7 +31,7 @@ const statusColors: Record<string, string> = {
 };
 
 interface AppointmentCardProps {
-  appointment: any;
+  appointment: Appointment;
 }
 
 export function AppointmentCard({ appointment }: AppointmentCardProps) {
