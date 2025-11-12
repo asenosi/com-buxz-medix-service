@@ -244,6 +244,15 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       form.setValue("appointment_date", selectedDate);
       setStep(1);
     } else if (step === 1) {
+      form.setValue("appointment_date", selectedDate);
+      setStep(2);
+    } else if (step === 2) {
+      // Validate time is not empty
+      if (!selectedTime || selectedTime.trim() === "") {
+        toast.error("Please select a time for your appointment.");
+        return;
+      }
+      
       form.setValue("appointment_time", selectedTime);
       
       // Check if the selected date/time is in the past
@@ -252,8 +261,9 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       const [hours, minutes] = selectedTime.split(":").map(Number);
       selectedDateTime.setHours(hours, minutes, 0, 0);
       
-      if (selectedDateTime < now) {
-        toast.error("Cannot schedule appointments in the past. Please select a future date and time.");
+      // Allow current day appointments as long as the time hasn't passed
+      if (selectedDateTime <= now) {
+        toast.error("Cannot schedule appointments in the past. Please select a future time.");
         return;
       }
       
@@ -268,8 +278,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         }
       }
       
-      setStep(2);
-    } else if (step === 2) {
       setStep(3);
     } else if (step === 3) {
       setStep(4);
@@ -607,7 +615,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               </div>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
+            <div className="flex-1 overflow-y-auto px-6 py-4 pb-8 space-y-4 min-h-0">
               {/* Main Details - Click to Edit */}
               <div className="space-y-2 pb-4 border-b">
                 <button
@@ -683,17 +691,15 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               </div>
             </div>
 
-            <div className="p-6 border-t shrink-0">
-              <Button
-                onClick={() => form.handleSubmit(onSubmit)()}
-                disabled={!form.watch("title")}
-                size="lg"
-                className="w-full h-14 text-lg rounded-full"
-              >
-                Save
-                <ChevronRight className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
+            <Button
+              onClick={() => form.handleSubmit(onSubmit)()}
+              disabled={!form.watch("title")}
+              size="lg"
+              className="w-full h-14 text-lg rounded-full mx-6 mb-6 mt-4 shrink-0"
+            >
+              Save
+              <ChevronRight className="ml-2 h-5 w-5" />
+            </Button>
           </div>
         )}
       </DialogContent>

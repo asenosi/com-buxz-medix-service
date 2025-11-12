@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
+import { useCountdown } from "@/hooks/use-countdown";
 
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
   medications?: { name: string } | null;
@@ -38,15 +39,32 @@ interface AppointmentCardProps {
 export function AppointmentCard({ appointment }: AppointmentCardProps) {
   const navigate = useNavigate();
   const [showFullNotes, setShowFullNotes] = useState(false);
-  const appointmentDate = new Date(appointment.appointment_date);
-  const isAppointmentPast = isPast(appointmentDate);
+  
+  // Properly construct datetime in local timezone
+  const [year, month, day] = appointment.appointment_date.split('-').map(Number);
+  const [hours, minutes] = appointment.appointment_time.split(':').map(Number);
+  const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
+  const isAppointmentPast = isPast(appointmentDateTime);
+  
+  // Countdown for today's appointments
+  const countdown = useCountdown(isToday(appointmentDateTime) && !isAppointmentPast ? appointmentDateTime : null);
   
   // Format relative time
   const getRelativeTime = () => {
-    if (isToday(appointmentDate)) return "Today";
-    if (isTomorrow(appointmentDate)) return "Tomorrow";
-    if (isAppointmentPast) return formatDistanceToNow(appointmentDate, { addSuffix: true });
-    return `In ${formatDistanceToNow(appointmentDate)}`;
+    if (isToday(appointmentDateTime) && !isAppointmentPast) {
+      // Show countdown for today's future appointments
+      if (countdown.hours > 0) {
+        return `In ${countdown.hours}h ${countdown.minutes}m`;
+      } else if (countdown.minutes > 0) {
+        return `In ${countdown.minutes}m`;
+      } else if (countdown.seconds > 0) {
+        return `In ${countdown.seconds}s`;
+      }
+      return "Now";
+    }
+    if (isTomorrow(appointmentDateTime)) return "Tomorrow";
+    if (isAppointmentPast) return formatDistanceToNow(appointmentDateTime, { addSuffix: true });
+    return `In ${formatDistanceToNow(appointmentDateTime)}`;
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -123,7 +141,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
             <div className="flex items-center gap-3 text-muted-foreground">
               <Calendar className="w-4 h-4 shrink-0" />
               <span className="font-medium">
-                {format(appointmentDate, "EEE, MMM d, yyyy")} — {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
+                {format(appointmentDateTime, "EEE, MMM d, yyyy")} — {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
               </span>
             </div>
 
