@@ -38,7 +38,11 @@ interface AppointmentCardProps {
 export function AppointmentCard({ appointment }: AppointmentCardProps) {
   const navigate = useNavigate();
   const [showFullNotes, setShowFullNotes] = useState(false);
-  const appointmentDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+  
+  // Properly construct datetime in local timezone
+  const [year, month, day] = appointment.appointment_date.split('-').map(Number);
+  const [hours, minutes] = appointment.appointment_time.split(':').map(Number);
+  const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
   const isAppointmentPast = isPast(appointmentDateTime);
   
   // Format relative time
