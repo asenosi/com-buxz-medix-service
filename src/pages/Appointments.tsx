@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { useHaptic } from "@/hooks/use-haptic";
+import { cn } from "@/lib/utils";
 
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
   medications?: { name: string } | null;
@@ -142,9 +143,9 @@ export default function Appointments() {
 
   return (
     <div className="space-y-4 pb-4">
-      <div>
+      <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Appointments</h1>
-        <p className="text-sm text-muted-foreground">Manage your medical appointments</p>
+        <p className="text-sm sm:text-base text-muted-foreground">Manage your medical appointments</p>
       </div>
 
       {/* Search and Filters */}
@@ -250,12 +251,12 @@ export default function Appointments() {
       )}
 
       <Tabs value={view} onValueChange={(v) => setView(v as "list" | "calendar")} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 h-11">
-          <TabsTrigger value="list" className="gap-2">
+        <TabsList className="grid w-full grid-cols-2 h-11 bg-muted rounded-xl">
+          <TabsTrigger value="list" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <List className="w-4 h-4" />
             <span>List</span>
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="gap-2">
+          <TabsTrigger value="calendar" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <CalendarIcon className="w-4 h-4" />
             <span>Calendar</span>
           </TabsTrigger>
@@ -267,14 +268,16 @@ export default function Appointments() {
               Loading appointments...
             </div>
           ) : !appointments?.length ? (
-            <Card className="text-center py-12 sm:py-16 animate-fade-in relative overflow-visible border-2 border-dashed border-muted-foreground/30">
+            <Card className="text-center py-12 sm:py-16 animate-fade-in relative overflow-visible border-2 border-dashed border-border rounded-2xl">
               <CardContent className="pb-32 sm:pb-40">
-                <CalendarIcon className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
-                <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Appointments Yet</h2>
-                <p className="text-base sm:text-lg text-muted-foreground px-4 max-w-md mx-auto mb-6">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CalendarIcon className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-semibold mb-3">No Appointments Yet</h2>
+                <p className="text-sm sm:text-base text-muted-foreground px-4 max-w-md mx-auto mb-8">
                   Start organizing your healthcare by adding your first appointment. Never miss a doctor's visit again.
                 </p>
-                <Button onClick={() => setDialogOpen(true)} size="lg" className="mx-auto">
+                <Button onClick={() => setDialogOpen(true)} size="lg" className="mx-auto rounded-xl h-12 px-6">
                   <Plus className="w-5 h-5 mr-2" />
                   Add Appointment
                 </Button>
@@ -282,21 +285,25 @@ export default function Appointments() {
             </Card>
           ) : (
             <>
-              <div className="flex gap-2">
-                <Button
-                  variant={appointmentView === "upcoming" ? "default" : "outline"}
+              <div className="inline-flex h-11 items-center justify-center rounded-xl bg-muted p-1 text-muted-foreground w-full">
+                <button
                   onClick={() => setAppointmentView("upcoming")}
-                  className="flex-1 h-11"
+                  className={cn(
+                    "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1",
+                    appointmentView === "upcoming" && "bg-background text-foreground shadow-sm"
+                  )}
                 >
-                  Upcoming ({upcomingAppointments?.length || 0})
-                </Button>
-                <Button
-                  variant={appointmentView === "past" ? "default" : "outline"}
+                  Upcoming <Badge variant="secondary" className="ml-2 text-xs">{upcomingAppointments?.length || 0}</Badge>
+                </button>
+                <button
                   onClick={() => setAppointmentView("past")}
-                  className="flex-1 h-11"
+                  className={cn(
+                    "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1",
+                    appointmentView === "past" && "bg-background text-foreground shadow-sm"
+                  )}
                 >
-                  Past ({pastAppointments?.length || 0})
-                </Button>
+                  Past <Badge variant="secondary" className="ml-2 text-xs">{pastAppointments?.length || 0}</Badge>
+                </button>
               </div>
 
               {appointmentView === "upcoming" && (
