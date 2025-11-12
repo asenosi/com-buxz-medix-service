@@ -116,7 +116,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         reminder_minutes_before: appointment.reminder_minutes_before || 60,
         medication_id: appointment.medication_id || "none",
       });
-      setStep(4); // Skip to review for editing
+      setStep(5); // Skip to review for editing
     } else if (appointment && appointment.appointment_date) {
       // Creating new appointment with pre-selected date - start from date step
       const appointmentDate = new Date(appointment.appointment_date);
@@ -261,7 +261,6 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
     } else if (step === 2) {
       setStep(3);
     } else if (step === 3) {
-      form.setValue("reminder_minutes_before", selectedReminder);
       setStep(4);
     }
   };
@@ -539,7 +538,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         )}
 
         {/* Step 4: Reminder Selection */}
-        {step === 4 && !appointment && (
+        {step === 4 && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 shrink-0">
               <DialogTitle className="sr-only">Add Appointment - Reminder</DialogTitle>
@@ -588,7 +587,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         )}
 
         {/* Step 5: Review & Additional Details */}
-        {(step === 5 || (step === 4 && appointment)) && (
+        {step === 5 && (
           <div className="flex flex-col h-[600px]">
             <DialogHeader className="p-6 pb-4 space-y-4 border-b shrink-0">
               <DialogTitle className="sr-only">{appointment?.id ? "Edit Appointment" : "Review Appointment"}</DialogTitle>
