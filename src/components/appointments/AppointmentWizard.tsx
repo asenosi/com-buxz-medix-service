@@ -184,7 +184,13 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         console.error("Appointment error:", error);
         toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`);
       } else {
-        toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`);
+        toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`, {
+          style: {
+            background: "hsl(var(--success))",
+            color: "hsl(var(--success-foreground))",
+            border: "1px solid hsl(var(--success))",
+          },
+        });
         onOpenChange(false);
         setStep(0);
       }
@@ -277,10 +283,22 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       const conflict = checkAppointmentConflict();
       if (conflict) {
         if (conflict.type === "error") {
-          toast.error(conflict.message);
+          toast.error(conflict.message, {
+            style: {
+              background: "hsl(var(--warning))",
+              color: "hsl(var(--warning-foreground))",
+              border: "1px solid hsl(var(--warning))",
+            },
+          });
           return;
         } else if (conflict.type === "warning") {
-          toast.warning(conflict.message);
+          toast.warning(conflict.message, {
+            style: {
+              background: "hsl(var(--accent))",
+              color: "hsl(var(--accent-foreground))",
+              border: "1px solid hsl(var(--accent))",
+            },
+          });
         }
       }
       

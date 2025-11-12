@@ -166,7 +166,13 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
     if (error) {
       toast.error(`Failed to ${appointment ? "update" : "create"} appointment`);
     } else {
-      toast.success(`Appointment ${appointment ? "updated" : "created"} successfully`);
+      toast.success(`Appointment ${appointment ? "updated" : "created"} successfully`, {
+        style: {
+          background: "hsl(var(--success))",
+          color: "hsl(var(--success-foreground))",
+          border: "1px solid hsl(var(--success))",
+        },
+      });
       onOpenChange(false);
     }
   };

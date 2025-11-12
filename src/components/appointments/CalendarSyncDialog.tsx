@@ -38,7 +38,13 @@ export function CalendarSyncDialog({ open, onOpenChange, appointmentId }: Calend
         window.location.href = data.authUrl;
       } else {
         // Already authorized, sync the event
-        toast.success("Appointment synced with your calendar");
+        toast.success("Appointment synced with your calendar", {
+          style: {
+            background: "hsl(var(--success))",
+            color: "hsl(var(--success-foreground))",
+            border: "1px solid hsl(var(--success))",
+          },
+        });
         onOpenChange(false);
       }
     } catch (error) {

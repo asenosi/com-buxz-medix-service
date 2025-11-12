@@ -136,7 +136,13 @@ export default function AppointmentDetails() {
     if (error) {
       toast.error("Failed to delete appointment");
     } else {
-      toast.success("Appointment deleted");
+      toast.success("Appointment deleted", {
+        style: {
+          background: "hsl(var(--success))",
+          color: "hsl(var(--success-foreground))",
+          border: "1px solid hsl(var(--success))",
+        },
+      });
       navigate("/appointments");
     }
   };
@@ -155,7 +161,13 @@ export default function AppointmentDetails() {
     if (error) {
       toast.error("Failed to cancel appointment");
     } else {
-      toast.success("Appointment cancelled");
+      toast.success("Appointment cancelled", {
+        style: {
+          background: "hsl(var(--warning))",
+          color: "hsl(var(--warning-foreground))",
+          border: "1px solid hsl(var(--warning))",
+        },
+      });
       setCancelDialogOpen(false);
       refetch();
     }
@@ -350,7 +362,8 @@ export default function AppointmentDetails() {
           <Button
             onClick={handleReschedule}
             variant="outline"
-            className="w-full"
+            size="sm"
+            className="w-full rounded-full"
           >
             <CalendarClock className="w-4 h-4 mr-2" />
             Reschedule
@@ -358,7 +371,8 @@ export default function AppointmentDetails() {
           <Button
             onClick={() => setCancelDialogOpen(true)}
             variant="outline"
-            className="w-full text-destructive hover:text-destructive"
+            size="sm"
+            className="w-full rounded-full text-destructive hover:text-destructive"
           >
             <X className="w-4 h-4 mr-2" />
             Cancel
