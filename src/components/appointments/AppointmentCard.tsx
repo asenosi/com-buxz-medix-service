@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
+import { useCountdown } from "@/hooks/use-countdown";
 
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"] & {
   medications?: { name: string } | null;
@@ -45,9 +46,22 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
   const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
   const isAppointmentPast = isPast(appointmentDateTime);
   
+  // Countdown for today's appointments
+  const countdown = useCountdown(isToday(appointmentDateTime) && !isAppointmentPast ? appointmentDateTime : null);
+  
   // Format relative time
   const getRelativeTime = () => {
-    if (isToday(appointmentDateTime)) return "Today";
+    if (isToday(appointmentDateTime) && !isAppointmentPast) {
+      // Show countdown for today's future appointments
+      if (countdown.hours > 0) {
+        return `In ${countdown.hours}h ${countdown.minutes}m`;
+      } else if (countdown.minutes > 0) {
+        return `In ${countdown.minutes}m`;
+      } else if (countdown.seconds > 0) {
+        return `In ${countdown.seconds}s`;
+      }
+      return "Now";
+    }
     if (isTomorrow(appointmentDateTime)) return "Tomorrow";
     if (isAppointmentPast) return formatDistanceToNow(appointmentDateTime, { addSuffix: true });
     return `In ${formatDistanceToNow(appointmentDateTime)}`;
