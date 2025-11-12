@@ -247,6 +247,12 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       form.setValue("appointment_date", selectedDate);
       setStep(2);
     } else if (step === 2) {
+      // Validate time is not empty
+      if (!selectedTime || selectedTime.trim() === "") {
+        toast.error("Please select a time for your appointment.");
+        return;
+      }
+      
       form.setValue("appointment_time", selectedTime);
       
       // Check if the selected date/time is in the past
