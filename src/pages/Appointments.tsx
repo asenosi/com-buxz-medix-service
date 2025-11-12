@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
-import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { useHaptic } from "@/hooks/use-haptic";
 import { cn } from "@/lib/utils";
 
@@ -404,19 +403,16 @@ export default function Appointments() {
         appointment={selectedAppointment}
       />
 
-      <FloatingActionButton
-        actions={[
-          {
-            label: "Add Appointment",
-            icon: <Plus className="h-6 w-6" />,
-            onClick: () => {
-              triggerHaptic("light");
-              setDialogOpen(true);
-            },
-            color: "bg-primary hover:bg-primary/90",
-          },
-        ]}
-      />
+      <Button
+        size="lg"
+        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 rounded-full h-16 w-16 sm:h-20 sm:w-20 shadow-2xl hover:scale-110 transition-all duration-300 bg-primary hover:bg-primary/90"
+        onClick={() => {
+          triggerHaptic("light");
+          setDialogOpen(true);
+        }}
+      >
+        <Plus className="h-8 w-8" />
+      </Button>
     </div>
   );
 }
