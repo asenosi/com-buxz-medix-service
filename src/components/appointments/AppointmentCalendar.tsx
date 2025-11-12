@@ -49,10 +49,10 @@ export function AppointmentCalendar({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
       <div className="lg:col-span-2">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -80,26 +80,26 @@ export function AppointmentCalendar({
         </Card>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground">
-          {format(selectedDate, "MMMM d, yyyy")}
+      <div className="space-y-3">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground px-1">
+          {format(selectedDate, "MMM d, yyyy")}
         </h3>
 
         {appointmentsForDate.length === 0 ? (
           <Card>
-            <CardContent className="p-6 text-center text-muted-foreground">
-              No appointments on this day
+            <CardContent className="p-6 text-center text-sm text-muted-foreground">
+              No appointments
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {appointmentsForDate.map((appointment) => (
               <Card
                 key={appointment.id}
-                className="cursor-pointer transition-all hover:shadow-md"
+                className="cursor-pointer transition-all active:scale-[0.98]"
                 onClick={() => onAppointmentClick(appointment)}
               >
-                <CardContent className="p-4 space-y-2">
+                <CardContent className="p-3 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <h4 className="font-semibold text-foreground">

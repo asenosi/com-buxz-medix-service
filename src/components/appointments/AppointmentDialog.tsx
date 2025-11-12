@@ -160,23 +160,23 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>
-            {appointment ? "Edit Appointment" : "Create Appointment"}
+          <DialogTitle className="text-xl">
+            {appointment ? "Edit Appointment" : "New Appointment"}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title *</FormLabel>
+                  <FormLabel className="text-sm font-medium">Title *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Annual checkup" {...field} />
+                    <Input placeholder="Annual checkup" className="h-11" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -427,12 +427,17 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex gap-2 pt-4 sticky bottom-0 bg-background">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="flex-1 h-11"
+              >
                 Cancel
               </Button>
-              <Button type="submit">
-                {appointment ? "Update" : "Create"} Appointment
+              <Button type="submit" className="flex-1 h-11">
+                {appointment ? "Update" : "Create"}
               </Button>
             </div>
           </form>

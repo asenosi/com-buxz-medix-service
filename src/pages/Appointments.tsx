@@ -81,23 +81,24 @@ export default function Appointments() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Appointments</h1>
-          <p className="text-muted-foreground">Manage your medical appointments</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Appointments</h1>
+          <p className="text-sm text-muted-foreground">Manage your medical appointments</p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="icon"
+            className="h-10 w-10"
             onClick={() => setShowFilters(!showFilters)}
           >
-            <Filter className="w-4 h-4" />
+            <Filter className="w-5 h-5" />
           </Button>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Appointment
+          <Button onClick={() => setDialogOpen(true)} className="flex-1 sm:flex-none">
+            <Plus className="w-5 h-5 sm:mr-2" />
+            <span className="sm:inline">Add</span>
           </Button>
         </div>
       </div>
@@ -107,33 +108,33 @@ export default function Appointments() {
       )}
 
       <Tabs value={view} onValueChange={(v) => setView(v as "list" | "calendar")}>
-        <TabsList>
-          <TabsTrigger value="list">
-            <List className="w-4 h-4 mr-2" />
-            List
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="list" className="gap-2">
+            <List className="w-4 h-4" />
+            <span>List</span>
           </TabsTrigger>
-          <TabsTrigger value="calendar">
-            <CalendarIcon className="w-4 h-4 mr-2" />
-            Calendar
+          <TabsTrigger value="calendar" className="gap-2">
+            <CalendarIcon className="w-4 h-4" />
+            <span>Calendar</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="list" className="space-y-6">
+        <TabsContent value="list" className="space-y-4 mt-4">
           {isLoading ? (
-            <div className="text-center text-muted-foreground py-8">
+            <div className="text-center text-muted-foreground py-12">
               Loading appointments...
             </div>
           ) : !appointments?.length ? (
-            <div className="text-center py-12 space-y-3">
+            <div className="text-center py-12 px-4 space-y-4">
               <CalendarIcon className="w-16 h-16 mx-auto text-muted-foreground/50" />
               <div>
                 <h3 className="text-lg font-medium text-foreground">No appointments yet</h3>
-                <p className="text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Create your first appointment to get started
                 </p>
               </div>
-              <Button onClick={() => setDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
+              <Button onClick={() => setDialogOpen(true)} size="lg">
+                <Plus className="w-5 h-5 mr-2" />
                 Add Your First Appointment
               </Button>
             </div>
@@ -141,10 +142,10 @@ export default function Appointments() {
             <>
               {upcomingAppointments && upcomingAppointments.length > 0 && (
                 <div className="space-y-3">
-                  <h2 className="text-xl font-semibold text-foreground">
-                    Upcoming Appointments
+                  <h2 className="text-lg sm:text-xl font-semibold text-foreground px-1">
+                    Upcoming
                   </h2>
-                  <div className="grid gap-4">
+                  <div className="space-y-3">
                     {upcomingAppointments.map((appointment) => (
                       <AppointmentCard
                         key={appointment.id}
@@ -159,10 +160,10 @@ export default function Appointments() {
 
               {pastAppointments && pastAppointments.length > 0 && (
                 <div className="space-y-3">
-                  <h2 className="text-xl font-semibold text-foreground">
-                    Past Appointments
+                  <h2 className="text-lg sm:text-xl font-semibold text-foreground px-1">
+                    Past
                   </h2>
-                  <div className="grid gap-4">
+                  <div className="space-y-3">
                     {pastAppointments.map((appointment) => (
                       <AppointmentCard
                         key={appointment.id}
