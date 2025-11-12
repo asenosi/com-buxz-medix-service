@@ -252,8 +252,9 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       const [hours, minutes] = selectedTime.split(":").map(Number);
       selectedDateTime.setHours(hours, minutes, 0, 0);
       
-      if (selectedDateTime < now) {
-        toast.error("Cannot schedule appointments in the past. Please select a future date and time.");
+      // Allow current day appointments as long as the time hasn't passed
+      if (selectedDateTime <= now) {
+        toast.error("Cannot schedule appointments in the past. Please select a future time.");
         return;
       }
       
