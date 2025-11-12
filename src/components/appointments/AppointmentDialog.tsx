@@ -90,7 +90,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
       status: "scheduled",
       notes: "",
       reminder_minutes_before: 60,
-      medication_id: "",
+      medication_id: "none",
     },
   });
 
@@ -111,7 +111,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
         status: appointment.status || "scheduled",
         notes: appointment.notes || "",
         reminder_minutes_before: appointment.reminder_minutes_before || 60,
-        medication_id: appointment.medication_id || "",
+        medication_id: appointment.medication_id || "none",
       });
     } else {
       form.reset({
@@ -127,7 +127,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
         status: "scheduled",
         notes: "",
         reminder_minutes_before: 60,
-        medication_id: "",
+        medication_id: "none",
       });
     }
   }, [appointment, form]);
@@ -143,7 +143,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
       ...values,
       user_id: user.id,
       appointment_date: format(values.appointment_date, "yyyy-MM-dd"),
-      medication_id: values.medication_id || null,
+      medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
     };
 
     const { error } = appointment
@@ -383,7 +383,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {medications?.map((med) => (
                         <SelectItem key={med.id} value={med.id}>
                           {med.name}
