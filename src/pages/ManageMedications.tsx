@@ -53,7 +53,7 @@ const menuSections = {
     {
       icon: Contact,
       label: "Health Contacts",
-      path: "/contacts",
+      path: "/practitioners",
       iconBg: "bg-cyan-500/10 text-cyan-500",
     },
     {
