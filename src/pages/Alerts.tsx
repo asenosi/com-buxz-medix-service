@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, AlertCircle, Clock, CheckCircle, ChevronRight, Settings, BellOff, CalendarCheck } from "lucide-react";
+import { Bell, AlertCircle, Clock, CheckCircle, ChevronRight, Settings, BellOff, CalendarCheck, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow, isToday, isTomorrow } from "date-fns";
 import { useNotification } from "@/hooks/use-notification";
@@ -48,6 +48,7 @@ const Alerts = () => {
   const [missedDoses, setMissedDoses] = useState<AlertDose[]>([]);
   const [upcomingDoses, setUpcomingDoses] = useState<AlertDose[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [showAppointments, setShowAppointments] = useState(true);
   const { preferences, sendNotification } = useNotification();
 
   const fetchAlerts = useCallback(async () => {
@@ -155,9 +156,9 @@ const Alerts = () => {
       setMissedDoses(missed);
       setUpcomingDoses(upcoming);
 
-      // Fetch upcoming appointments (next 30 days)
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      // Fetch upcoming appointments (today and tomorrow only)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
       const { data: appointments } = await supabase
         .from("appointments")
@@ -165,10 +166,9 @@ const Alerts = () => {
         .eq("user_id", session.user.id)
         .eq("status", "scheduled")
         .gte("appointment_date", new Date().toISOString().split('T')[0])
-        .lte("appointment_date", thirtyDaysFromNow.toISOString().split('T')[0])
+        .lte("appointment_date", tomorrow.toISOString().split('T')[0])
         .order("appointment_date", { ascending: true })
-        .order("appointment_time", { ascending: true })
-        .limit(5);
+        .order("appointment_time", { ascending: true });
 
       setUpcomingAppointments(appointments || []);
 
@@ -281,6 +281,15 @@ const Alerts = () => {
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => setShowAppointments(!showAppointments)}
+            className="h-8 w-8"
+            title={showAppointments ? "Hide appointments" : "Show appointments"}
+          >
+            {showAppointments ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate("/notification-settings")}
             className="h-8 w-8"
           >
@@ -370,7 +379,7 @@ const Alerts = () => {
         </section>
 
         {/* Upcoming Appointments */}
-        {upcomingAppointments.length > 0 && (
+        {showAppointments && upcomingAppointments.length > 0 && (
           <section>
             <h2 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Appointments</h2>
             <div className="space-y-2">
@@ -404,6 +413,13 @@ const Alerts = () => {
                   </Card>
                 );
               })}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => navigate("/appointments")}
+              >
+                All Appointments
+              </Button>
             </div>
           </section>
         )}

@@ -73,9 +73,9 @@ export default function AppHeader() {
           .eq("active", true);
         setMedCount(count ?? 0);
 
-        // Fetch upcoming appointments (next 30 days)
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        // Fetch upcoming appointments (today and tomorrow only)
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
 
         const { data: appointments } = await supabase
           .from("appointments")
@@ -83,10 +83,9 @@ export default function AppHeader() {
           .eq("user_id", user.id)
           .eq("status", "scheduled")
           .gte("appointment_date", new Date().toISOString().split('T')[0])
-          .lte("appointment_date", thirtyDaysFromNow.toISOString().split('T')[0])
+          .lte("appointment_date", tomorrow.toISOString().split('T')[0])
           .order("appointment_date", { ascending: true })
-          .order("appointment_time", { ascending: true })
-          .limit(3);
+          .order("appointment_time", { ascending: true });
 
         setUpcomingAppointments(appointments || []);
       }
@@ -276,6 +275,17 @@ export default function AppHeader() {
                         </div>
                       );
                     })}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => {
+                        setNotificationOpen(false);
+                        navigate("/appointments");
+                      }}
+                    >
+                      All Appointments
+                    </Button>
                   </div>
                 ) : (
                   <div className="rounded-md border p-3 text-sm text-muted-foreground">No upcoming appointments</div>
