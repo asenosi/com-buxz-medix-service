@@ -379,48 +379,66 @@ const Alerts = () => {
         </section>
 
         {/* Upcoming Appointments */}
-        {showAppointments && upcomingAppointments.length > 0 && (
+        {showAppointments && (
           <section>
             <h2 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Appointments</h2>
-            <div className="space-y-2">
-              {upcomingAppointments.map((appointment) => {
-                const appointmentDate = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
-                const dateLabel = isToday(appointmentDate) 
-                  ? "Today" 
-                  : isTomorrow(appointmentDate) 
-                  ? "Tomorrow" 
-                  : format(appointmentDate, "MMM d");
-                
-                return (
-                  <Card 
-                    key={appointment.id}
-                    className="hover:bg-accent/5 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/appointments/${appointment.id}`)}
+            {upcomingAppointments.length === 0 ? (
+              <Card>
+                <CardContent className="py-6 text-center">
+                  <CalendarCheck className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-3">
+                    No appointments scheduled for today or tomorrow
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/appointments")}
                   >
-                    <CardContent className="flex items-center justify-between p-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <CalendarCheck className="w-4 h-4 text-primary shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm mb-0.5">{appointment.title}</h3>
-                          <p className="text-xs text-muted-foreground">
-                            {dateLabel} at {format(appointmentDate, "h:mm a")}
-                            {appointment.doctor_name && ` • ${appointment.doctor_name}`}
-                          </p>
+                    View All Appointments
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {upcomingAppointments.map((appointment) => {
+                  const appointmentDate = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+                  const dateLabel = isToday(appointmentDate) 
+                    ? "Today" 
+                    : isTomorrow(appointmentDate) 
+                    ? "Tomorrow" 
+                    : format(appointmentDate, "MMM d");
+                  
+                  return (
+                    <Card 
+                      key={appointment.id}
+                      className="hover:bg-accent/5 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/appointments/${appointment.id}`)}
+                    >
+                      <CardContent className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <CalendarCheck className="w-4 h-4 text-primary shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm mb-0.5">{appointment.title}</h3>
+                            <p className="text-xs text-muted-foreground">
+                              {dateLabel} at {format(appointmentDate, "h:mm a")}
+                              {appointment.doctor_name && ` • ${appointment.doctor_name}`}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                    </CardContent>
-                  </Card>
-                );
-              })}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate("/appointments")}
-              >
-                All Appointments
-              </Button>
-            </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => navigate("/appointments")}
+                >
+                  All Appointments
+                </Button>
+              </div>
+            )}
           </section>
         )}
 
