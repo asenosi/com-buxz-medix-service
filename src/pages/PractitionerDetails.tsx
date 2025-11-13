@@ -33,16 +33,17 @@ export default function PractitionerDetails() {
 
   const { data: appointments } = useQuery({
     queryKey: ["practitioner-appointments", id],
+    enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("appointments")
         .select("*")
-        .eq("practitioner_id", id)
         .order("appointment_date", { ascending: true })
         .order("appointment_time", { ascending: true });
 
       if (error) throw error;
-      return data;
+      // Filter by practitioner_id in JS since types don't have it yet
+      return (data || []).filter((apt: any) => apt.practitioner_id === id);
     },
   });
 

@@ -130,7 +130,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         notes: appointment.notes || "",
         reminder_minutes_before: appointment.reminder_minutes_before || 60,
         medication_id: appointment.medication_id || "none",
-        practitioner_id: appointment.practitioner_id || "none",
+        practitioner_id: (appointment as any).practitioner_id || "none",
       });
       setStep(5); // Skip to review for editing
     } else if (appointment && appointment.appointment_date) {
@@ -174,7 +174,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         return;
       }
 
-      const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] = {
+      const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] & { practitioner_id?: string | null } = {
         title: values.title,
         appointment_date: format(values.appointment_date, "yyyy-MM-dd"),
         appointment_time: values.appointment_time,
