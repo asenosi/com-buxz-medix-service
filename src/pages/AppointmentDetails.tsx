@@ -62,10 +62,10 @@ const appointmentTypeLabels: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   scheduled: "Scheduled",
-  completed: "Completed",
+  completed: "Attended",
   cancelled: "Cancelled",
   rescheduled: "Rescheduled",
-  no_show: "No Show",
+  no_show: "Missed",
 };
 
 const formatReminderTime = (minutes: number): string => {
@@ -199,16 +199,16 @@ export default function AppointmentDetails() {
     }
   };
 
-  const handleMarkNoShow = async () => {
+  const handleMarkMissed = async () => {
     const { error } = await supabase
       .from("appointments")
       .update({ status: "no_show" })
       .eq("id", id);
 
     if (error) {
-      toast.error("Failed to mark appointment as no show");
+      toast.error("Failed to mark appointment as missed");
     } else {
-      toast.error("Appointment marked as no show", {
+      toast.error("Appointment marked as missed", {
         style: {
           background: "hsl(var(--destructive))",
           color: "hsl(var(--destructive-foreground))",
@@ -430,24 +430,34 @@ export default function AppointmentDetails() {
 
       {/* Mark Attendance for Past Appointments */}
       {appointment.status === "scheduled" && isAppointmentPast && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={handleMarkCompleted}
+              size="sm"
+              className="w-full rounded-full bg-success text-success-foreground hover:bg-success/90"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Attended
+            </Button>
+            <Button
+              onClick={handleMarkMissed}
+              variant="outline"
+              size="sm"
+              className="w-full rounded-full text-destructive hover:text-destructive"
+            >
+              <XCircle className="w-4 h-4 mr-2" />
+              Missed
+            </Button>
+          </div>
           <Button
-            onClick={handleMarkCompleted}
+            onClick={handleReschedule}
             variant="outline"
             size="sm"
             className="w-full rounded-full"
           >
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Mark as Completed
-          </Button>
-          <Button
-            onClick={handleMarkNoShow}
-            variant="outline"
-            size="sm"
-            className="w-full rounded-full text-destructive hover:text-destructive"
-          >
-            <XCircle className="w-4 h-4 mr-2" />
-            Mark as No Show
+            <CalendarClock className="w-4 h-4 mr-2" />
+            Reschedule
           </Button>
         </div>
       )}
