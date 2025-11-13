@@ -294,7 +294,7 @@ export default function Appointments() {
             </Card>
           ) : (
             <>
-              <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted/50 p-0.5 text-muted-foreground w-full">
+              <div className="inline-flex h-9 items-center justify-center rounded-lg p-0.5 text-muted-foreground w-full">
                 <button
                   onClick={() => setAppointmentView("upcoming")}
                   className={cn(
