@@ -9,6 +9,7 @@ import { Search, Plus, User, Phone, Mail, MapPin, Stethoscope } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 import PageLoader from "@/components/PageLoader";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { HealthCentersDirectory } from "@/components/HealthCentersDirectory";
 
 interface Practitioner {
   id: string;
@@ -82,6 +83,9 @@ export default function Practitioners() {
             className="pl-10 h-11"
           />
         </div>
+
+        {/* Health Centers Directory */}
+        <HealthCentersDirectory />
 
         {/* Empty State */}
         {(!practitioners || practitioners.length === 0) && (
