@@ -68,39 +68,45 @@ const Alerts = () => {
 
       if (medsError) throw medsError;
 
-      if (!medications || medications.length === 0) {
-        setLoading(false);
-        return;
+      // Get schedules only if we have medications
+      let schedules = null;
+      if (medications && medications.length > 0) {
+        const medIds = medications.map(m => m.id);
+        const { data: schedulesData, error: schedError } = await supabase
+          .from("medication_schedules")
+          .select("*")
+          .in("medication_id", medIds)
+          .eq("active", true);
+
+        if (schedError) throw schedError;
+        schedules = schedulesData;
       }
 
-      // Get schedules
-      const medIds = medications.map(m => m.id);
-      const { data: schedules, error: schedError } = await supabase
-        .from("medication_schedules")
-        .select("*")
-        .in("medication_id", medIds)
-        .eq("active", true);
+      // Get today's logs only if we have medications
+      let logs = null;
+      if (medications && medications.length > 0) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
 
-      if (schedError) throw schedError;
-
-      // Get today's logs
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date();
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const { data: logs } = await supabase
-        .from("dose_logs")
-        .select("*")
-        .gte("scheduled_time", startOfDay.toISOString())
-        .lte("scheduled_time", endOfDay.toISOString());
+        const { data: logsData } = await supabase
+          .from("dose_logs")
+          .select("*")
+          .gte("scheduled_time", startOfDay.toISOString())
+          .lte("scheduled_time", endOfDay.toISOString());
+        
+        logs = logsData;
+      }
 
       const now = new Date();
       const currentDay = now.getDay();
       const missed: AlertDose[] = [];
       const upcoming: AlertDose[] = [];
 
-      schedules?.forEach(schedule => {
+      // Process medication schedules only if we have medications
+      if (medications && medications.length > 0) {
+        schedules?.forEach(schedule => {
         // Check if today is in the days_of_week
         if (schedule.days_of_week && !schedule.days_of_week.includes(currentDay)) {
           return;
@@ -140,7 +146,8 @@ const Alerts = () => {
             log,
           });
         }
-      });
+        });
+      }
 
       missed.sort((a, b) => b.scheduledTime.getTime() - a.scheduledTime.getTime());
       upcoming.sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime());
