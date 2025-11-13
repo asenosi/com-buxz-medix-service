@@ -93,13 +93,32 @@ export default function AppointmentDetails() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("appointments")
-        .select("*, medications(name), medical_practitioners(name, specialty, phone_number, email)")
+        .select("*, medications(name)")
         .eq("id", id)
         .single();
       
       if (error) throw error;
       return data;
     },
+  });
+
+  // Fetch practitioner separately if linked
+  const { data: practitioner } = useQuery({
+    queryKey: ["appointment-practitioner", (appointment as any)?.practitioner_id],
+    queryFn: async () => {
+      const practitionerId = (appointment as any)?.practitioner_id;
+      if (!practitionerId) return null;
+      
+      const { data, error } = await supabase
+        .from("medical_practitioners")
+        .select("*")
+        .eq("id", practitionerId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!(appointment as any)?.practitioner_id,
   });
 
   // Real-time subscription for this appointment
@@ -322,7 +341,7 @@ export default function AppointmentDetails() {
               </div>
             </div>
 
-            {(appointment.doctor_name || appointment.medical_practitioners) && (
+            {(appointment.doctor_name || practitioner) && (
               <>
                 <Separator className="my-2" />
                 <div className="flex items-start gap-2">
@@ -330,21 +349,21 @@ export default function AppointmentDetails() {
                   <div className="flex-1">
                     <p className="text-xs text-muted-foreground">Doctor</p>
                     <p className="text-sm font-medium">
-                      {appointment.medical_practitioners?.name || appointment.doctor_name}
+                      {practitioner?.name || appointment.doctor_name}
                     </p>
-                    {(appointment.medical_practitioners?.specialty || appointment.doctor_specialty) && (
+                    {(practitioner?.specialty || appointment.doctor_specialty) && (
                       <p className="text-xs text-muted-foreground">
-                        {appointment.medical_practitioners?.specialty || appointment.doctor_specialty}
+                        {practitioner?.specialty || appointment.doctor_specialty}
                       </p>
                     )}
-                    {appointment.medical_practitioners?.phone_number && (
+                    {practitioner?.phone_number && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        📞 {appointment.medical_practitioners.phone_number}
+                        📞 {practitioner.phone_number}
                       </p>
                     )}
-                    {appointment.medical_practitioners?.email && (
+                    {practitioner?.email && (
                       <p className="text-xs text-muted-foreground">
-                        ✉️ {appointment.medical_practitioners.email}
+                        ✉️ {practitioner.email}
                       </p>
                     )}
                   </div>
