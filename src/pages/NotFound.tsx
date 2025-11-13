@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { Home, Pill, MapPin, Sparkles } from "lucide-react";
+import { Home, Pill, Frown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
@@ -35,8 +35,8 @@ const NotFound = () => {
           <div className="flex justify-center">
             <div className="relative">
               <div className="absolute inset-0 rounded-full bg-primary/20 animate-glow blur-xl" />
-              <div className="relative p-3 md:p-4 rounded-full bg-primary/10 animate-float border-2 border-dashed border-primary/40">
-                <MapPin className="w-10 h-10 md:w-12 md:h-12 text-primary animate-bounce-smooth" />
+              <div className="relative p-3 md:p-4 rounded-full bg-primary/10 animate-float">
+                <Frown className="w-10 h-10 md:w-12 md:h-12 text-primary animate-bounce-smooth" />
               </div>
             </div>
           </div>
