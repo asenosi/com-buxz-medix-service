@@ -53,10 +53,10 @@ const App = () => (
               <Route path="/install" element={<InstallPWA />} />
               <Route path="/appointments" element={<Appointments />} />
               <Route path="/appointments/:id" element={<AppointmentDetails />} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
             </Route>
-
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
