@@ -9,9 +9,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import PageLoader from "@/components/PageLoader";
 import { toast } from "sonner";
+
+const MEDICAL_SPECIALTIES = [
+  "General Practice",
+  "Internal Medicine",
+  "Pediatrics",
+  "Cardiology",
+  "Dermatology",
+  "Endocrinology",
+  "Gastroenterology",
+  "Neurology",
+  "Oncology",
+  "Orthopedics",
+  "Psychiatry",
+  "Pulmonology",
+  "Rheumatology",
+  "Urology",
+  "Obstetrics & Gynecology",
+  "Ophthalmology",
+  "Otolaryngology (ENT)",
+  "Radiology",
+  "Anesthesiology",
+  "Emergency Medicine",
+  "Physical Medicine & Rehabilitation",
+  "Surgery",
+  "Other",
+];
 
 const practitionerSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -158,9 +185,20 @@ export default function PractitionerForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Specialty</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Cardiologist" className="h-11" />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Select specialty" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {MEDICAL_SPECIALTIES.map((specialty) => (
+                        <SelectItem key={specialty} value={specialty}>
+                          {specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
