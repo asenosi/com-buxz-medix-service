@@ -323,9 +323,9 @@ const Alerts = () => {
           </section>
         )}
 
-        {/* Today's Reminders */}
+        {/* Today's Medication Reminders */}
         <section>
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">Upcoming</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Medications</h2>
           {upcomingDoses.length === 0 ? (
             <Card>
               <CardContent className="py-6 text-center">

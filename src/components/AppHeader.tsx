@@ -29,6 +29,7 @@ export default function AppHeader() {
   const [fullName, setFullName] = useState<string | null>(null);
   const [hasUnread, setHasUnread] = useState(true);
   const [loadingNav, setLoadingNav] = useState(true);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Array<{
     id: string;
     title: string;
@@ -222,7 +223,7 @@ export default function AppHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-1">
-          <Popover>
+          <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
                 <Bell className="h-5 w-5" />
@@ -236,7 +237,10 @@ export default function AppHeader() {
                   <Button 
                     size="sm" 
                     variant="ghost" 
-                    onClick={() => navigate("/alerts")}
+                    onClick={() => {
+                      setNotificationOpen(false);
+                      navigate("/alerts");
+                    }}
                     className="h-7 text-xs"
                   >
                     View All
@@ -257,6 +261,7 @@ export default function AppHeader() {
                           key={appointment.id}
                           className="flex items-start gap-2 rounded-md border p-2 text-sm hover:bg-accent/5 cursor-pointer transition-colors"
                           onClick={() => {
+                            setNotificationOpen(false);
                             navigate(`/appointments/${appointment.id}`);
                           }}
                         >
