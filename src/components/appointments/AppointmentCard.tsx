@@ -1,7 +1,7 @@
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, User, FileText, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, User, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -91,16 +91,9 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
       
       <CardContent className="p-3 pl-4">
         <div className="space-y-1.5">
-          {/* Header: Relative time + Status chips */}
-          <div className="flex items-start justify-between gap-2">
+          {/* Header: Title + Relative time */}
+          <div className="flex items-start justify-between gap-3">
             <div className="flex-1 space-y-1">
-              <p className={cn(
-                "text-sm font-medium",
-                isAppointmentPast ? "text-muted-foreground" : "text-primary"
-              )}>
-                {getRelativeTime()}
-              </p>
-              
               <h3 className="text-base font-semibold text-foreground leading-tight">
                 {appointment.title}
               </h3>
@@ -112,9 +105,12 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
               )}
             </div>
 
-            <div className="flex items-center gap-1">
-              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-            </div>
+            <p className={cn(
+              "text-sm font-medium shrink-0",
+              isAppointmentPast ? "text-muted-foreground" : "text-primary"
+            )}>
+              {getRelativeTime()}
+            </p>
           </div>
 
           {/* Status chips */}
