@@ -8,9 +8,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import ThemePicker from "@/components/ThemePicker";
-import { Bell, LogOut, Settings, Monitor, Pill, Menu, SunMedium, Moon, Home, Calendar as CalendarIcon, Search, User as UserIcon } from "lucide-react";
+import { Bell, LogOut, Settings, Monitor, Pill, Menu, SunMedium, Moon, Home, Calendar as CalendarIcon, Search, User as UserIcon, CalendarCheck } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Skeleton } from "@/components/ui/skeleton";
+import { format, isToday, isTomorrow } from "date-fns";
 
 const brand = {
   name: "MedTracker",
@@ -28,6 +29,13 @@ export default function AppHeader() {
   const [fullName, setFullName] = useState<string | null>(null);
   const [hasUnread, setHasUnread] = useState(true);
   const [loadingNav, setLoadingNav] = useState(true);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Array<{
+    id: string;
+    title: string;
+    appointment_date: string;
+    appointment_time: string;
+    doctor_name: string | null;
+  }>>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -63,6 +71,23 @@ export default function AppHeader() {
           .eq("user_id", user.id)
           .eq("active", true);
         setMedCount(count ?? 0);
+
+        // Fetch upcoming appointments (next 7 days)
+        const sevenDaysFromNow = new Date();
+        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+        const { data: appointments } = await supabase
+          .from("appointments")
+          .select("id, title, appointment_date, appointment_time, doctor_name")
+          .eq("user_id", user.id)
+          .eq("status", "scheduled")
+          .gte("appointment_date", new Date().toISOString().split('T')[0])
+          .lte("appointment_date", sevenDaysFromNow.toISOString().split('T')[0])
+          .order("appointment_date", { ascending: true })
+          .order("appointment_time", { ascending: true })
+          .limit(3);
+
+        setUpcomingAppointments(appointments || []);
       }
       setLoadingNav(false);
     };
@@ -201,16 +226,55 @@ export default function AppHeader() {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
                 <Bell className="h-5 w-5" />
-                {hasUnread && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" />}
+                {(hasUnread || upcomingAppointments.length > 0) && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" />}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-72 p-0">
+            <PopoverContent align="end" className="w-80 p-0">
               <div className="p-3">
-                <div className="mb-2 text-sm font-medium">Notifications</div>
-                <div className="rounded-md border p-3 text-sm text-muted-foreground">No new notifications</div>
-                <div className="mt-3 text-right">
-                  <Button size="sm" variant="outline" onClick={() => setHasUnread(false)}>Clear dot</Button>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-medium">Notifications</span>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => navigate("/alerts")}
+                    className="h-7 text-xs"
+                  >
+                    View All
+                  </Button>
                 </div>
+                {upcomingAppointments.length > 0 ? (
+                  <div className="space-y-2">
+                    {upcomingAppointments.map((appointment) => {
+                      const appointmentDate = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+                      const dateLabel = isToday(appointmentDate) 
+                        ? "Today" 
+                        : isTomorrow(appointmentDate) 
+                        ? "Tomorrow" 
+                        : format(appointmentDate, "MMM d");
+                      
+                      return (
+                        <div
+                          key={appointment.id}
+                          className="flex items-start gap-2 rounded-md border p-2 text-sm hover:bg-accent/5 cursor-pointer transition-colors"
+                          onClick={() => {
+                            navigate(`/appointments/${appointment.id}`);
+                          }}
+                        >
+                          <CalendarCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm mb-0.5">{appointment.title}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {dateLabel} at {format(appointmentDate, "h:mm a")}
+                              {appointment.doctor_name && ` • ${appointment.doctor_name}`}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-md border p-3 text-sm text-muted-foreground">No upcoming appointments</div>
+                )}
               </div>
             </PopoverContent>
           </Popover>
