@@ -89,11 +89,11 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
         )} 
       />
       
-      <CardContent className="p-4 pl-5">
-        <div className="space-y-2.5">
+      <CardContent className="p-3 pl-4">
+        <div className="space-y-1.5">
           {/* Header: Relative time + Status chips */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 space-y-1">
               <p className={cn(
                 "text-sm font-medium",
                 isAppointmentPast ? "text-muted-foreground" : "text-primary"
@@ -101,7 +101,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
                 {getRelativeTime()}
               </p>
               
-              <h3 className="text-lg font-semibold text-foreground leading-tight">
+              <h3 className="text-base font-semibold text-foreground leading-tight">
                 {appointment.title}
               </h3>
               
@@ -118,7 +118,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
           </div>
 
           {/* Status chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <Badge 
               variant="secondary" 
               className={cn("text-xs font-normal", appointmentTypeColors[appointment.appointment_type])}
@@ -136,9 +136,9 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
           </div>
 
           {/* Info rows with icons */}
-          <div className="space-y-2 text-sm pt-0.5">
+          <div className="space-y-1.5 text-sm">
             {/* Date & Time */}
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="w-4 h-4 shrink-0" />
               <span className="font-medium">
                 {format(appointmentDateTime, "EEE, MMM d, yyyy")} — {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
@@ -147,7 +147,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
 
             {/* Doctor */}
             {appointment.doctor_name && (
-              <div className="flex items-center gap-3 text-muted-foreground">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <User className="w-4 h-4 shrink-0" />
                 <span>
                   {appointment.doctor_name}
@@ -160,7 +160,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
 
             {/* Location */}
             {appointment.location && (
-              <div className="flex items-center gap-3 text-muted-foreground">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4 shrink-0" />
                 <span>{appointment.location}</span>
               </div>
@@ -169,7 +169,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
             {/* Notes */}
             {appointment.notes && (
               <div 
-                className="flex items-start gap-3 pt-1.5 border-t border-border/50 cursor-pointer"
+                className="flex items-start gap-2 pt-1 border-t border-border/50 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowFullNotes(!showFullNotes);
