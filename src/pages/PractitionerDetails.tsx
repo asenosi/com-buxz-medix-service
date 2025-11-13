@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, User, Phone, Mail, MapPin, Stethoscope, FileText } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, User, Phone, Mail, MapPin, Stethoscope, FileText, Calendar } from "lucide-react";
+import { format } from "date-fns";
 import PageLoader from "@/components/PageLoader";
 import { toast } from "sonner";
 
@@ -26,6 +27,21 @@ export default function PractitionerDetails() {
 
       if (error) throw error;
       if (!data) throw new Error("Practitioner not found");
+      return data;
+    },
+  });
+
+  const { data: appointments } = useQuery({
+    queryKey: ["practitioner-appointments", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*")
+        .eq("practitioner_id", id)
+        .order("appointment_date", { ascending: true })
+        .order("appointment_time", { ascending: true });
+
+      if (error) throw error;
       return data;
     },
   });
@@ -167,6 +183,48 @@ export default function PractitionerDetails() {
             </CardContent>
           </Card>
         )}
+
+        {/* Appointments Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Appointments
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {appointments && appointments.length > 0 ? (
+              <div className="space-y-3">
+                {appointments.map((appointment) => (
+                  <div
+                    key={appointment.id}
+                    onClick={() => navigate(`/appointments/${appointment.id}`)}
+                    className="p-4 rounded-lg border border-border bg-card hover:bg-accent/50 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-foreground truncate">{appointment.title}</h4>
+                        {appointment.description && (
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{appointment.description}</p>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {format(new Date(appointment.appointment_date), "MMM d, yyyy")}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">No appointments scheduled with this practitioner.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Delete Confirmation Dialog */}
