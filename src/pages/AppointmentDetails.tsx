@@ -18,7 +18,9 @@ import {
   Trash2,
   Bell,
   X,
-  CalendarClock
+  CalendarClock,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -176,6 +178,52 @@ export default function AppointmentDetails() {
   const handleReschedule = () => {
     setEditDialogOpen(true);
   };
+
+  const handleMarkCompleted = async () => {
+    const { error } = await supabase
+      .from("appointments")
+      .update({ status: "completed" })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to mark appointment as completed");
+    } else {
+      toast.success("Appointment marked as completed", {
+        style: {
+          background: "hsl(var(--success))",
+          color: "hsl(var(--success-foreground))",
+          border: "1px solid hsl(var(--success))",
+        },
+      });
+      refetch();
+    }
+  };
+
+  const handleMarkNoShow = async () => {
+    const { error } = await supabase
+      .from("appointments")
+      .update({ status: "no_show" })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to mark appointment as no show");
+    } else {
+      toast.error("Appointment marked as no show", {
+        style: {
+          background: "hsl(var(--destructive))",
+          color: "hsl(var(--destructive-foreground))",
+          border: "1px solid hsl(var(--destructive))",
+        },
+      });
+      refetch();
+    }
+  };
+
+  // Check if appointment is in the past
+  const isAppointmentPast = appointment ? (() => {
+    const appointmentDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+    return appointmentDateTime < new Date();
+  })() : false;
 
   if (isLoading) {
     return (
@@ -357,7 +405,7 @@ export default function AppointmentDetails() {
       </Card>
 
       {/* Action Buttons */}
-      {appointment.status === "scheduled" && (
+      {appointment.status === "scheduled" && !isAppointmentPast && (
         <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={handleReschedule}
@@ -376,6 +424,30 @@ export default function AppointmentDetails() {
           >
             <X className="w-4 h-4 mr-2" />
             Cancel
+          </Button>
+        </div>
+      )}
+
+      {/* Mark Attendance for Past Appointments */}
+      {appointment.status === "scheduled" && isAppointmentPast && (
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            onClick={handleMarkCompleted}
+            variant="outline"
+            size="sm"
+            className="w-full rounded-full"
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            Mark as Completed
+          </Button>
+          <Button
+            onClick={handleMarkNoShow}
+            variant="outline"
+            size="sm"
+            className="w-full rounded-full text-destructive hover:text-destructive"
+          >
+            <XCircle className="w-4 h-4 mr-2" />
+            Mark as No Show
           </Button>
         </div>
       )}
