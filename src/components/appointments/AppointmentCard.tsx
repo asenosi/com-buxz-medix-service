@@ -145,24 +145,31 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
               </span>
             </div>
 
-            {/* Doctor */}
-            {appointment.doctor_name && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <User className="w-4 h-4 shrink-0" />
-                <span>
-                  {appointment.doctor_name}
-                  {appointment.doctor_specialty && (
-                    <span className="text-xs ml-1">({appointment.doctor_specialty})</span>
-                  )}
-                </span>
-              </div>
-            )}
-
-            {/* Location */}
-            {appointment.location && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MapPin className="w-4 h-4 shrink-0" />
-                <span>{appointment.location}</span>
+            {/* Doctor & Location on same line */}
+            {(appointment.doctor_name || appointment.location) && (
+              <div className="flex items-center gap-3 text-muted-foreground flex-wrap">
+                {appointment.doctor_name && (
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 shrink-0" />
+                    <span>
+                      {appointment.doctor_name}
+                      {appointment.doctor_specialty && (
+                        <span className="text-xs ml-1">({appointment.doctor_specialty})</span>
+                      )}
+                    </span>
+                  </div>
+                )}
+                
+                {appointment.doctor_name && appointment.location && (
+                  <span className="text-muted-foreground/40">•</span>
+                )}
+                
+                {appointment.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 shrink-0" />
+                    <span>{appointment.location}</span>
+                  </div>
+                )}
               </div>
             )}
 
