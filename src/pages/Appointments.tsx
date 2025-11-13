@@ -311,7 +311,7 @@ export default function Appointments() {
                     appointmentView === "past" && "bg-background text-foreground shadow-sm"
                   )}
                 >
-                  Past <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-xs">{pastAppointments?.length || 0}</Badge>
+                  History <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-xs bg-muted text-muted-foreground">{pastAppointments?.length || 0}</Badge>
                 </button>
               </div>
 

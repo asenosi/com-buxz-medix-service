@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, AlertCircle, Clock, CheckCircle, ChevronRight, Settings, BellOff } from "lucide-react";
+import { Bell, AlertCircle, Clock, CheckCircle, ChevronRight, Settings, BellOff, CalendarCheck, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, isToday, isTomorrow } from "date-fns";
 import { useNotification } from "@/hooks/use-notification";
 
 interface Medication {
@@ -32,11 +32,23 @@ interface AlertDose {
   };
 }
 
+interface Appointment {
+  id: string;
+  title: string;
+  appointment_date: string;
+  appointment_time: string;
+  appointment_type: string;
+  doctor_name: string | null;
+  location: string | null;
+}
+
 const Alerts = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [missedDoses, setMissedDoses] = useState<AlertDose[]>([]);
   const [upcomingDoses, setUpcomingDoses] = useState<AlertDose[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [showAppointments, setShowAppointments] = useState(true);
   const { preferences, sendNotification } = useNotification();
 
   const fetchAlerts = useCallback(async () => {
@@ -57,39 +69,45 @@ const Alerts = () => {
 
       if (medsError) throw medsError;
 
-      if (!medications || medications.length === 0) {
-        setLoading(false);
-        return;
+      // Get schedules only if we have medications
+      let schedules = null;
+      if (medications && medications.length > 0) {
+        const medIds = medications.map(m => m.id);
+        const { data: schedulesData, error: schedError } = await supabase
+          .from("medication_schedules")
+          .select("*")
+          .in("medication_id", medIds)
+          .eq("active", true);
+
+        if (schedError) throw schedError;
+        schedules = schedulesData;
       }
 
-      // Get schedules
-      const medIds = medications.map(m => m.id);
-      const { data: schedules, error: schedError } = await supabase
-        .from("medication_schedules")
-        .select("*")
-        .in("medication_id", medIds)
-        .eq("active", true);
+      // Get today's logs only if we have medications
+      let logs = null;
+      if (medications && medications.length > 0) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
 
-      if (schedError) throw schedError;
-
-      // Get today's logs
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date();
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const { data: logs } = await supabase
-        .from("dose_logs")
-        .select("*")
-        .gte("scheduled_time", startOfDay.toISOString())
-        .lte("scheduled_time", endOfDay.toISOString());
+        const { data: logsData } = await supabase
+          .from("dose_logs")
+          .select("*")
+          .gte("scheduled_time", startOfDay.toISOString())
+          .lte("scheduled_time", endOfDay.toISOString());
+        
+        logs = logsData;
+      }
 
       const now = new Date();
       const currentDay = now.getDay();
       const missed: AlertDose[] = [];
       const upcoming: AlertDose[] = [];
 
-      schedules?.forEach(schedule => {
+      // Process medication schedules only if we have medications
+      if (medications && medications.length > 0) {
+        schedules?.forEach(schedule => {
         // Check if today is in the days_of_week
         if (schedule.days_of_week && !schedule.days_of_week.includes(currentDay)) {
           return;
@@ -129,13 +147,30 @@ const Alerts = () => {
             log,
           });
         }
-      });
+        });
+      }
 
       missed.sort((a, b) => b.scheduledTime.getTime() - a.scheduledTime.getTime());
       upcoming.sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime());
 
       setMissedDoses(missed);
       setUpcomingDoses(upcoming);
+
+      // Fetch upcoming appointments (today and tomorrow only)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const { data: appointments } = await supabase
+        .from("appointments")
+        .select("id, title, appointment_date, appointment_time, appointment_type, doctor_name, location")
+        .eq("user_id", session.user.id)
+        .eq("status", "scheduled")
+        .gte("appointment_date", new Date().toISOString().split('T')[0])
+        .lte("appointment_date", tomorrow.toISOString().split('T')[0])
+        .order("appointment_date", { ascending: true })
+        .order("appointment_time", { ascending: true });
+
+      setUpcomingAppointments(appointments || []);
 
       // Send notifications for upcoming doses
       if (preferences?.enabled && preferences?.browser_enabled) {
@@ -246,6 +281,15 @@ const Alerts = () => {
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => setShowAppointments(!showAppointments)}
+            className="h-8 w-8"
+            title={showAppointments ? "Hide appointments" : "Show appointments"}
+          >
+            {showAppointments ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate("/notification-settings")}
             className="h-8 w-8"
           >
@@ -295,9 +339,9 @@ const Alerts = () => {
           </section>
         )}
 
-        {/* Today's Reminders */}
+        {/* Today's Medication Reminders */}
         <section>
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">Upcoming</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Medications</h2>
           {upcomingDoses.length === 0 ? (
             <Card>
               <CardContent className="py-6 text-center">
@@ -333,6 +377,71 @@ const Alerts = () => {
             </div>
           )}
         </section>
+
+        {/* Upcoming Appointments */}
+        {showAppointments && (
+          <section>
+            <h2 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Appointments</h2>
+            {upcomingAppointments.length === 0 ? (
+              <Card>
+                <CardContent className="py-6 text-center">
+                  <CalendarCheck className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-3">
+                    No appointments scheduled for today or tomorrow
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/appointments")}
+                    className="rounded-full"
+                  >
+                    View All Appointments
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {upcomingAppointments.map((appointment) => {
+                  const appointmentDate = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+                  const dateLabel = isToday(appointmentDate) 
+                    ? "Today" 
+                    : isTomorrow(appointmentDate) 
+                    ? "Tomorrow" 
+                    : format(appointmentDate, "MMM d");
+                  
+                  return (
+                    <Card 
+                      key={appointment.id}
+                      className="hover:bg-accent/5 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/appointments/${appointment.id}`)}
+                    >
+                      <CardContent className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <CalendarCheck className="w-4 h-4 text-primary shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm mb-0.5">{appointment.title}</h3>
+                            <p className="text-xs text-muted-foreground">
+                              {dateLabel} at {format(appointmentDate, "h:mm a")}
+                              {appointment.doctor_name && ` • ${appointment.doctor_name}`}
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => navigate("/appointments")}
+                >
+                  All Appointments
+                </Button>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Recent Updates */}
         <section>
