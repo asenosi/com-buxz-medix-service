@@ -287,7 +287,10 @@ export default function AppointmentDetails() {
             <Badge variant="outline" className="text-xs">
               {appointmentTypeLabels[appointment.appointment_type]}
             </Badge>
-            <Badge variant={appointment.status === "scheduled" ? "default" : "secondary"} className="text-xs">
+            <Badge 
+              variant={appointment.status === "scheduled" ? "default" : "secondary"} 
+              className={`text-xs ${appointment.status === "completed" ? "bg-success text-success-foreground" : ""}`}
+            >
               {statusLabels[appointment.status]}
             </Badge>
           </div>
