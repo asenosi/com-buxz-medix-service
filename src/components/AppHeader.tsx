@@ -73,9 +73,9 @@ export default function AppHeader() {
           .eq("active", true);
         setMedCount(count ?? 0);
 
-        // Fetch upcoming appointments (next 7 days)
-        const sevenDaysFromNow = new Date();
-        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+        // Fetch upcoming appointments (next 30 days)
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
         const { data: appointments } = await supabase
           .from("appointments")
@@ -83,7 +83,7 @@ export default function AppHeader() {
           .eq("user_id", user.id)
           .eq("status", "scheduled")
           .gte("appointment_date", new Date().toISOString().split('T')[0])
-          .lte("appointment_date", sevenDaysFromNow.toISOString().split('T')[0])
+          .lte("appointment_date", thirtyDaysFromNow.toISOString().split('T')[0])
           .order("appointment_date", { ascending: true })
           .order("appointment_time", { ascending: true })
           .limit(3);
