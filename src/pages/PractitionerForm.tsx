@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
 import PageLoader from "@/components/PageLoader";
 import { toast } from "sonner";
@@ -57,6 +58,7 @@ export default function PractitionerForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEditing = Boolean(id);
+  const [contactType, setContactType] = useState<"practitioner" | "health_center">("practitioner");
 
   const form = useForm<PractitionerFormData>({
     resolver: zodResolver(practitionerSchema),
@@ -158,9 +160,22 @@ export default function PractitionerForm() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-bold">
-            {isEditing ? "Edit Practitioner" : "Add Practitioner"}
+            {isEditing 
+              ? `Edit ${contactType === "practitioner" ? "Practitioner" : "Health Center"}`
+              : `Add ${contactType === "practitioner" ? "Practitioner" : "Health Center"}`
+            }
           </h1>
         </div>
+
+        {/* Type Toggle */}
+        {!isEditing && (
+          <Tabs value={contactType} onValueChange={(value) => setContactType(value as "practitioner" | "health_center")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="practitioner">Practitioner</TabsTrigger>
+              <TabsTrigger value="health_center">Health Center</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
 
         {/* Form */}
         <Form {...form}>
@@ -170,9 +185,15 @@ export default function PractitionerForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name *</FormLabel>
+                  <FormLabel>
+                    {contactType === "practitioner" ? "Doctor Name" : "Center Name"} *
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Dr. John Smith" className="h-11" />
+                    <Input 
+                      {...field} 
+                      placeholder={contactType === "practitioner" ? "Dr. John Smith" : "City Medical Center"} 
+                      className="h-11" 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -184,11 +205,13 @@ export default function PractitionerForm() {
               name="specialty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Specialty</FormLabel>
+                  <FormLabel>
+                    {contactType === "practitioner" ? "Specialty" : "Services Offered"}
+                  </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || undefined}>
                     <FormControl>
                       <SelectTrigger className="h-11">
-                        <SelectValue placeholder="Select specialty" />
+                        <SelectValue placeholder={contactType === "practitioner" ? "Select specialty" : "Select service type"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -204,19 +227,21 @@ export default function PractitionerForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="clinic_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Clinic Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="City Medical Center" className="h-11" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {contactType === "health_center" && (
+              <FormField
+                control={form.control}
+                name="clinic_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Organization/Network</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Healthcare Network Name" className="h-11" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
@@ -239,7 +264,7 @@ export default function PractitionerForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="doctor@clinic.com" className="h-11" />
+                    <Input {...field} type="email" placeholder="contact@example.com" className="h-11" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
