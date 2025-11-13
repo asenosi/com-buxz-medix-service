@@ -93,7 +93,7 @@ export default function AppointmentDetails() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("appointments")
-        .select("*, medications(name)")
+        .select("*, medications(name), medical_practitioners(name, specialty, phone_number, email)")
         .eq("id", id)
         .single();
       
@@ -322,17 +322,29 @@ export default function AppointmentDetails() {
               </div>
             </div>
 
-            {appointment.doctor_name && (
+            {(appointment.doctor_name || appointment.medical_practitioners) && (
               <>
                 <Separator className="my-2" />
                 <div className="flex items-start gap-2">
                   <User className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs text-muted-foreground">Doctor</p>
-                    <p className="text-sm font-medium">{appointment.doctor_name}</p>
-                    {appointment.doctor_specialty && (
+                    <p className="text-sm font-medium">
+                      {appointment.medical_practitioners?.name || appointment.doctor_name}
+                    </p>
+                    {(appointment.medical_practitioners?.specialty || appointment.doctor_specialty) && (
                       <p className="text-xs text-muted-foreground">
-                        {appointment.doctor_specialty}
+                        {appointment.medical_practitioners?.specialty || appointment.doctor_specialty}
+                      </p>
+                    )}
+                    {appointment.medical_practitioners?.phone_number && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        📞 {appointment.medical_practitioners.phone_number}
+                      </p>
+                    )}
+                    {appointment.medical_practitioners?.email && (
+                      <p className="text-xs text-muted-foreground">
+                        ✉️ {appointment.medical_practitioners.email}
                       </p>
                     )}
                   </div>
