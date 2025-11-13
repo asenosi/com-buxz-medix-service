@@ -393,6 +393,7 @@ const Alerts = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate("/appointments")}
+                    className="rounded-full"
                   >
                     View All Appointments
                   </Button>
