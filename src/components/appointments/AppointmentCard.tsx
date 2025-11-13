@@ -1,7 +1,7 @@
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, User, FileText, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, User, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -89,19 +89,12 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
         )} 
       />
       
-      <CardContent className="p-4 pl-5">
-        <div className="space-y-2.5">
-          {/* Header: Relative time + Status chips */}
+      <CardContent className="p-3 pl-4">
+        <div className="space-y-1.5">
+          {/* Header: Title + Relative time */}
           <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 space-y-2">
-              <p className={cn(
-                "text-sm font-medium",
-                isAppointmentPast ? "text-muted-foreground" : "text-primary"
-              )}>
-                {getRelativeTime()}
-              </p>
-              
-              <h3 className="text-lg font-semibold text-foreground leading-tight">
+            <div className="flex-1 space-y-1">
+              <h3 className="text-base font-semibold text-foreground leading-tight">
                 {appointment.title}
               </h3>
               
@@ -112,13 +105,16 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
               )}
             </div>
 
-            <div className="flex items-center gap-1">
-              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-            </div>
+            <p className={cn(
+              "text-sm font-medium shrink-0",
+              isAppointmentPast ? "text-muted-foreground" : "text-primary"
+            )}>
+              {getRelativeTime()}
+            </p>
           </div>
 
           {/* Status chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <Badge 
               variant="secondary" 
               className={cn("text-xs font-normal", appointmentTypeColors[appointment.appointment_type])}
@@ -136,40 +132,47 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
           </div>
 
           {/* Info rows with icons */}
-          <div className="space-y-2 text-sm pt-0.5">
+          <div className="space-y-1.5 text-sm">
             {/* Date & Time */}
-            <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="w-4 h-4 shrink-0" />
               <span className="font-medium">
                 {format(appointmentDateTime, "EEE, MMM d, yyyy")} — {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
               </span>
             </div>
 
-            {/* Doctor */}
-            {appointment.doctor_name && (
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <User className="w-4 h-4 shrink-0" />
-                <span>
-                  {appointment.doctor_name}
-                  {appointment.doctor_specialty && (
-                    <span className="text-xs ml-1">({appointment.doctor_specialty})</span>
-                  )}
-                </span>
-              </div>
-            )}
-
-            {/* Location */}
-            {appointment.location && (
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <MapPin className="w-4 h-4 shrink-0" />
-                <span>{appointment.location}</span>
+            {/* Doctor & Location on same line */}
+            {(appointment.doctor_name || appointment.location) && (
+              <div className="flex items-center gap-3 text-muted-foreground flex-wrap">
+                {appointment.doctor_name && (
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 shrink-0" />
+                    <span>
+                      {appointment.doctor_name}
+                      {appointment.doctor_specialty && (
+                        <span className="text-xs ml-1">({appointment.doctor_specialty})</span>
+                      )}
+                    </span>
+                  </div>
+                )}
+                
+                {appointment.doctor_name && appointment.location && (
+                  <span className="text-muted-foreground/40">•</span>
+                )}
+                
+                {appointment.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 shrink-0" />
+                    <span>{appointment.location}</span>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Notes */}
             {appointment.notes && (
               <div 
-                className="flex items-start gap-3 pt-1.5 border-t border-border/50 cursor-pointer"
+                className="flex items-start gap-2 pt-1 border-t border-border/50 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowFullNotes(!showFullNotes);
