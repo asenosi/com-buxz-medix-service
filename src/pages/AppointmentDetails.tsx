@@ -104,9 +104,9 @@ export default function AppointmentDetails() {
 
   // Fetch practitioner separately if linked
   const { data: practitioner } = useQuery({
-    queryKey: ["appointment-practitioner", (appointment as any)?.practitioner_id],
+    queryKey: ["appointment-practitioner", (appointment as { practitioner_id?: string })?.practitioner_id],
     queryFn: async () => {
-      const practitionerId = (appointment as any)?.practitioner_id;
+      const practitionerId = (appointment as { practitioner_id?: string })?.practitioner_id;
       if (!practitionerId) return null;
       
       const { data, error } = await supabase
@@ -118,7 +118,7 @@ export default function AppointmentDetails() {
       if (error) throw error;
       return data;
     },
-    enabled: !!(appointment as any)?.practitioner_id,
+    enabled: !!(appointment as { practitioner_id?: string })?.practitioner_id,
   });
 
   // Real-time subscription for this appointment
