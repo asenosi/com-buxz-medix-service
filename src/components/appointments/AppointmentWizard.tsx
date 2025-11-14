@@ -130,7 +130,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         notes: appointment.notes || "",
         reminder_minutes_before: appointment.reminder_minutes_before || 60,
         medication_id: appointment.medication_id || "none",
-        practitioner_id: (appointment as any).practitioner_id || "none",
+        practitioner_id: (appointment as { practitioner_id?: string })?.practitioner_id || "none",
       });
       setStep(5); // Skip to review for editing
     } else if (appointment && appointment.appointment_date) {
