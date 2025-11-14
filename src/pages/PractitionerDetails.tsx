@@ -43,7 +43,7 @@ export default function PractitionerDetails() {
 
       if (error) throw error;
       // Filter by practitioner_id in JS since types don't have it yet
-      return (data || []).filter((apt: any) => apt.practitioner_id === id);
+      return (data || []).filter((apt) => (apt as { practitioner_id?: string }).practitioner_id === id);
     },
   });
 
