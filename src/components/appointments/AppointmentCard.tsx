@@ -32,6 +32,14 @@ const statusColors: Record<string, string> = {
   no_show: "bg-gray-500/10 text-gray-700 dark:text-gray-300",
 };
 
+const statusLabels: Record<string, string> = {
+  scheduled: "Scheduled",
+  completed: "Attended",
+  cancelled: "Cancelled",
+  rescheduled: "Rescheduled",
+  no_show: "Missed",
+};
+
 interface AppointmentCardProps {
   appointment: Appointment;
 }
@@ -126,7 +134,7 @@ export function AppointmentCard({ appointment }: AppointmentCardProps) {
                 variant="secondary"
                 className={cn("text-xs font-normal", statusColors[appointment.status])}
               >
-                {appointment.status}
+                {statusLabels[appointment.status]}
               </Badge>
             )}
           </div>

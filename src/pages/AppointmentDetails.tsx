@@ -18,7 +18,9 @@ import {
   Trash2,
   Bell,
   X,
-  CalendarClock
+  CalendarClock,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -60,10 +62,10 @@ const appointmentTypeLabels: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   scheduled: "Scheduled",
-  completed: "Completed",
+  completed: "Attended",
   cancelled: "Cancelled",
   rescheduled: "Rescheduled",
-  no_show: "No Show",
+  no_show: "Missed",
 };
 
 const formatReminderTime = (minutes: number): string => {
@@ -98,6 +100,25 @@ export default function AppointmentDetails() {
       if (error) throw error;
       return data;
     },
+  });
+
+  // Fetch practitioner separately if linked
+  const { data: practitioner } = useQuery({
+    queryKey: ["appointment-practitioner", (appointment as { practitioner_id?: string })?.practitioner_id],
+    queryFn: async () => {
+      const practitionerId = (appointment as { practitioner_id?: string })?.practitioner_id;
+      if (!practitionerId) return null;
+      
+      const { data, error } = await supabase
+        .from("medical_practitioners")
+        .select("*")
+        .eq("id", practitionerId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!(appointment as { practitioner_id?: string })?.practitioner_id,
   });
 
   // Real-time subscription for this appointment
@@ -177,6 +198,52 @@ export default function AppointmentDetails() {
     setEditDialogOpen(true);
   };
 
+  const handleMarkCompleted = async () => {
+    const { error } = await supabase
+      .from("appointments")
+      .update({ status: "completed" })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to mark appointment as completed");
+    } else {
+      toast.success("Appointment marked as completed", {
+        style: {
+          background: "hsl(var(--success))",
+          color: "hsl(var(--success-foreground))",
+          border: "1px solid hsl(var(--success))",
+        },
+      });
+      refetch();
+    }
+  };
+
+  const handleMarkMissed = async () => {
+    const { error } = await supabase
+      .from("appointments")
+      .update({ status: "no_show" })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to mark appointment as missed");
+    } else {
+      toast.error("Appointment marked as missed", {
+        style: {
+          background: "hsl(var(--destructive))",
+          color: "hsl(var(--destructive-foreground))",
+          border: "1px solid hsl(var(--destructive))",
+        },
+      });
+      refetch();
+    }
+  };
+
+  // Check if appointment is in the past
+  const isAppointmentPast = appointment ? (() => {
+    const appointmentDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
+    return appointmentDateTime < new Date();
+  })() : false;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -239,7 +306,10 @@ export default function AppointmentDetails() {
             <Badge variant="outline" className="text-xs">
               {appointmentTypeLabels[appointment.appointment_type]}
             </Badge>
-            <Badge variant={appointment.status === "scheduled" ? "default" : "secondary"} className="text-xs">
+            <Badge 
+              variant={appointment.status === "scheduled" ? "default" : "secondary"} 
+              className={`text-xs ${appointment.status === "completed" ? "bg-success text-success-foreground" : ""}`}
+            >
               {statusLabels[appointment.status]}
             </Badge>
           </div>
@@ -271,17 +341,29 @@ export default function AppointmentDetails() {
               </div>
             </div>
 
-            {appointment.doctor_name && (
+            {(appointment.doctor_name || practitioner) && (
               <>
                 <Separator className="my-2" />
                 <div className="flex items-start gap-2">
                   <User className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs text-muted-foreground">Doctor</p>
-                    <p className="text-sm font-medium">{appointment.doctor_name}</p>
-                    {appointment.doctor_specialty && (
+                    <p className="text-sm font-medium">
+                      {practitioner?.name || appointment.doctor_name}
+                    </p>
+                    {(practitioner?.specialty || appointment.doctor_specialty) && (
                       <p className="text-xs text-muted-foreground">
-                        {appointment.doctor_specialty}
+                        {practitioner?.specialty || appointment.doctor_specialty}
+                      </p>
+                    )}
+                    {practitioner?.phone_number && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        📞 {practitioner.phone_number}
+                      </p>
+                    )}
+                    {practitioner?.email && (
+                      <p className="text-xs text-muted-foreground">
+                        ✉️ {practitioner.email}
                       </p>
                     )}
                   </div>
@@ -357,7 +439,7 @@ export default function AppointmentDetails() {
       </Card>
 
       {/* Action Buttons */}
-      {appointment.status === "scheduled" && (
+      {appointment.status === "scheduled" && !isAppointmentPast && (
         <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={handleReschedule}
@@ -376,6 +458,40 @@ export default function AppointmentDetails() {
           >
             <X className="w-4 h-4 mr-2" />
             Cancel
+          </Button>
+        </div>
+      )}
+
+      {/* Mark Attendance for Past Appointments */}
+      {appointment.status === "scheduled" && isAppointmentPast && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={handleMarkCompleted}
+              size="sm"
+              className="w-full rounded-full bg-success text-success-foreground hover:bg-success/90"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Attended
+            </Button>
+            <Button
+              onClick={handleMarkMissed}
+              variant="outline"
+              size="sm"
+              className="w-full rounded-full text-destructive hover:text-destructive"
+            >
+              <XCircle className="w-4 h-4 mr-2" />
+              Missed
+            </Button>
+          </div>
+          <Button
+            onClick={handleReschedule}
+            variant="outline"
+            size="sm"
+            className="w-full rounded-full"
+          >
+            <CalendarClock className="w-4 h-4 mr-2" />
+            Reschedule
           </Button>
         </div>
       )}

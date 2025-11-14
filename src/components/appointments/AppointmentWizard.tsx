@@ -33,6 +33,7 @@ const appointmentSchema = z.object({
   notes: z.string().optional(),
   reminder_minutes_before: z.coerce.number().min(0).default(60),
   medication_id: z.string().optional(),
+  practitioner_id: z.string().optional(),
 });
 
 interface AppointmentWizardProps {
@@ -55,6 +56,18 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         .from("medications")
         .select("id, name")
         .eq("active", true)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: practitioners } = useQuery({
+    queryKey: ["practitioners"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medical_practitioners")
+        .select("id, name, specialty")
         .order("name");
       if (error) throw error;
       return data;
@@ -89,6 +102,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
       notes: "",
       reminder_minutes_before: 60,
       medication_id: "none",
+      practitioner_id: "none",
     },
   });
 
@@ -116,6 +130,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         notes: appointment.notes || "",
         reminder_minutes_before: appointment.reminder_minutes_before || 60,
         medication_id: appointment.medication_id || "none",
+        practitioner_id: (appointment as { practitioner_id?: string })?.practitioner_id || "none",
       });
       setStep(5); // Skip to review for editing
     } else if (appointment && appointment.appointment_date) {
@@ -159,7 +174,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         return;
       }
 
-      const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] = {
+      const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] & { practitioner_id?: string | null } = {
         title: values.title,
         appointment_date: format(values.appointment_date, "yyyy-MM-dd"),
         appointment_time: values.appointment_time,
@@ -174,6 +189,7 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         notes: values.notes,
         reminder_minutes_before: values.reminder_minutes_before,
         medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
+        practitioner_id: values.practitioner_id === "none" || !values.practitioner_id ? null : values.practitioner_id,
       };
 
       const { data: insertedAppointment, error } = appointment?.id
@@ -559,15 +575,52 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
               <div>
                 <Label className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  Doctor Name
+                  Select Practitioner
                 </Label>
-                <Input
-                  placeholder="e.g., Dr. Smith"
-                  value={form.watch("doctor_name")}
-                  onChange={(e) => form.setValue("doctor_name", e.target.value)}
-                  className="h-12 text-base"
-                />
+                <Select
+                  value={form.watch("practitioner_id") || "none"}
+                  onValueChange={(value) => {
+                    form.setValue("practitioner_id", value);
+                    if (value !== "none") {
+                      const practitioner = practitioners?.find(p => p.id === value);
+                      if (practitioner) {
+                        form.setValue("doctor_name", practitioner.name);
+                        form.setValue("doctor_specialty", practitioner.specialty || "");
+                      }
+                    } else {
+                      form.setValue("doctor_name", "");
+                      form.setValue("doctor_specialty", "");
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-12 text-base">
+                    <SelectValue placeholder="Select a practitioner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Enter manually</SelectItem>
+                    {practitioners?.map((practitioner) => (
+                      <SelectItem key={practitioner.id} value={practitioner.id}>
+                        {practitioner.name} {practitioner.specialty && `- ${practitioner.specialty}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {form.watch("practitioner_id") === "none" && (
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Doctor Name
+                  </Label>
+                  <Input
+                    placeholder="e.g., Dr. Smith"
+                    value={form.watch("doctor_name")}
+                    onChange={(e) => form.setValue("doctor_name", e.target.value)}
+                    className="h-12 text-base"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="px-6 pb-6 shrink-0">

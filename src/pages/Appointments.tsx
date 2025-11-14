@@ -260,12 +260,12 @@ export default function Appointments() {
       )}
 
       <Tabs value={view} onValueChange={(v) => setView(v as "list" | "calendar")} className="space-y-3">
-        <TabsList className="grid w-full grid-cols-2 h-9 bg-muted/50 rounded-lg p-0.5">
-          <TabsTrigger value="list" className="gap-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm transition-all">
+        <TabsList className="grid w-full grid-cols-2 h-9 rounded-lg p-0.5">
+          <TabsTrigger value="list" className="gap-1.5 rounded-md text-sm transition-all">
             <List className="w-4 h-4" />
             <span>List</span>
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="gap-1.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm transition-all">
+          <TabsTrigger value="calendar" className="gap-1.5 rounded-md text-sm transition-all">
             <CalendarIcon className="w-4 h-4" />
             <span>Calendar</span>
           </TabsTrigger>
@@ -294,7 +294,7 @@ export default function Appointments() {
             </Card>
           ) : (
             <>
-              <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted/50 p-0.5 text-muted-foreground w-full">
+              <div className="inline-flex h-9 items-center justify-center rounded-lg p-0.5 text-muted-foreground w-full">
                 <button
                   onClick={() => setAppointmentView("upcoming")}
                   className={cn(
