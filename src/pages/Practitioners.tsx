@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, User, Phone, Mail, MapPin, Stethoscope } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Plus, User, Phone, Mail, MapPin, Stethoscope, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageLoader from "@/components/PageLoader";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
-import { HealthCentersDirectory } from "@/components/HealthCentersDirectory";
+import { toast } from "@/hooks/use-toast";
 
 interface Practitioner {
   id: string;
@@ -24,11 +25,24 @@ interface Practitioner {
   updated_at: string;
 }
 
+interface HealthCenter {
+  id: string;
+  name: string;
+  specialty: string | null;
+  phone_number: string | null;
+  email: string | null;
+  clinic_name: string | null;
+  address: string | null;
+  region: string;
+}
+
 export default function Practitioners() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("practitioners");
 
-  const { data: practitioners, isLoading } = useQuery({
+  const { data: practitioners, isLoading: practitionersLoading } = useQuery({
     queryKey: ["practitioners"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -45,13 +59,65 @@ export default function Practitioners() {
     },
   });
 
+  const { data: centers, isLoading: centersLoading } = useQuery({
+    queryKey: ["health-centers-directory"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("health_centers_directory" as never)
+        .select("*")
+        .order("name");
+      
+      if (error) throw error;
+      return (data || []) as unknown as HealthCenter[];
+    },
+  });
+
+  const importCenterMutation = useMutation({
+    mutationFn: async (center: HealthCenter) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase.from("medical_practitioners" as never).insert({
+        user_id: user.id,
+        name: center.name,
+        specialty: center.specialty,
+        phone_number: center.phone_number,
+        email: center.email,
+        clinic_name: center.clinic_name,
+        address: center.address,
+      } as never);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["practitioners"] });
+      toast({
+        title: "Health center added",
+        description: "The health center has been added to your practitioners.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to add health center",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredPractitioners = practitioners?.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.specialty?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.clinic_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (isLoading) {
+  const filteredCenters = centers?.filter((c) =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.clinic_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.address?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (practitionersLoading || centersLoading) {
     return <PageLoader />;
   }
 
@@ -84,82 +150,160 @@ export default function Practitioners() {
           />
         </div>
 
-        {/* Health Centers Directory */}
-        <HealthCentersDirectory />
+        {/* Filter Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="practitioners">
+              <User className="mr-2 h-4 w-4" />
+              My Practitioners
+            </TabsTrigger>
+            <TabsTrigger value="centers">
+              <Building2 className="mr-2 h-4 w-4" />
+              Health Centers
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Empty State */}
-        {(!practitioners || practitioners.length === 0) && (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="rounded-full bg-primary/10 p-6 mb-4">
-                <Stethoscope className="h-12 w-12 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No practitioners yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-sm">
-                Start by adding your doctors and healthcare providers for easy reference
-              </p>
-              <Button onClick={() => navigate("/practitioners/add")} size="lg">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Practitioner
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+          <TabsContent value="practitioners" className="space-y-4 mt-6">
+            {/* Empty State */}
+            {(!practitioners || practitioners.length === 0) && (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="rounded-full bg-primary/10 p-6 mb-4">
+                    <Stethoscope className="h-12 w-12 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">No practitioners yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-sm">
+                    Start by adding your doctors and healthcare providers for easy reference
+                  </p>
+                  <Button onClick={() => navigate("/practitioners/add")} size="lg">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Practitioner
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Practitioners List */}
-        <div className="grid gap-4">
-          {filteredPractitioners?.map((practitioner) => (
-            <Card
-              key={practitioner.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate(`/practitioners/${practitioner.id}`)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-primary/10 p-3">
-                      <User className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{practitioner.name}</CardTitle>
-                      {practitioner.specialty && (
-                        <Badge variant="secondary" className="mt-1">
-                          {practitioner.specialty}
-                        </Badge>
+            {/* Practitioners List */}
+            {filteredPractitioners && filteredPractitioners.length > 0 && (
+              <div className="grid gap-4">
+                {filteredPractitioners.map((practitioner) => (
+                  <Card
+                    key={practitioner.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/practitioners/${practitioner.id}`)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1 flex-1">
+                          <CardTitle className="text-xl flex items-center gap-2">
+                            <User className="h-5 w-5 text-primary" />
+                            {practitioner.name}
+                          </CardTitle>
+                          {practitioner.specialty && (
+                            <Badge variant="secondary" className="w-fit">
+                              {practitioner.specialty}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {practitioner.clinic_name && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 shrink-0" />
+                          <span>{practitioner.clinic_name}</span>
+                        </div>
                       )}
-                    </div>
+                      {practitioner.phone_number && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Phone className="h-4 w-4 shrink-0" />
+                          <span>{practitioner.phone_number}</span>
+                        </div>
+                      )}
+                      {practitioner.email && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4 shrink-0" />
+                          <span>{practitioner.email}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="centers" className="space-y-4 mt-6">
+            {/* Empty State */}
+            {(!centers || centers.length === 0) && (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="rounded-full bg-primary/10 p-6 mb-4">
+                    <Building2 className="h-12 w-12 text-primary" />
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {practitioner.clinic_name && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Stethoscope className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{practitioner.clinic_name}</span>
-                  </div>
-                )}
-                {practitioner.phone_number && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{practitioner.phone_number}</span>
-                  </div>
-                )}
-                {practitioner.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{practitioner.email}</span>
-                  </div>
-                )}
-                {practitioner.address && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{practitioner.address}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <h3 className="text-xl font-semibold mb-2">No health centers found</h3>
+                  <p className="text-muted-foreground max-w-sm">
+                    Health centers directory is currently empty
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Health Centers List */}
+            {filteredCenters && filteredCenters.length > 0 && (
+              <div className="grid gap-4 md:grid-cols-2">
+                {filteredCenters.map((center) => (
+                  <Card key={center.id}>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-5 w-5 text-primary" />
+                          <span>{center.name}</span>
+                        </div>
+                      </CardTitle>
+                      {center.specialty && (
+                        <CardDescription>{center.specialty}</CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {center.clinic_name && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">{center.clinic_name}</p>
+                            {center.address && (
+                              <p className="text-muted-foreground">{center.address}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {center.phone_number && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Phone className="h-4 w-4 shrink-0" />
+                          <span>{center.phone_number}</span>
+                        </div>
+                      )}
+                      {center.email && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4 shrink-0" />
+                          <span>{center.email}</span>
+                        </div>
+                      )}
+                      <Button
+                        className="w-full mt-2"
+                        onClick={() => importCenterMutation.mutate(center)}
+                        disabled={importCenterMutation.isPending}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add to My Practitioners
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       <FloatingActionButton actions={fabActions} />
