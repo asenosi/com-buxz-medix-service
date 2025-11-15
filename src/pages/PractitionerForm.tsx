@@ -148,8 +148,8 @@ export default function PractitionerForm() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
+    <div className="min-h-screen bg-background pb-36">
+      <div className="max-w-2xl mx-auto p-4 space-y-6 pb-32">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button
@@ -303,18 +303,18 @@ export default function PractitionerForm() {
               )}
             />
 
-            <div className="sticky bottom-20 bg-background pt-4 flex gap-3">
+            <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border p-4 pb-24 md:pb-6 flex gap-3 z-10">
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 h-11"
+                className="flex-1 h-12 rounded-full"
                 onClick={() => navigate("/practitioners")}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1 h-11"
+                className="flex-1 h-12 rounded-full"
                 disabled={saveMutation.isPending}
               >
                 {saveMutation.isPending ? "Saving..." : isEditing ? "Update" : "Add Practitioner"}
