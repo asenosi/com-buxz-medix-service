@@ -28,6 +28,7 @@ export type Database = {
           location: string | null
           medication_id: string | null
           notes: string | null
+          practitioner_id: string | null
           reminder_minutes_before: number | null
           status: Database["public"]["Enums"]["appointment_status"]
           title: string
@@ -47,6 +48,7 @@ export type Database = {
           location?: string | null
           medication_id?: string | null
           notes?: string | null
+          practitioner_id?: string | null
           reminder_minutes_before?: number | null
           status?: Database["public"]["Enums"]["appointment_status"]
           title: string
@@ -66,6 +68,7 @@ export type Database = {
           location?: string | null
           medication_id?: string | null
           notes?: string | null
+          practitioner_id?: string | null
           reminder_minutes_before?: number | null
           status?: Database["public"]["Enums"]["appointment_status"]
           title?: string
@@ -73,6 +76,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "medical_practitioners"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_appointments_medication"
             columns: ["medication_id"]
@@ -201,6 +211,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      health_centers_directory: {
+        Row: {
+          address: string | null
+          clinic_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone_number: string | null
+          region: string
+          specialty: string | null
+        }
+        Insert: {
+          address?: string | null
+          clinic_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone_number?: string | null
+          region?: string
+          specialty?: string | null
+        }
+        Update: {
+          address?: string | null
+          clinic_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone_number?: string | null
+          region?: string
+          specialty?: string | null
+        }
+        Relationships: []
       }
       medical_practitioners: {
         Row: {

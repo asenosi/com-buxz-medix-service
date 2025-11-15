@@ -132,51 +132,51 @@ export default function Practitioners() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Medical Practitioners</h1>
-          <p className="text-muted-foreground">Manage your healthcare providers</p>
+        <div className="space-y-3">
+          <h1 className="text-4xl font-bold tracking-tight">Healthcare Providers</h1>
+          <p className="text-lg text-muted-foreground">Manage and organize your medical practitioners</p>
         </div>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative max-w-2xl">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
-            placeholder="Search by name, specialty, or clinic..."
+            placeholder="Search practitioners, specialties, or clinics..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11"
+            className="pl-12 h-12 text-base rounded-xl border-border/60 bg-card shadow-sm focus-visible:ring-2"
           />
         </div>
 
         {/* Filter Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="practitioners">
+          <TabsList className="grid w-full max-w-md grid-cols-2 h-11 bg-muted/50">
+            <TabsTrigger value="practitioners" className="text-sm font-medium">
               <User className="mr-2 h-4 w-4" />
               My Practitioners
             </TabsTrigger>
-            <TabsTrigger value="centers">
+            <TabsTrigger value="centers" className="text-sm font-medium">
               <Building2 className="mr-2 h-4 w-4" />
               Health Centers
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="practitioners" className="space-y-4 mt-6">
+          <TabsContent value="practitioners" className="space-y-5 mt-8">
             {/* Empty State */}
             {(!practitioners || practitioners.length === 0) && (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="rounded-full bg-primary/10 p-6 mb-4">
-                    <Stethoscope className="h-12 w-12 text-primary" />
+              <Card className="border-dashed border-2 rounded-2xl">
+                <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="rounded-2xl bg-primary/10 p-8 mb-6">
+                    <Stethoscope className="h-14 w-14 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">No practitioners yet</h3>
-                  <p className="text-muted-foreground mb-6 max-w-sm">
+                  <h3 className="text-2xl font-semibold mb-3">No practitioners yet</h3>
+                  <p className="text-muted-foreground mb-8 max-w-md text-base">
                     Start by adding your doctors and healthcare providers for easy reference
                   </p>
-                  <Button onClick={() => navigate("/practitioners/add")} size="lg">
-                    <Plus className="mr-2 h-4 w-4" />
+                  <Button onClick={() => navigate("/practitioners/add")} size="lg" className="h-11 px-6">
+                    <Plus className="mr-2 h-5 w-5" />
                     Add Practitioner
                   </Button>
                 </CardContent>
@@ -185,45 +185,47 @@ export default function Practitioners() {
 
             {/* Practitioners List */}
             {filteredPractitioners && filteredPractitioners.length > 0 && (
-              <div className="grid gap-4">
+              <div className="grid gap-5">
                 {filteredPractitioners.map((practitioner) => (
                   <Card
                     key={practitioner.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    className="cursor-pointer hover:shadow-lg hover:border-primary/20 transition-all duration-200 rounded-2xl overflow-hidden"
                     onClick={() => navigate(`/practitioners/${practitioner.id}`)}
                   >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1 flex-1">
-                          <CardTitle className="text-xl flex items-center gap-2">
-                            <User className="h-5 w-5 text-primary" />
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <CardTitle className="text-xl font-semibold flex items-center gap-3">
+                            <div className="rounded-lg bg-primary/10 p-2">
+                              <User className="h-5 w-5 text-primary" />
+                            </div>
                             {practitioner.name}
                           </CardTitle>
                           {practitioner.specialty && (
-                            <Badge variant="secondary" className="w-fit">
+                            <Badge variant="secondary" className="w-fit font-medium">
                               {practitioner.specialty}
                             </Badge>
                           )}
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-3 pt-0">
                       {practitioner.clinic_name && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4 shrink-0" />
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 shrink-0 text-primary/60" />
                           <span>{practitioner.clinic_name}</span>
                         </div>
                       )}
                       {practitioner.phone_number && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="h-4 w-4 shrink-0" />
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <Phone className="h-4 w-4 shrink-0 text-primary/60" />
                           <span>{practitioner.phone_number}</span>
                         </div>
                       )}
                       {practitioner.email && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="h-4 w-4 shrink-0" />
-                          <span>{practitioner.email}</span>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4 shrink-0 text-primary/60" />
+                          <span className="truncate">{practitioner.email}</span>
                         </div>
                       )}
                     </CardContent>
@@ -233,16 +235,16 @@ export default function Practitioners() {
             )}
           </TabsContent>
 
-          <TabsContent value="centers" className="space-y-4 mt-6">
+          <TabsContent value="centers" className="space-y-5 mt-8">
             {/* Empty State */}
             {(!centers || centers.length === 0) && (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="rounded-full bg-primary/10 p-6 mb-4">
-                    <Building2 className="h-12 w-12 text-primary" />
+              <Card className="border-dashed border-2 rounded-2xl">
+                <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="rounded-2xl bg-primary/10 p-8 mb-6">
+                    <Building2 className="h-14 w-14 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">No health centers found</h3>
-                  <p className="text-muted-foreground max-w-sm">
+                  <h3 className="text-2xl font-semibold mb-3">No health centers found</h3>
+                  <p className="text-muted-foreground max-w-md text-base">
                     Health centers directory is currently empty
                   </p>
                 </CardContent>
@@ -251,46 +253,48 @@ export default function Practitioners() {
 
             {/* Health Centers List */}
             {filteredCenters && filteredCenters.length > 0 && (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-5 md:grid-cols-2">
                 {filteredCenters.map((center) => (
-                  <Card key={center.id}>
-                    <CardHeader>
-                      <CardTitle className="text-lg flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-5 w-5 text-primary" />
-                          <span>{center.name}</span>
+                  <Card key={center.id} className="rounded-2xl hover:shadow-lg hover:border-primary/20 transition-all duration-200">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-primary/10 p-2">
+                            <Building2 className="h-5 w-5 text-primary" />
+                          </div>
+                          <span className="leading-tight">{center.name}</span>
                         </div>
                       </CardTitle>
                       {center.specialty && (
-                        <CardDescription>{center.specialty}</CardDescription>
+                        <CardDescription className="text-sm mt-2">{center.specialty}</CardDescription>
                       )}
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-3 pt-0">
                       {center.clinic_name && (
-                        <div className="flex items-start gap-2 text-sm">
-                          <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
-                          <div>
+                        <div className="flex items-start gap-3 text-sm">
+                          <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-primary/60" />
+                          <div className="flex-1">
                             <p className="font-medium">{center.clinic_name}</p>
                             {center.address && (
-                              <p className="text-muted-foreground">{center.address}</p>
+                              <p className="text-muted-foreground mt-0.5">{center.address}</p>
                             )}
                           </div>
                         </div>
                       )}
                       {center.phone_number && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="h-4 w-4 shrink-0" />
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <Phone className="h-4 w-4 shrink-0 text-primary/60" />
                           <span>{center.phone_number}</span>
                         </div>
                       )}
                       {center.email && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="h-4 w-4 shrink-0" />
-                          <span>{center.email}</span>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4 shrink-0 text-primary/60" />
+                          <span className="truncate">{center.email}</span>
                         </div>
                       )}
                       <Button
-                        className="w-full mt-2"
+                        className="w-full mt-4 h-10"
                         onClick={() => importCenterMutation.mutate(center)}
                         disabled={importCenterMutation.isPending}
                       >
