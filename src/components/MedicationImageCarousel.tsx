@@ -78,8 +78,8 @@ export function MedicationImageCarousel({
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm hover:bg-background border-2 active:bg-background active:scale-95 focus:bg-background" />
-        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm hover:bg-background border-2 active:bg-background active:scale-95 focus:bg-background" />
+        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm hover:bg-background border-2 disabled:opacity-100" />
+        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm hover:bg-background border-2 disabled:opacity-100" />
       </Carousel>
       
       {/* Image counter */}
