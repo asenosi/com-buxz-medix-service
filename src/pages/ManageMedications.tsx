@@ -93,7 +93,7 @@ const menuSections = {
     },
     {
       icon: Share2,
-      label: "Share Medisafe",
+      label: "Share TreatMate",
       path: "/share",
       iconBg: "bg-pink-500/10 text-pink-500",
     },
