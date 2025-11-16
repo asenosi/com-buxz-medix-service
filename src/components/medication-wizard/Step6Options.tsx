@@ -88,6 +88,7 @@ export const Step6Options = ({
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
+                max={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                 className="h-9"
               />
             </div>
@@ -97,8 +98,15 @@ export const Step6Options = ({
                 id="treatmentDays"
                 type="number"
                 value={treatmentDays}
-                onChange={(e) => setTreatmentDays(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (Number(val) >= 1 && Number(val) <= 3650)) {
+                    setTreatmentDays(val);
+                  }
+                }}
                 placeholder="e.g., 30"
+                min="1"
+                max="3650"
                 className="h-9"
               />
             </div>
@@ -155,8 +163,15 @@ export const Step6Options = ({
                 id="totalPills"
                 type="number"
                 value={totalPills}
-                onChange={(e) => setTotalPills(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (Number(val) >= 1 && Number(val) <= 10000)) {
+                    setTotalPills(val);
+                  }
+                }}
                 placeholder="e.g., 30"
+                min="1"
+                max="10000"
                 className="h-9"
               />
             </div>
@@ -166,8 +181,15 @@ export const Step6Options = ({
                 id="refillThreshold"
                 type="number"
                 value={refillThreshold}
-                onChange={(e) => setRefillThreshold(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (Number(val) >= 1 && Number(val) <= 1000)) {
+                    setRefillThreshold(val);
+                  }
+                }}
                 placeholder="e.g., 7"
+                min="1"
+                max="1000"
                 className="h-9"
               />
             </div>
@@ -196,10 +218,17 @@ export const Step6Options = ({
             <Textarea
               id="instructions"
               value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.length <= 500) {
+                  setInstructions(val);
+                }
+              }}
               placeholder="e.g., Take with water, Avoid alcohol"
+              maxLength={500}
               className="min-h-[60px] text-sm"
             />
+            <p className="text-xs text-muted-foreground">{instructions.length}/500 characters</p>
           </div>
         </div>
 
