@@ -107,7 +107,7 @@ export const NotificationSettings = () => {
                 </h3>
                 <p className="text-xs text-muted-foreground mb-3">
                   {!isInstalled 
-                    ? "Install MedTracker as an app to receive notifications in your phone's notification tray, just like other apps."
+                    ? "Install TreatMate as an app to receive notifications in your phone's notification tray, just like other apps."
                     : "Allow notifications to receive medication reminders in your system notification tray."
                   }
                 </p>

@@ -88,7 +88,7 @@ const InstallPWA = () => {
                 <Smartphone className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-lg">Install MedTracker</CardTitle>
+                <CardTitle className="text-lg">Install TreatMate</CardTitle>
                 <CardDescription>
                   Add to your home screen for quick access
                 </CardDescription>
@@ -104,7 +104,7 @@ const InstallPWA = () => {
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Installing MedTracker as an app gives you:
+                  Installing TreatMate as an app gives you:
                 </p>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-start gap-2">
@@ -212,7 +212,7 @@ const InstallPWA = () => {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              Once you install the app and enable notifications, MedTracker will
+              Once you install the app and enable notifications, TreatMate will
               send reminders to your phone's notification tray:
             </p>
             <ol className="list-decimal list-inside space-y-2 pl-2">
