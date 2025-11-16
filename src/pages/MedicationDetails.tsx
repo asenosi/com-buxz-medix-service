@@ -205,7 +205,7 @@ const MedicationDetails = () => {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-bold mb-1 truncate">{med.name}</h1>
+                <h1 className="text-2xl font-bold mb-1 break-words">{med.name}</h1>
                 <p className="text-muted-foreground">
                   {med.dosage || ""} {med.form ? `• ${med.form}` : ""}
                 </p>
