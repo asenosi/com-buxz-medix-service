@@ -85,7 +85,7 @@ export function MedicationImageCarousel({
       </Carousel>
       
       {/* Pagination dots */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-background/80 backdrop-blur-sm px-3 py-2 rounded-full">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-background/70 backdrop-blur-sm px-2 py-1.5 rounded-full">
         {displayImages.map((_, index) => (
           <button
             key={index}
@@ -93,8 +93,8 @@ export function MedicationImageCarousel({
             className={cn(
               "transition-all rounded-full",
               index === currentIndex 
-                ? "w-6 h-2 bg-primary" 
-                : "w-2 h-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"
+                ? "w-1.5 h-1.5 bg-primary" 
+                : "w-1.5 h-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
             )}
             aria-label={`Go to image ${index + 1}`}
           />
