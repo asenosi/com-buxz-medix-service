@@ -26,16 +26,16 @@ export const Step1Name = ({ name, setName }: Step1NameProps) => {
             value={name}
             onChange={(e) => {
               const val = e.target.value;
-              if (val.length <= 100) {
+              if (val.length <= 50) {
                 setName(val);
               }
             }}
             placeholder="e.g., Aspirin, Metformin, Lisinopril"
             required
-            maxLength={100}
+            maxLength={50}
             className="h-10"
           />
-          <p className="text-xs text-muted-foreground">{name.length}/100 characters</p>
+          <p className="text-xs text-muted-foreground">{name.length}/50 characters</p>
         </div>
       </CardContent>
     </Card>
