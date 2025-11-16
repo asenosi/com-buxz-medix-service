@@ -43,18 +43,18 @@ import type { Database } from "@/integrations/supabase/types";
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 
 const appointmentSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  title: z.string().min(1, "Title is required").max(100, "Title must be less than 100 characters"),
+  description: z.string().max(500, "Description must be less than 500 characters").optional(),
   appointment_date: z.date({ required_error: "Date is required" }),
   appointment_time: z.string().min(1, "Time is required"),
-  duration_minutes: z.coerce.number().min(5).default(30),
-  location: z.string().optional(),
-  doctor_name: z.string().optional(),
-  doctor_specialty: z.string().optional(),
+  duration_minutes: z.coerce.number().min(5, "Duration must be at least 5 minutes").max(480, "Duration must be less than 8 hours").default(30),
+  location: z.string().max(200, "Location must be less than 200 characters").optional(),
+  doctor_name: z.string().max(100, "Doctor name must be less than 100 characters").optional(),
+  doctor_specialty: z.string().max(100, "Specialty must be less than 100 characters").optional(),
   appointment_type: z.string(),
   status: z.string(),
-  notes: z.string().optional(),
-  reminder_minutes_before: z.coerce.number().min(0).default(60),
+  notes: z.string().max(1000, "Notes must be less than 1000 characters").optional(),
+  reminder_minutes_before: z.coerce.number().min(0, "Reminder must be 0 or more minutes").max(10080, "Reminder must be less than 7 days").default(60),
   medication_id: z.string().optional(),
 });
 
