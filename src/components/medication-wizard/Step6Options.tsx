@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Pill, Syringe, Droplet, Wind, Bandage, Clipboard } from "lucide-react";
-import { MedicationImageSearch } from "./MedicationImageSearch";
 
 interface Step6OptionsProps {
   startDate: string;
@@ -70,15 +69,6 @@ export const Step6Options = ({
   onRemoveImage,
   medicationName,
 }: Step6OptionsProps) => {
-  const handleImageFromSearch = (dataUrl: string) => {
-    // Convert data URL to File object
-    fetch(dataUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], `${medicationName}-${Date.now()}.jpg`, { type: "image/jpeg" });
-        onAddImages([file]);
-      });
-  };
   return (
     <Card>
       <CardContent className="pt-4 space-y-4">
@@ -119,14 +109,9 @@ export const Step6Options = ({
           <h3 className="text-base font-semibold">Medication Images</h3>
           <p className="text-xs text-muted-foreground">Select up to 5 images. Existing images remain; new ones will be added.</p>
           
-          <MedicationImageSearch 
-            medicationName={medicationName}
-            onImageSelect={handleImageFromSearch}
-          />
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             <div className="space-y-1.5">
-              <Label htmlFor="images" className="text-sm">Or Upload from Device</Label>
+              <Label htmlFor="images" className="text-sm">Upload from Device</Label>
               <Input
                 id="images"
                 type="file"
