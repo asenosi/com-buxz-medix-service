@@ -26,6 +26,7 @@ export function MedicationImageCarousel({
   onImageClick,
 }: MedicationImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [api, setApi] = useState<any>(null);
   
   // Filter out empty/null images and use fallback if needed
   const validImages = images?.filter(img => img && img.trim() !== "") || [];
@@ -58,9 +59,10 @@ export function MedicationImageCarousel({
           loop: true,
         }}
         className="w-full"
-        setApi={(api) => {
-          api?.on("select", () => {
-            setCurrentIndex(api.selectedScrollSnap());
+        setApi={(carouselApi) => {
+          setApi(carouselApi);
+          carouselApi?.on("select", () => {
+            setCurrentIndex(carouselApi.selectedScrollSnap());
           });
         }}
       >
@@ -82,9 +84,21 @@ export function MedicationImageCarousel({
         <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/90 backdrop-blur-sm hover:bg-background border-2 disabled:opacity-100" />
       </Carousel>
       
-      {/* Image counter */}
-      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm text-xs px-2 py-1 rounded-full">
-        {currentIndex + 1} / {displayImages.length}
+      {/* Pagination dots */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-background/80 backdrop-blur-sm px-3 py-2 rounded-full">
+        {displayImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => api?.scrollTo(index)}
+            className={cn(
+              "transition-all rounded-full",
+              index === currentIndex 
+                ? "w-6 h-2 bg-primary" 
+                : "w-2 h-2 bg-muted-foreground/40 hover:bg-muted-foreground/60"
+            )}
+            aria-label={`Go to image ${index + 1}`}
+          />
+        ))}
       </div>
     </div>
   );
