@@ -10,6 +10,7 @@ import { ArrowLeft, Edit, Trash2, Clock, Calendar, Pill, X } from "lucide-react"
 import { MedicationDetailsSkeleton } from "@/components/LoadingSkeletons";
 import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { truncateText } from "@/lib/utils";
 
 type Medication = {
   id: string;
@@ -192,7 +193,7 @@ const MedicationDetails = () => {
       <div className="px-2 space-y-4">
         {/* Title Section */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold break-words">{med.name}</h1>
+          <h1 className="text-3xl font-bold break-words">{truncateText(med.name)}</h1>
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-muted-foreground">
               {med.dosage || ""} {med.form ? `• ${med.form}` : ""}

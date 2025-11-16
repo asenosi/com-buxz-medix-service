@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Pill, Syringe, Droplet, Wind, Bandage, Clipboard } from "lucide-react";
 import type React from "react";
+import { truncateText } from "@/lib/utils";
 
 interface Step7ReviewProps {
   data: {
@@ -49,7 +50,7 @@ export const Step7Review = ({ data }: Step7ReviewProps) => {
             </div>
           )}
           <div className="flex-1">
-            <h3 className="text-xl font-bold">{data.name}</h3>
+            <h3 className="text-xl font-bold">{truncateText(data.name)}</h3>
             <p className="text-muted-foreground">{data.dosage}</p>
           </div>
         </div>

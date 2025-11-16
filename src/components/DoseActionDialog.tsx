@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Check, Clock as ClockIcon, Trash2, Edit, Info, Pill, Utensils, Stethoscope, Syringe } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, truncateText } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
@@ -148,7 +148,7 @@ export const DoseActionDialog = ({
               </div>
             )}
             <div className="text-center">
-              <h2 className="text-xl font-bold">{medication.name}</h2>
+              <h2 className="text-xl font-bold">{truncateText(medication.name)}</h2>
               <p className="text-sm text-muted-foreground">{dosage}</p>
             </div>
           </div>
