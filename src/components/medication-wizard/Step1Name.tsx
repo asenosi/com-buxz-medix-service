@@ -24,11 +24,18 @@ export const Step1Name = ({ name, setName }: Step1NameProps) => {
           <Input
             id="name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val.length <= 100) {
+                setName(val);
+              }
+            }}
             placeholder="e.g., Aspirin, Metformin, Lisinopril"
             required
+            maxLength={100}
             className="h-10"
           />
+          <p className="text-xs text-muted-foreground">{name.length}/100 characters</p>
         </div>
       </CardContent>
     </Card>

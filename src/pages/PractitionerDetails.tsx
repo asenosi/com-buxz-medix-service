@@ -4,11 +4,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Edit, Trash2, User, Phone, Mail, MapPin, Stethoscope, FileText, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import PageLoader from "@/components/PageLoader";
 import { toast } from "sonner";
+
+const statusColors: Record<string, string> = {
+  scheduled: "bg-primary/10 text-primary",
+  completed: "bg-green-500/10 text-green-700 dark:text-green-300",
+  cancelled: "bg-red-500/10 text-red-700 dark:text-red-300",
+  rescheduled: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+  no_show: "bg-gray-500/10 text-gray-700 dark:text-gray-300",
+};
+
+const statusLabels: Record<string, string> = {
+  scheduled: "Scheduled",
+  completed: "Attended",
+  cancelled: "Cancelled",
+  rescheduled: "Rescheduled",
+  no_show: "Missed",
+};
 
 export default function PractitionerDetails() {
   const { id } = useParams();
@@ -71,7 +88,7 @@ export default function PractitionerDetails() {
 
   if (!practitioner) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-dvh bg-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Practitioner not found</h2>
           <Button onClick={() => navigate("/practitioners")}>
@@ -83,150 +100,136 @@ export default function PractitionerDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/practitioners")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">{practitioner.name}</h1>
-            {practitioner.specialty && (
-              <p className="text-muted-foreground">{practitioner.specialty}</p>
-            )}
-          </div>
+    <div className="space-y-3 pb-4">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/practitioners")}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{practitioner.name}</h1>
+          {practitioner.specialty && (
+            <p className="text-sm text-muted-foreground">{practitioner.specialty}</p>
+          )}
         </div>
+        <Button
+          onClick={() => navigate(`/practitioners/${id}/edit`)}
+          variant="ghost"
+          size="icon"
+        >
+          <Edit className="w-5 h-5" />
+        </Button>
+        <Button
+          onClick={() => setShowDeleteDialog(true)}
+          variant="ghost"
+          size="icon"
+        >
+          <Trash2 className="w-5 h-5 text-destructive" />
+        </Button>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => navigate(`/practitioners/${id}/edit`)}
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-          <Button
-            variant="destructive"
-            className="flex-1"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
-        </div>
+      {/* Details Card */}
+      <Card>
+        <CardHeader className="pb-2 pt-4 px-4">
+          <CardTitle className="text-base font-semibold">Contact Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 px-4 pb-4">
+          {practitioner.clinic_name && (
+            <div className="flex items-start gap-2">
+              <Stethoscope className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Clinic</p>
+                <p className="text-sm font-medium">{practitioner.clinic_name}</p>
+              </div>
+            </div>
+          )}
+          {practitioner.phone_number && (
+            <div className="flex items-start gap-2">
+              <Phone className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Phone</p>
+                <p className="text-sm font-medium">{practitioner.phone_number}</p>
+              </div>
+            </div>
+          )}
+          {practitioner.email && (
+            <div className="flex items-start gap-2">
+              <Mail className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Email</p>
+                <p className="text-sm font-medium">{practitioner.email}</p>
+              </div>
+            </div>
+          )}
+          {practitioner.address && (
+            <div className="flex items-start gap-2">
+              <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Address</p>
+                <p className="text-sm font-medium">{practitioner.address}</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Details Card */}
+      {/* Notes Card */}
+      {practitioner.notes && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Contact Information
-            </CardTitle>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-base font-semibold">Notes</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {practitioner.clinic_name && (
-              <div className="flex items-start gap-3">
-                <Stethoscope className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Clinic</p>
-                  <p className="font-medium">{practitioner.clinic_name}</p>
-                </div>
-              </div>
-            )}
-            {practitioner.phone_number && (
-              <div className="flex items-start gap-3">
-                <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{practitioner.phone_number}</p>
-                </div>
-              </div>
-            )}
-            {practitioner.email && (
-              <div className="flex items-start gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{practitioner.email}</p>
-                </div>
-              </div>
-            )}
-            {practitioner.address && (
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Address</p>
-                  <p className="font-medium">{practitioner.address}</p>
-                </div>
-              </div>
-            )}
+          <CardContent className="px-4 pb-4">
+            <p className="text-sm text-foreground whitespace-pre-wrap">{practitioner.notes}</p>
           </CardContent>
         </Card>
+      )}
 
-        {/* Notes Card */}
-        {practitioner.notes && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-foreground whitespace-pre-wrap">{practitioner.notes}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Appointments Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Appointments
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {appointments && appointments.length > 0 ? (
-              <div className="space-y-3">
-                {appointments.map((appointment) => (
-                  <div
-                    key={appointment.id}
-                    onClick={() => navigate(`/appointments/${appointment.id}`)}
-                    className="p-4 rounded-lg border border-border bg-card hover:bg-accent/50 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-foreground truncate">{appointment.title}</h4>
-                        {appointment.description && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{appointment.description}</p>
-                        )}
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {format(new Date(appointment.appointment_date), "MMM d, yyyy")}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
-                        </p>
-                      </div>
+      {/* Appointments Card */}
+      <Card>
+        <CardHeader className="pb-2 pt-4 px-4">
+          <CardTitle className="text-base font-semibold">Appointments</CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          {appointments && appointments.length > 0 ? (
+            <div className="space-y-2">
+              {appointments.map((appointment) => (
+                <div
+                  key={appointment.id}
+                  onClick={() => navigate(`/appointments/${appointment.id}`)}
+                  className="p-3 rounded-lg border border-border bg-card hover:bg-accent/50 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-foreground truncate">{appointment.title}</h4>
+                      {appointment.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{appointment.description}</p>
+                      )}
+                      <Badge variant="secondary" className={`${statusColors[appointment.status]} mt-1.5 text-xs`}>
+                        {statusLabels[appointment.status]}
+                      </Badge>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-medium text-foreground">
+                        {format(new Date(appointment.appointment_date), "MMM d, yyyy")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">No appointments scheduled with this practitioner.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No appointments scheduled with this practitioner.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

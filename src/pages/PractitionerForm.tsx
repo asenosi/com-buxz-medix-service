@@ -192,7 +192,8 @@ export default function PractitionerForm() {
                     <Input 
                       {...field} 
                       placeholder={contactType === "practitioner" ? "Dr. John Smith" : "City Medical Center"} 
-                      className="h-11" 
+                      className="h-11"
+                      autoComplete="off"
                     />
                   </FormControl>
                   <FormMessage />
@@ -250,7 +251,7 @@ export default function PractitionerForm() {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input {...field} type="tel" placeholder="+1 234 567 8900" className="h-11" />
+                    <Input {...field} type="tel" placeholder="+1 234 567 8900" className="h-11" autoComplete="off" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -264,7 +265,7 @@ export default function PractitionerForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="contact@example.com" className="h-11" />
+                    <Input {...field} type="email" placeholder="contact@example.com" className="h-11" autoComplete="off" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Pill, Syringe, Droplet, Wind, Bandage, Clipboard } from "lucide-react";
-import { MedicationImageSearch } from "./MedicationImageSearch";
 
 interface Step6OptionsProps {
   startDate: string;
@@ -70,15 +69,6 @@ export const Step6Options = ({
   onRemoveImage,
   medicationName,
 }: Step6OptionsProps) => {
-  const handleImageFromSearch = (dataUrl: string) => {
-    // Convert data URL to File object
-    fetch(dataUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], `${medicationName}-${Date.now()}.jpg`, { type: "image/jpeg" });
-        onAddImages([file]);
-      });
-  };
   return (
     <Card>
       <CardContent className="pt-4 space-y-4">
@@ -98,6 +88,7 @@ export const Step6Options = ({
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
+                max={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                 className="h-9"
               />
             </div>
@@ -107,8 +98,15 @@ export const Step6Options = ({
                 id="treatmentDays"
                 type="number"
                 value={treatmentDays}
-                onChange={(e) => setTreatmentDays(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (Number(val) >= 1 && Number(val) <= 3650)) {
+                    setTreatmentDays(val);
+                  }
+                }}
                 placeholder="e.g., 30"
+                min="1"
+                max="3650"
                 className="h-9"
               />
             </div>
@@ -119,14 +117,9 @@ export const Step6Options = ({
           <h3 className="text-base font-semibold">Medication Images</h3>
           <p className="text-xs text-muted-foreground">Select up to 5 images. Existing images remain; new ones will be added.</p>
           
-          <MedicationImageSearch 
-            medicationName={medicationName}
-            onImageSelect={handleImageFromSearch}
-          />
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             <div className="space-y-1.5">
-              <Label htmlFor="images" className="text-sm">Or Upload from Device</Label>
+              <Label htmlFor="images" className="text-sm">Upload from Device</Label>
               <Input
                 id="images"
                 type="file"
@@ -170,8 +163,15 @@ export const Step6Options = ({
                 id="totalPills"
                 type="number"
                 value={totalPills}
-                onChange={(e) => setTotalPills(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (Number(val) >= 1 && Number(val) <= 10000)) {
+                    setTotalPills(val);
+                  }
+                }}
                 placeholder="e.g., 30"
+                min="1"
+                max="10000"
                 className="h-9"
               />
             </div>
@@ -181,8 +181,15 @@ export const Step6Options = ({
                 id="refillThreshold"
                 type="number"
                 value={refillThreshold}
-                onChange={(e) => setRefillThreshold(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (Number(val) >= 1 && Number(val) <= 1000)) {
+                    setRefillThreshold(val);
+                  }
+                }}
                 placeholder="e.g., 7"
+                min="1"
+                max="1000"
                 className="h-9"
               />
             </div>
@@ -211,10 +218,17 @@ export const Step6Options = ({
             <Textarea
               id="instructions"
               value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.length <= 500) {
+                  setInstructions(val);
+                }
+              }}
               placeholder="e.g., Take with water, Avoid alcohol"
+              maxLength={500}
               className="min-h-[60px] text-sm"
             />
+            <p className="text-xs text-muted-foreground">{instructions.length}/500 characters</p>
           </div>
         </div>
 

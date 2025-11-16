@@ -26,11 +26,18 @@ export const Step4Reason = ({ reason, setReason, dosage, setDosage }: Step4Reaso
           <Textarea
             id="reason"
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val.length <= 300) {
+                setReason(val);
+              }
+            }}
             placeholder="e.g., High blood pressure, Diabetes, Pain relief"
             required
+            maxLength={300}
             className="min-h-[80px] text-sm"
           />
+          <p className="text-xs text-muted-foreground">{reason.length}/300 characters</p>
         </div>
 
         <div className="space-y-2">
@@ -40,11 +47,18 @@ export const Step4Reason = ({ reason, setReason, dosage, setDosage }: Step4Reaso
           <Input
             id="dosage"
             value={dosage}
-            onChange={(e) => setDosage(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val.length <= 50) {
+                setDosage(val);
+              }
+            }}
             placeholder="e.g., 100mg, 2 puffs, 1 drop"
             required
+            maxLength={50}
             className="h-10"
           />
+          <p className="text-xs text-muted-foreground">{dosage.length}/50 characters</p>
         </div>
       </CardContent>
     </Card>

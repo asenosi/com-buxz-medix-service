@@ -48,7 +48,14 @@ export const RefillDialog = ({
               type="number"
               placeholder="Meds"
               value={refillAmount}
-              onChange={(e) => setRefillAmount(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || (Number(val) >= 1 && Number(val) <= 10000)) {
+                  setRefillAmount(val);
+                }
+              }}
+              min="1"
+              max="10000"
               className="h-12"
             />
           </div>

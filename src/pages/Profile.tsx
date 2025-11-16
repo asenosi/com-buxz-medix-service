@@ -155,6 +155,38 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAllAppointments = async () => {
+    if (!session) return;
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .delete()
+        .eq("user_id", session.user.id);
+      
+      if (error) throw error;
+      toast.success("All appointments deleted successfully");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to delete appointments");
+    }
+  };
+
+  const handleDeleteAllPractitioners = async () => {
+    if (!session) return;
+    try {
+      const { error } = await supabase
+        .from("medical_practitioners")
+        .delete()
+        .eq("user_id", session.user.id);
+      
+      if (error) throw error;
+      toast.success("All practitioners deleted successfully");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to delete practitioners");
+    }
+  };
+
   const handleFilePick = () => fileInputRef.current?.click();
 
   const handleUpload: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
@@ -398,6 +430,66 @@ const Profile = () => {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDeleteAllMedications} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                           Yes, delete everything
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                  <div className="font-medium mb-1.5 text-xs">Delete All Appointments</div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    This will permanently delete all your appointments. This action cannot be undone.
+                  </p>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="destructive" className="w-full sm:w-auto">
+                        <Trash2 className="w-3 h-3 mr-1.5" />
+                        Delete All Appointments
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete all your appointments. 
+                          This action cannot be undone and all data will be lost forever.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAllAppointments} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Yes, delete all appointments
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                  <div className="font-medium mb-1.5 text-xs">Delete All Practitioners</div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    This will permanently delete all your medical practitioners. This action cannot be undone.
+                  </p>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="destructive" className="w-full sm:w-auto">
+                        <Trash2 className="w-3 h-3 mr-1.5" />
+                        Delete All Practitioners
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete all your medical practitioners. 
+                          This action cannot be undone and all data will be lost forever.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAllPractitioners} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Yes, delete all practitioners
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
