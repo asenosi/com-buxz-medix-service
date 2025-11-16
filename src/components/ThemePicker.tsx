@@ -53,13 +53,14 @@ const ThemeCard = ({ themeId, title, colors, selected, onSelect }: {
   </button>
 );
 
-const ThemePicker = ({ trigger }: { trigger?: React.ReactNode }) => {
+const ThemePicker = ({ trigger, onThemeSelect }: { trigger?: React.ReactNode; onThemeSelect?: () => void }) => {
   const { palette, setPalette } = useTheme();
   const [open, setOpen] = useState(false);
 
   const handleSelect = (themeId: ThemeName) => {
     setPalette(themeId);
     setOpen(false);
+    onThemeSelect?.();
   };
 
   return (

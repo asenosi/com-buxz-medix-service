@@ -30,6 +30,7 @@ export default function AppHeader() {
   const [hasUnread, setHasUnread] = useState(true);
   const [loadingNav, setLoadingNav] = useState(true);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Array<{
     id: string;
     title: string;
@@ -294,7 +295,7 @@ export default function AppHeader() {
             </PopoverContent>
           </Popover>
 
-          <DropdownMenu>
+          <DropdownMenu open={profileDropdownOpen} onOpenChange={setProfileDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-9 gap-2 px-2">
                 <Avatar className="h-7 w-7">
@@ -327,7 +328,10 @@ export default function AppHeader() {
               {/* Prevent dropdown from closing so the Dialog doesn't unmount */}
               <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
                 <div className="w-full">
-                  <ThemePicker trigger={<div className="flex w-full cursor-pointer items-center"><Monitor className="mr-2 h-4 w-4" /> Choose Theme</div>} />
+                  <ThemePicker 
+                    trigger={<div className="flex w-full cursor-pointer items-center"><Monitor className="mr-2 h-4 w-4" /> Choose Theme</div>} 
+                    onThemeSelect={() => setProfileDropdownOpen(false)}
+                  />
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
