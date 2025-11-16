@@ -79,7 +79,7 @@ export function CalendarSyncDialog({ open, onOpenChange, appointmentId }: Calend
           {/* Title */}
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold">
-              Sync your Medisafe appointments with your Calendar app to better manage your schedule
+              Sync your TreatMate appointments with your Calendar app to better manage your schedule
             </h2>
           </div>
 
@@ -98,7 +98,7 @@ export function CalendarSyncDialog({ open, onOpenChange, appointmentId }: Calend
 
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">
-                Allow Medisafe to access your calendar?
+                Allow TreatMate to access your calendar?
               </h3>
 
               <Button
