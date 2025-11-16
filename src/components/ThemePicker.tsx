@@ -13,14 +13,14 @@ type ThemeDef = {
 };
 
 const themes: ThemeDef[] = [
-  { id: "ubuntu", title: "Ubuntu", description: "Earth tones representing unity and community", colors: { circle: "bg-orange-500", bar1: "bg-orange-300", bar2: "bg-orange-200", button: "bg-orange-500" } },
-  { id: "default", title: "Default", description: "Clean medical blue palette", colors: { circle: "bg-sky-500", bar1: "bg-sky-300", bar2: "bg-sky-200", button: "bg-sky-600" } },
-  { id: "african-sunset", title: "African Sunset", description: "Warm sunset inspired by African landscapes", colors: { circle: "bg-rose-500", bar1: "bg-rose-300", bar2: "bg-orange-200", button: "bg-rose-600" } },
-  { id: "township-green", title: "Township Green", description: "Fresh green representing growth and prosperity", colors: { circle: "bg-green-500", bar1: "bg-green-300", bar2: "bg-green-200", button: "bg-green-600" } },
-  { id: "kwazulu-gold", title: "KwaZulu Gold", description: "Inspired by South African gold heritage", colors: { circle: "bg-amber-500", bar1: "bg-amber-300", bar2: "bg-amber-200", button: "bg-amber-500" } },
-  { id: "cape-blue", title: "Cape Blue", description: "Cool blue like Cape waters", colors: { circle: "bg-blue-500", bar1: "bg-blue-300", bar2: "bg-blue-200", button: "bg-blue-600" } },
-  { id: "pretoria-purple", title: "Pretoria Purple", description: "Royal purple inspired by jacarandas", colors: { circle: "bg-violet-500", bar1: "bg-violet-300", bar2: "bg-violet-200", button: "bg-violet-600" } },
-  { id: "mandela", title: "Mandela", description: "Dignified and timeless", colors: { circle: "bg-neutral-700", bar1: "bg-neutral-400", bar2: "bg-neutral-300", button: "bg-neutral-800" } },
+  { id: "ubuntu", title: "Wellness", description: "Calming teal for peace of mind", colors: { circle: "bg-teal-500", bar1: "bg-teal-300", bar2: "bg-teal-200", button: "bg-teal-600" } },
+  { id: "default", title: "Healthcare", description: "Professional medical blue", colors: { circle: "bg-blue-600", bar1: "bg-blue-400", bar2: "bg-blue-200", button: "bg-blue-700" } },
+  { id: "african-sunset", title: "Vitality", description: "Energizing coral for active health", colors: { circle: "bg-pink-500", bar1: "bg-pink-300", bar2: "bg-pink-200", button: "bg-pink-600" } },
+  { id: "township-green", title: "Recovery", description: "Fresh mint for healing and renewal", colors: { circle: "bg-emerald-500", bar1: "bg-emerald-300", bar2: "bg-emerald-200", button: "bg-emerald-600" } },
+  { id: "kwazulu-gold", title: "Sunshine", description: "Bright yellow for positivity", colors: { circle: "bg-yellow-500", bar1: "bg-yellow-300", bar2: "bg-yellow-200", button: "bg-yellow-600" } },
+  { id: "cape-blue", title: "Tranquil", description: "Serene sky blue", colors: { circle: "bg-cyan-500", bar1: "bg-cyan-300", bar2: "bg-cyan-200", button: "bg-cyan-600" } },
+  { id: "pretoria-purple", title: "Balance", description: "Harmonious lavender", colors: { circle: "bg-purple-500", bar1: "bg-purple-300", bar2: "bg-purple-200", button: "bg-purple-600" } },
+  { id: "mandela", title: "Midnight", description: "Sleek dark mode aesthetic", colors: { circle: "bg-slate-700", bar1: "bg-slate-500", bar2: "bg-slate-400", button: "bg-slate-800" } },
 ];
 
 const ThemeCard = ({ themeId, title, colors, selected, onSelect }: {
@@ -53,13 +53,14 @@ const ThemeCard = ({ themeId, title, colors, selected, onSelect }: {
   </button>
 );
 
-const ThemePicker = ({ trigger }: { trigger?: React.ReactNode }) => {
+const ThemePicker = ({ trigger, onThemeSelect }: { trigger?: React.ReactNode; onThemeSelect?: () => void }) => {
   const { palette, setPalette } = useTheme();
   const [open, setOpen] = useState(false);
 
   const handleSelect = (themeId: ThemeName) => {
     setPalette(themeId);
     setOpen(false);
+    onThemeSelect?.();
   };
 
   return (
@@ -82,7 +83,7 @@ const ThemePicker = ({ trigger }: { trigger?: React.ReactNode }) => {
             ))}
           </div>
         </ScrollArea>
-        <div className="text-center text-xs text-muted-foreground">Proudly South African Themes</div>
+        <div className="text-center text-xs text-muted-foreground">Choose a theme that matches your wellness journey</div>
       </DialogContent>
     </Dialog>
   );

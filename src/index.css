@@ -399,20 +399,26 @@ All colors MUST be HSL.
     --secondary: 142 76% 36%;
     --accent: 38 92% 50%;
     --ring: 210 90% 48% / 0.7;
+    --sidebar-primary: 210 90% 48%;
+    --sidebar-ring: 210 90% 48%;
   }
 
   :root[data-theme="ubuntu"] {
-    --primary: 24 95% 54%; /* orange */
-    --secondary: 16 72% 45%; /* deep orange */
-    --accent: 40 95% 55%; /* amber */
-    --ring: 24 95% 54% / 0.7;
+    --primary: 180 80% 50%; /* teal */
+    --secondary: 180 70% 45%; /* deep teal */
+    --accent: 180 85% 55%; /* bright teal */
+    --ring: 180 80% 50% / 0.7;
+    --sidebar-primary: 180 80% 50%;
+    --sidebar-ring: 180 80% 50%;
   }
 
   :root[data-theme="african-sunset"] {
-    --primary: 10 88% 55%; /* sunset red */
-    --secondary: 28 92% 54%; /* warm orange */
-    --accent: 40 92% 58%; /* amber */
-    --ring: 10 88% 55% / 0.7;
+    --primary: 330 80% 60%; /* coral pink */
+    --secondary: 340 75% 55%; /* deep pink */
+    --accent: 320 85% 65%; /* bright pink */
+    --ring: 330 80% 60% / 0.7;
+    --sidebar-primary: 330 80% 60%;
+    --sidebar-ring: 330 80% 60%;
   }
 
   :root[data-theme="township-green"] {
@@ -420,6 +426,8 @@ All colors MUST be HSL.
     --secondary: 156 72% 40%; /* teal green */
     --accent: 120 60% 45%; /* forest */
     --ring: 142 70% 45% / 0.7;
+    --sidebar-primary: 142 70% 45%;
+    --sidebar-ring: 142 70% 45%;
   }
 
   :root[data-theme="kwazulu-gold"] {
@@ -427,6 +435,8 @@ All colors MUST be HSL.
     --secondary: 36 90% 52%; /* warm gold */
     --accent: 25 95% 53%; /* orange */
     --ring: 42 96% 56% / 0.7;
+    --sidebar-primary: 42 96% 56%;
+    --sidebar-ring: 42 96% 56%;
   }
 
   :root[data-theme="cape-blue"] {
@@ -434,6 +444,8 @@ All colors MUST be HSL.
     --secondary: 199 89% 48%; /* sea teal */
     --accent: 222 84% 57%; /* sky */
     --ring: 217 92% 55% / 0.7;
+    --sidebar-primary: 217 92% 55%;
+    --sidebar-ring: 217 92% 55%;
   }
 
   :root[data-theme="pretoria-purple"] {
@@ -441,6 +453,8 @@ All colors MUST be HSL.
     --secondary: 270 80% 55%; /* purple */
     --accent: 286 75% 60%; /* accent violet */
     --ring: 262 83% 58% / 0.7;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-ring: 262 83% 58%;
   }
 
   :root[data-theme="mandela"] {
@@ -448,6 +462,81 @@ All colors MUST be HSL.
     --secondary: 0 0% 35%; /* dark gray */
     --accent: 42 96% 56%; /* gold accent */
     --ring: 0 0% 15% / 0.7;
+    --sidebar-primary: 0 0% 15%;
+    --sidebar-ring: 0 0% 15%;
+  }
+
+  /* Dark mode theme overrides */
+  .dark[data-theme="default"] {
+    --primary: 210 90% 58%;
+    --secondary: 142 70% 45%;
+    --accent: 38 90% 55%;
+    --ring: 210 90% 58% / 0.7;
+    --sidebar-primary: 210 90% 58%;
+    --sidebar-ring: 210 90% 58%;
+  }
+
+  .dark[data-theme="ubuntu"] {
+    --primary: 180 75% 55%;
+    --secondary: 180 65% 50%;
+    --accent: 180 80% 60%;
+    --ring: 180 75% 55% / 0.7;
+    --sidebar-primary: 180 75% 55%;
+    --sidebar-ring: 180 75% 55%;
+  }
+
+  .dark[data-theme="african-sunset"] {
+    --primary: 330 75% 65%;
+    --secondary: 340 70% 60%;
+    --accent: 320 80% 70%;
+    --ring: 330 75% 65% / 0.7;
+    --sidebar-primary: 330 75% 65%;
+    --sidebar-ring: 330 75% 65%;
+  }
+
+  .dark[data-theme="township-green"] {
+    --primary: 142 70% 50%;
+    --secondary: 156 72% 45%;
+    --accent: 120 60% 50%;
+    --ring: 142 70% 50% / 0.7;
+    --sidebar-primary: 142 70% 50%;
+    --sidebar-ring: 142 70% 50%;
+  }
+
+  .dark[data-theme="kwazulu-gold"] {
+    --primary: 42 96% 60%;
+    --secondary: 36 90% 56%;
+    --accent: 25 95% 58%;
+    --ring: 42 96% 60% / 0.7;
+    --sidebar-primary: 42 96% 60%;
+    --sidebar-ring: 42 96% 60%;
+  }
+
+  .dark[data-theme="cape-blue"] {
+    --primary: 217 92% 60%;
+    --secondary: 199 89% 52%;
+    --accent: 222 84% 62%;
+    --ring: 217 92% 60% / 0.7;
+    --sidebar-primary: 217 92% 60%;
+    --sidebar-ring: 217 92% 60%;
+  }
+
+  .dark[data-theme="pretoria-purple"] {
+    --primary: 262 83% 62%;
+    --secondary: 270 80% 60%;
+    --accent: 286 75% 65%;
+    --ring: 262 83% 62% / 0.7;
+    --sidebar-primary: 262 83% 62%;
+    --sidebar-ring: 262 83% 62%;
+  }
+
+  .dark[data-theme="mandela"] {
+    --primary: 0 0% 85%;
+    --secondary: 0 0% 65%;
+    --accent: 42 96% 60%;
+    --ring: 0 0% 85% / 0.7;
+    --sidebar-primary: 0 0% 85%;
+    --sidebar-ring: 0 0% 85%;
   }
 }
 

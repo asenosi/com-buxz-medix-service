@@ -108,7 +108,10 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className, isTak
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className={cn("font-semibold text-lg truncate", isCompleted && "line-through")}>{truncateText(medication.name)}</h3>
+            <h3 className={cn("font-semibold text-lg truncate", isTaken && "text-muted-foreground")}>{truncateText(medication.name)}</h3>
+            {isTaken && <CheckCircle2 className="w-4 h-4 text-success shrink-0" />}
+            {isSkipped && <XCircle className="w-4 h-4 text-destructive shrink-0" />}
+            {isSnoozed && <Clock className="w-4 h-4 text-warning shrink-0" />}
           </div>
           <p className="text-sm text-muted-foreground truncate">{medication.dosage}</p>
           {schedule.special_instructions && (

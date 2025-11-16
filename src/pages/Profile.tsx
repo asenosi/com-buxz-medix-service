@@ -381,7 +381,7 @@ const Profile = () => {
             <Card className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
               <CardHeader className="p-3">
                 <CardTitle className="text-sm font-medium">About</CardTitle>
-                <CardDescription className="text-xs">Personalize how MedTracker feels.</CardDescription>
+                <CardDescription className="text-xs">Personalize how TreatMate feels.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 p-3 pt-0">
                 <div className="grid gap-2 sm:grid-cols-2">

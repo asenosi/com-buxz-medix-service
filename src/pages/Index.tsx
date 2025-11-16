@@ -31,7 +31,7 @@ const Index = () => {
               </div>
             </div>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              MedTracker
+              TreatMate
             </h1>
             <p className="text-lg md:text-xl max-w-2xl mx-auto opacity-90 leading-relaxed">
               Never miss a dose again. Your reliable companion for managing medications with ease and confidence.
@@ -166,7 +166,7 @@ const Index = () => {
             Start Managing Your Medications Today
           </h2>
           <p className="text-lg opacity-90 leading-relaxed">
-            Join thousands of users who trust MedTracker for their daily medication management
+            Join thousands of users who trust TreatMate for their daily medication management
           </p>
           <Button
             onClick={() => navigate("/auth")}
@@ -188,7 +188,7 @@ const Index = () => {
             </div>
           </div>
           <p className="text-muted-foreground">
-            © 2025 MedTracker. Helping you stay healthy, one dose at a time.
+            © 2025 TreatMate. Helping you stay healthy, one dose at a time.
           </p>
         </div>
       </footer>

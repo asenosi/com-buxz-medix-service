@@ -25,9 +25,9 @@ export default defineConfig(({ mode }) => ({
         injectionPoint: undefined, // Auto-detect __WB_MANIFEST
       },
       manifest: {
-        name: "MedTracker - Medication Reminder",
-        short_name: "MedTracker",
-        description: "Never miss a dose with MedTracker. Easy medication tracking and reminders.",
+        name: "TreatMate - Medication Reminder",
+        short_name: "TreatMate",
+        description: "Never miss a dose with TreatMate. Easy medication tracking and reminders.",
         theme_color: "#1EAEDB",
         background_color: "#ffffff",
         display: "standalone",
