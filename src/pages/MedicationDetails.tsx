@@ -231,16 +231,6 @@ const MedicationDetails = () => {
                 <p className="text-sm">{med.reason_for_taking}</p>
               </div>
             )}
-            
-            {med.instructions && (
-              <>
-                <Separator />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Instructions</p>
-                  <p className="text-sm">{med.instructions}</p>
-                </div>
-              </>
-            )}
 
             {med.with_food_timing && (
               <>
