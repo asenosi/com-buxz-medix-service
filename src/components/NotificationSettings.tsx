@@ -114,7 +114,7 @@ export const NotificationSettings = () => {
                 <Button 
                   size="sm" 
                   onClick={() => navigate("/install")}
-                  className="h-8 text-xs"
+                  className="h-8 text-xs rounded-full"
                 >
                   <ExternalLink className="w-3 h-3 mr-1.5" />
                   {!isInstalled ? "Install App" : "Setup Guide"}
@@ -166,7 +166,7 @@ export const NotificationSettings = () => {
             />
           </div>
           {permission === "default" && (
-            <Button onClick={requestPermission} variant="outline" className="w-full" size="sm">Enable Browser Notifications</Button>
+            <Button onClick={requestPermission} variant="outline" className="w-full rounded-full" size="sm">Enable Browser Notifications</Button>
           )}
           {permission === "denied" && (
             <div className="text-sm text-muted-foreground bg-destructive/10 p-3 rounded-lg">Notifications blocked. Enable them in your browser settings.</div>
@@ -241,11 +241,11 @@ export const NotificationSettings = () => {
               </div>
             </div>
             {preferences.quiet_hours_start && preferences.quiet_hours_end && (
-              <Button variant="ghost" size="sm" onClick={() => updatePreferences({ quiet_hours_start: null, quiet_hours_end: null })} className="w-full text-xs">Clear Quiet Hours</Button>
+              <Button variant="ghost" size="sm" onClick={() => updatePreferences({ quiet_hours_start: null, quiet_hours_end: null })} className="w-full text-xs rounded-full">Clear Quiet Hours</Button>
             )}
           </div>
 
-          <Button onClick={testNotification} variant="outline" className="w-full">Send Test Notification</Button>
+          <Button onClick={testNotification} variant="outline" className="w-full rounded-full">Send Test Notification</Button>
         </CardContent>
       </Card>
 
