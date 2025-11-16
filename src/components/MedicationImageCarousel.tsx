@@ -91,10 +91,11 @@ export function MedicationImageCarousel({
             key={index}
             onClick={() => api?.scrollTo(index)}
             className={cn(
-              "transition-all rounded-full w-2.5 h-2.5",
+              "rounded-full p-0 border-0 flex-shrink-0 transition-all",
+              "w-2 h-2 min-w-[8px] min-h-[8px]",
               index === currentIndex 
-                ? "bg-primary scale-110 shadow-md" 
-                : "bg-white/70 hover:bg-white/90 shadow-sm"
+                ? "bg-primary scale-125" 
+                : "bg-white/70 hover:bg-white/90"
             )}
             aria-label={`Go to image ${index + 1}`}
           />
