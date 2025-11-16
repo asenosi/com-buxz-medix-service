@@ -142,7 +142,31 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
       return;
     }
 
-    const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] = {
+    let practitionerId = null;
+
+    // If manual entry with doctor details, create new practitioner
+    if (values.doctor_name && values.doctor_name.trim()) {
+      const { data: newPractitioner, error: practitionerError } = await supabase
+        .from("medical_practitioners")
+        .insert({
+          user_id: user.id,
+          name: values.doctor_name.trim(),
+          specialty: values.doctor_specialty?.trim() || null,
+          clinic_name: values.location?.trim() || null,
+        })
+        .select()
+        .single();
+
+      if (practitionerError) {
+        console.error("Failed to create practitioner:", practitionerError);
+        toast.error("Failed to save practitioner details");
+      } else if (newPractitioner) {
+        practitionerId = newPractitioner.id;
+        toast.success("Practitioner saved to your directory");
+      }
+    }
+
+    const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] & { practitioner_id?: string | null } = {
       title: values.title,
       appointment_date: format(values.appointment_date, "yyyy-MM-dd"),
       appointment_time: values.appointment_time,
@@ -157,6 +181,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment }: Appointme
       notes: values.notes,
       reminder_minutes_before: values.reminder_minutes_before,
       medication_id: values.medication_id === "none" || !values.medication_id ? null : values.medication_id,
+      practitioner_id: practitionerId,
     };
 
     const { error } = appointment
