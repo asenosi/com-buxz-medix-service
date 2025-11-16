@@ -77,7 +77,7 @@ export const Step5Frequency = ({
               type="button"
               variant={frequencyType === option.value ? "default" : "outline"}
               onClick={() => setFrequencyType(option.value)}
-              className="h-10 text-sm"
+              className="h-10 text-sm rounded-full"
             >
               {option.label}
             </Button>
@@ -95,7 +95,7 @@ export const Step5Frequency = ({
                     type="button"
                     variant={timesPerDay === count ? "default" : "outline"}
                     onClick={() => updateTimesPerDay(count)}
-                    className="h-10"
+                    className="h-10 rounded-full"
                   >
                     {count}x
                   </Button>
