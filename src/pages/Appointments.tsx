@@ -9,6 +9,7 @@ import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
 import { AppointmentCard } from "@/components/appointments/AppointmentCard";
 import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
+import { CalendarSyncDialog } from "@/components/appointments/CalendarSyncDialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -35,6 +36,28 @@ export default function Appointments() {
   const [showFilters, setShowFilters] = useState(false);
   const [appointmentView, setAppointmentView] = useState<"upcoming" | "past">("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setSelectedAppointment(null);
+    refetch();
+  };
+
+  const handleAppointmentCreated = (appointmentId: string, shouldSync: boolean) => {
+    // Only show sync dialog for new appointments or rescheduled ones
+    if (shouldSync) {
+      setCreatedAppointmentId(appointmentId);
+      setSyncDialogOpen(true);
+    }
+  };
+
+  const handleSyncDialogClose = () => {
+    setSyncDialogOpen(false);
+    setCreatedAppointmentId(null);
+    refetch();
+  };
 
   const { data: appointments, isLoading, refetch } = useQuery({
     queryKey: ["appointments", filters],
@@ -86,12 +109,6 @@ export default function Appointments() {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
-
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    setSelectedAppointment(null);
-    refetch();
-  };
 
   // Filter appointments by search query
   const filteredAppointments = appointments?.filter((apt) => {
@@ -409,6 +426,13 @@ export default function Appointments() {
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         appointment={selectedAppointment}
+        onAppointmentCreated={handleAppointmentCreated}
+      />
+
+      <CalendarSyncDialog
+        open={syncDialogOpen}
+        onOpenChange={handleSyncDialogClose}
+        appointmentId={createdAppointmentId || ""}
       />
 
       <Button

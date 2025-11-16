@@ -230,5 +230,15 @@ async function syncAppointmentToCalendar(
     .eq('user_id', userId)
     .eq('provider', 'google');
 
+  // Mark appointment as synced and store calendar event ID
+  await supabaseClient
+    .from('appointments')
+    .update({ 
+      calendar_synced: true,
+      calendar_event_id: calendarEvent.id 
+    })
+    .eq('id', appointmentId)
+    .eq('user_id', userId);
+
   console.log('Event synced successfully:', calendarEvent.id);
 }
