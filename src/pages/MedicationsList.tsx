@@ -191,71 +191,63 @@ const MedicationsList = () => {
         {medications.map((med) => {
           const schedule = getFirstSchedule(med.id);
           return (
-            <Card key={med.id} className="overflow-hidden hover:shadow-md transition-shadow">
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  <div 
-                    className="flex-1 cursor-pointer" 
-                    onClick={() => navigate(`/medications/${med.id}`)}
-                  >
-                    <SimpleDoseCard
-                      medication={med}
-                      schedule={schedule}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge 
-                      variant={med.active ? "default" : "secondary"}
-                      className="hidden sm:flex"
+            <div key={med.id} className="relative">
+              <SimpleDoseCard
+                medication={med}
+                schedule={schedule || { special_instructions: null }}
+                onClick={() => navigate(`/medications/${med.id}`)}
+                className="hover:shadow-md transition-shadow"
+              />
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <Badge 
+                  variant={med.active ? "default" : "secondary"}
+                  className="hidden sm:flex"
+                >
+                  {med.active ? "Active" : "Inactive"}
+                </Badge>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
                     >
-                      {med.active ? "Active" : "Inactive"}
-                    </Badge>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => navigate(`/medications/${med.id}`)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleActive(med.id, med.active)}>
-                          {med.active ? (
-                            <>
-                              <Pause className="mr-2 h-4 w-4" />
-                              Suspend
-                            </>
-                          ) : (
-                            <>
-                              <Play className="mr-2 h-4 w-4" />
-                              Activate
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setSelectedMedId(med.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate(`/medications/${med.id}`)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleToggleActive(med.id, med.active)}>
+                      {med.active ? (
+                        <>
+                          <Pause className="mr-2 h-4 w-4" />
+                          Suspend
+                        </>
+                      ) : (
+                        <>
+                          <Play className="mr-2 h-4 w-4" />
+                          Activate
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        setSelectedMedId(med.id);
+                        setDeleteDialogOpen(true);
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            </Card>
+            </div>
           );
         })}
       </div>
