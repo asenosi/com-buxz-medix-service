@@ -5,6 +5,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ export function MedicationImageCarousel({
   onImageClick,
 }: MedicationImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [api, setApi] = useState<any>(null);
+  const [api, setApi] = useState<CarouselApi>();
   
   // Filter out empty/null images and use fallback if needed
   const validImages = images?.filter(img => img && img.trim() !== "") || [];
