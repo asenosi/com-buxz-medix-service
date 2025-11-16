@@ -19,6 +19,8 @@ export type Database = {
           appointment_date: string
           appointment_time: string
           appointment_type: Database["public"]["Enums"]["appointment_type"]
+          calendar_event_id: string | null
+          calendar_synced: boolean | null
           created_at: string
           description: string | null
           doctor_name: string | null
@@ -39,6 +41,8 @@ export type Database = {
           appointment_date: string
           appointment_time: string
           appointment_type?: Database["public"]["Enums"]["appointment_type"]
+          calendar_event_id?: string | null
+          calendar_synced?: boolean | null
           created_at?: string
           description?: string | null
           doctor_name?: string | null
@@ -59,6 +63,8 @@ export type Database = {
           appointment_date?: string
           appointment_time?: string
           appointment_type?: Database["public"]["Enums"]["appointment_type"]
+          calendar_event_id?: string | null
+          calendar_synced?: boolean | null
           created_at?: string
           description?: string | null
           doctor_name?: string | null

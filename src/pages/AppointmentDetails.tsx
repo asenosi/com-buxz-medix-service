@@ -22,6 +22,7 @@ import {
   CheckCircle,
   XCircle
 } from "lucide-react";
+import { CalendarSyncDialog } from "@/components/appointments/CalendarSyncDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
@@ -87,6 +88,7 @@ export default function AppointmentDetails() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
 
   const { data: appointment, isLoading, refetch } = useQuery({
     queryKey: ["appointment", id],
@@ -171,6 +173,17 @@ export default function AppointmentDetails() {
   const handleEditClose = () => {
     setEditDialogOpen(false);
     refetch();
+  };
+
+  const handleAppointmentUpdated = async (appointmentId: string, wasRescheduled: boolean) => {
+    // If appointment was rescheduled and was previously synced, trigger resync
+    if (wasRescheduled && appointment?.calendar_synced) {
+      setSyncDialogOpen(true);
+    }
+  };
+
+  const handleSyncCalendar = () => {
+    setSyncDialogOpen(true);
   };
 
   const handleCancel = async () => {
@@ -496,10 +509,30 @@ export default function AppointmentDetails() {
         </div>
       )}
 
+      {/* Calendar Sync Button */}
+      {appointment.status === "scheduled" && !appointment.calendar_synced && (
+        <Button
+          onClick={handleSyncCalendar}
+          variant="outline"
+          size="sm"
+          className="w-full rounded-full"
+        >
+          <CalendarIcon className="w-4 h-4 mr-2" />
+          Sync to Calendar
+        </Button>
+      )}
+
       <AppointmentWizard
         open={editDialogOpen}
         onOpenChange={handleEditClose}
         appointment={appointment}
+        onAppointmentCreated={handleAppointmentUpdated}
+      />
+
+      <CalendarSyncDialog
+        open={syncDialogOpen}
+        onOpenChange={setSyncDialogOpen}
+        appointmentId={id || ""}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
