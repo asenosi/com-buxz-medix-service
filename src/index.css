@@ -404,21 +404,21 @@ All colors MUST be HSL.
   }
 
   :root[data-theme="ubuntu"] {
-    --primary: 24 95% 54%; /* orange */
-    --secondary: 16 72% 45%; /* deep orange */
-    --accent: 40 95% 55%; /* amber */
-    --ring: 24 95% 54% / 0.7;
-    --sidebar-primary: 24 95% 54%;
-    --sidebar-ring: 24 95% 54%;
+    --primary: 180 80% 50%; /* teal */
+    --secondary: 180 70% 45%; /* deep teal */
+    --accent: 180 85% 55%; /* bright teal */
+    --ring: 180 80% 50% / 0.7;
+    --sidebar-primary: 180 80% 50%;
+    --sidebar-ring: 180 80% 50%;
   }
 
   :root[data-theme="african-sunset"] {
-    --primary: 10 88% 55%; /* sunset red */
-    --secondary: 28 92% 54%; /* warm orange */
-    --accent: 40 92% 58%; /* amber */
-    --ring: 10 88% 55% / 0.7;
-    --sidebar-primary: 10 88% 55%;
-    --sidebar-ring: 10 88% 55%;
+    --primary: 330 80% 60%; /* coral pink */
+    --secondary: 340 75% 55%; /* deep pink */
+    --accent: 320 85% 65%; /* bright pink */
+    --ring: 330 80% 60% / 0.7;
+    --sidebar-primary: 330 80% 60%;
+    --sidebar-ring: 330 80% 60%;
   }
 
   :root[data-theme="township-green"] {
@@ -477,21 +477,21 @@ All colors MUST be HSL.
   }
 
   .dark[data-theme="ubuntu"] {
-    --primary: 24 95% 60%;
-    --secondary: 16 72% 50%;
-    --accent: 40 95% 60%;
-    --ring: 24 95% 60% / 0.7;
-    --sidebar-primary: 24 95% 60%;
-    --sidebar-ring: 24 95% 60%;
+    --primary: 180 75% 55%;
+    --secondary: 180 65% 50%;
+    --accent: 180 80% 60%;
+    --ring: 180 75% 55% / 0.7;
+    --sidebar-primary: 180 75% 55%;
+    --sidebar-ring: 180 75% 55%;
   }
 
   .dark[data-theme="african-sunset"] {
-    --primary: 10 88% 60%;
-    --secondary: 28 92% 58%;
-    --accent: 40 92% 62%;
-    --ring: 10 88% 60% / 0.7;
-    --sidebar-primary: 10 88% 60%;
-    --sidebar-ring: 10 88% 60%;
+    --primary: 330 75% 65%;
+    --secondary: 340 70% 60%;
+    --accent: 320 80% 70%;
+    --ring: 330 75% 65% / 0.7;
+    --sidebar-primary: 330 75% 65%;
+    --sidebar-ring: 330 75% 65%;
   }
 
   .dark[data-theme="township-green"] {
