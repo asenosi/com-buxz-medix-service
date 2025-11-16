@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Upload, X, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { truncateText } from "@/lib/utils";
 
 interface ExtractedMedication {
   name: string;
@@ -274,7 +275,7 @@ export const BulkPrescriptionUpload = ({ open, onOpenChange, onComplete }: BulkP
                     <Card key={idx}>
                       <CardContent className="pt-4">
                         <div className="space-y-1">
-                          <p className="font-semibold">{med.name}</p>
+                          <p className="font-semibold">{truncateText(med.name)}</p>
                           <p className="text-sm text-muted-foreground">{med.dosage}</p>
                           {med.reason && (
                             <p className="text-xs text-muted-foreground">For: {med.reason}</p>

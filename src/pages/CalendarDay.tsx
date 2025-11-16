@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { truncateText } from "@/lib/utils";
 
 type Medication = { id: string; name: string; image_url: string | null };
 type Schedule = { id: string; medication_id: string; time_of_day: string; with_food: boolean; special_instructions: string | null; days_of_week: number[] | null; active: boolean };
@@ -101,7 +102,7 @@ const CalendarDay = () => {
                       <img src={it.medication.image_url} alt={it.medication.name} className="w-12 h-12 rounded object-cover" />
                     )}
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{it.medication.name}</CardTitle>
+                      <CardTitle className="text-lg">{truncateText(it.medication.name)}</CardTitle>
                       <div className="text-sm text-muted-foreground">{it.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
                     </div>
                     <Badge
