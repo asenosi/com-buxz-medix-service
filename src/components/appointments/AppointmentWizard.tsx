@@ -20,7 +20,7 @@ import type { Database } from "@/integrations/supabase/types";
 type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 
 const appointmentSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z.string().min(1, "Title is required").max(50, "Title must be less than 50 characters"),
   description: z.string().optional(),
   appointment_date: z.date({ required_error: "Date is required" }),
   appointment_time: z.string().min(1, "Time is required"),
@@ -555,9 +555,16 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
                 <Input
                   placeholder="e.g., Annual checkup"
                   value={form.watch("title")}
-                  onChange={(e) => form.setValue("title", e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val.length <= 50) {
+                      form.setValue("title", val);
+                    }
+                  }}
+                  maxLength={50}
                   className="h-12 text-lg"
                 />
+                <p className="text-xs text-muted-foreground">{form.watch("title")?.length || 0}/50 characters</p>
               </div>
 
               <div>

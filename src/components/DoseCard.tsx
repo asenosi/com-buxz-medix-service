@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Clock, CheckCircle2, XCircle, Pill, AlarmClock, Edit } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, truncateText } from "@/lib/utils";
 import { useState } from "react";
 import { useCountdown } from "@/hooks/use-countdown";
 import { Badge } from "@/components/ui/badge";
@@ -122,7 +122,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base truncate">{dose.medication.name}</CardTitle>
+            <CardTitle className="text-base truncate">{truncateText(dose.medication.name)}</CardTitle>
             <CardDescription className="text-sm mt-0.5">
               {dose.medication.dosage}
               {dose.medication.form && ` • ${dose.medication.form}`}

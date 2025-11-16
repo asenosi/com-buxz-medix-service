@@ -10,6 +10,7 @@ import { ArrowLeft, Edit, Trash2, Clock, Calendar, Pill, X } from "lucide-react"
 import { MedicationDetailsSkeleton } from "@/components/LoadingSkeletons";
 import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { truncateText } from "@/lib/utils";
 
 type Medication = {
   id: string;
@@ -190,30 +191,34 @@ const MedicationDetails = () => {
       </div>
 
       <div className="px-2 space-y-4">
-        {/* Header Card with Image */}
+        {/* Title Section */}
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold break-words">{truncateText(med.name)}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-muted-foreground">
+              {med.dosage || ""} {med.form ? `• ${med.form}` : ""}
+            </p>
+            {med.route_of_administration && (
+              <Badge variant="secondary">
+                {med.route_of_administration}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Image Card */}
         <Card className="overflow-hidden">
           <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6">
-            <div className="flex items-start gap-4">
-              <div className="shrink-0 w-32 h-32 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
+            <div className="flex items-center justify-center">
+              <div className="w-48 h-48 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
                 <MedicationImageCarousel
                   images={[...images, ...(med.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
                   fallbackImage={med.image_url || defaultImageForForm(med.form)}
                   alt={med.name}
-                  className="w-32 h-32"
+                  className="w-48 h-48"
                   imageClassName="rounded-xl"
                   onImageClick={() => setShowFullImage(true)}
                 />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-bold mb-1 truncate">{med.name}</h1>
-                <p className="text-muted-foreground">
-                  {med.dosage || ""} {med.form ? `• ${med.form}` : ""}
-                </p>
-                {med.route_of_administration && (
-                  <Badge variant="secondary" className="mt-2">
-                    {med.route_of_administration}
-                  </Badge>
-                )}
               </div>
             </div>
           </div>
@@ -230,16 +235,6 @@ const MedicationDetails = () => {
                 <p className="text-sm font-medium text-muted-foreground mb-1">Reason</p>
                 <p className="text-sm">{med.reason_for_taking}</p>
               </div>
-            )}
-            
-            {med.instructions && (
-              <>
-                <Separator />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Instructions</p>
-                  <p className="text-sm">{med.instructions}</p>
-                </div>
-              </>
             )}
 
             {med.with_food_timing && (
