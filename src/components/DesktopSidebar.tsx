@@ -56,7 +56,7 @@ export default function DesktopSidebar() {
     <div className="sticky top-14 h-[calc(100dvh-56px)] overflow-auto rounded-md border bg-card p-3">
       <div className="flex items-center gap-2 px-1 py-2">
         <Pill className="h-5 w-5 text-primary" />
-        <span className="text-sm font-semibold">MedTracker</span>
+        <span className="text-sm font-semibold">TreatMate</span>
       </div>
       <div className="mt-1 space-y-1">
         <button

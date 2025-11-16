@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format, isToday, isTomorrow } from "date-fns";
 
 const brand = {
-  name: "MedTracker",
+  name: "TreatMate",
 };
 
 export default function AppHeader() {
