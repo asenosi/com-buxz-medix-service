@@ -4,11 +4,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Edit, Trash2, User, Phone, Mail, MapPin, Stethoscope, FileText, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import PageLoader from "@/components/PageLoader";
 import { toast } from "sonner";
+
+const statusColors: Record<string, string> = {
+  scheduled: "bg-primary/10 text-primary",
+  completed: "bg-green-500/10 text-green-700 dark:text-green-300",
+  cancelled: "bg-red-500/10 text-red-700 dark:text-red-300",
+  rescheduled: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-300",
+  no_show: "bg-gray-500/10 text-gray-700 dark:text-gray-300",
+};
+
+const statusLabels: Record<string, string> = {
+  scheduled: "Scheduled",
+  completed: "Attended",
+  cancelled: "Cancelled",
+  rescheduled: "Rescheduled",
+  no_show: "Missed",
+};
 
 export default function PractitionerDetails() {
   const { id } = useParams();
@@ -192,6 +209,9 @@ export default function PractitionerDetails() {
                       {appointment.description && (
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{appointment.description}</p>
                       )}
+                      <Badge variant="secondary" className={`${statusColors[appointment.status]} mt-1.5 text-xs`}>
+                        {statusLabels[appointment.status]}
+                      </Badge>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs font-medium text-foreground">
