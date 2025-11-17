@@ -27,6 +27,7 @@ interface Step6OptionsProps {
   onAddImages: (files: FileList | File[]) => void;
   onRemoveImage: (index: number) => void;
   medicationName: string;
+  isEditMode?: boolean;
 }
 
 const iconOptions = [
@@ -68,6 +69,7 @@ export const Step6Options = ({
   onAddImages,
   onRemoveImage,
   medicationName,
+  isEditMode = false,
 }: Step6OptionsProps) => {
   return (
     <Card>
@@ -154,47 +156,52 @@ export const Step6Options = ({
           </div>
         </div>
 
-        <div className="space-y-3">
-          <h3 className="text-base font-semibold">Refill Reminders</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="totalPills" className="text-sm">Total Pills/Doses</Label>
-              <Input
-                id="totalPills"
-                type="number"
-                value={totalPills}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || (Number(val) >= 1 && Number(val) <= 10000)) {
-                    setTotalPills(val);
-                  }
-                }}
-                placeholder="e.g., 30"
-                min="1"
-                max="10000"
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="refillThreshold" className="text-sm">Remind me when left</Label>
-              <Input
-                id="refillThreshold"
-                type="number"
-                value={refillThreshold}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || (Number(val) >= 1 && Number(val) <= 1000)) {
-                    setRefillThreshold(val);
-                  }
-                }}
-                placeholder="e.g., 7"
-                min="1"
-                max="1000"
-                className="h-9"
-              />
+        {isEditMode && (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold">Refill Reminders</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="totalPills" className="text-sm">Total Pills/Doses</Label>
+                <Input
+                  id="totalPills"
+                  type="number"
+                  value={totalPills}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (Number(val) >= 1 && Number(val) <= 10000)) {
+                      setTotalPills(val);
+                    }
+                  }}
+                  placeholder="e.g., 30"
+                  min="1"
+                  max="10000"
+                  className="h-9"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="refillThreshold" className="text-sm">Refill Reminder (pills left)</Label>
+                <Input
+                  id="refillThreshold"
+                  type="number"
+                  value={refillThreshold}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (Number(val) >= 1 && Number(val) <= 10000)) {
+                      setRefillThreshold(val);
+                    }
+                  }}
+                  placeholder="e.g., 5"
+                  min="1"
+                  max="10000"
+                  className="h-9"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Get notified when this many pills remain
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="space-y-3">
           <h3 className="text-base font-semibold">Instructions</h3>
