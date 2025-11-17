@@ -27,6 +27,7 @@ const Practitioners = lazy(() => import("./pages/Practitioners"));
 const PractitionerDetails = lazy(() => import("./pages/PractitionerDetails"));
 const PractitionerForm = lazy(() => import("./pages/PractitionerForm"));
 const Refills = lazy(() => import("./pages/Refills"));
+const RefillDetails = lazy(() => import("./pages/RefillDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/medications/list" element={<MedicationsList />} />
               <Route path="/medications/add" element={<AddMedication />} />
               <Route path="/medications/:id" element={<MedicationDetails />} />
+              <Route path="/medications/:id/refills" element={<RefillDetails />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/calendar/day" element={<CalendarDay />} />
               <Route path="/search" element={<Search />} />
