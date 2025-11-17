@@ -29,44 +29,54 @@ export const RefillPrediction = ({
 
   const calculatePrediction = async () => {
     try {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const { data: doseLogs, error } = await supabase
-        .from("dose_logs")
-        .select("taken_at, status")
+      // Fetch medication schedules to calculate expected daily consumption
+      const { data: schedules, error: scheduleError } = await supabase
+        .from("medication_schedules")
+        .select("*")
         .eq("medication_id", medicationId)
-        .eq("status", "taken")
-        .gte("scheduled_time", thirtyDaysAgo.toISOString())
-        .not("taken_at", "is", null);
+        .eq("active", true);
 
-      if (error) throw error;
+      if (scheduleError) throw scheduleError;
 
-      if (!doseLogs || doseLogs.length === 0) {
+      if (!schedules || schedules.length === 0) {
         setLoading(false);
         return;
       }
 
-      const daysWithData = differenceInDays(new Date(), thirtyDaysAgo);
-      const totalTaken = doseLogs.length;
-      const dailyConsumption = totalTaken / daysWithData;
+      // Calculate expected daily doses based on schedules
+      let dailyDoses = 0;
+      schedules.forEach((schedule) => {
+        if (schedule.frequency_type === "daily") {
+          dailyDoses += 1;
+        } else if (schedule.frequency_type === "specific_days" && schedule.days_of_week) {
+          // Average doses per day for specific days schedules
+          dailyDoses += schedule.days_of_week.length / 7;
+        } else if (schedule.frequency_type === "as_needed") {
+          // For as-needed, use conservative estimate
+          dailyDoses += 0.5;
+        } else {
+          dailyDoses += 1; // Default to once per day
+        }
+      });
 
-      if (dailyConsumption === 0) {
+      if (dailyDoses === 0) {
         setLoading(false);
         return;
       }
 
+      // Calculate pills until refill (considering threshold)
       const pillsUntilRefill = refillThreshold !== null ? 
         Math.max(pillsRemaining - refillThreshold, 0) : 
         pillsRemaining;
       
-      const daysUntilRefill = Math.ceil(pillsUntilRefill / dailyConsumption);
+      // Calculate days until refill based on current pills and daily consumption
+      const daysUntilRefill = Math.ceil(pillsUntilRefill / dailyDoses);
       const estimatedRefillDate = addDays(new Date(), daysUntilRefill);
 
       setPrediction({
         daysUntilRefill,
         estimatedRefillDate,
-        dailyConsumption,
+        dailyConsumption: dailyDoses,
       });
     } catch (error) {
       console.error("Error calculating refill prediction:", error);
