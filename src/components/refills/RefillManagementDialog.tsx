@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface Pharmacy {
   id: string;
@@ -49,6 +50,7 @@ export const RefillManagementDialog = ({
   const [pickupDate, setPickupDate] = useState("");
   const [status, setStatus] = useState<string>("completed");
   const [notes, setNotes] = useState("");
+  const [fulfillmentMethod, setFulfillmentMethod] = useState<string>("collection");
 
   useEffect(() => {
     if (open) {
@@ -101,6 +103,7 @@ export const RefillManagementDialog = ({
           pickup_date: pickupDate || null,
           status,
           notes: notes || null,
+          fulfillment_method: fulfillmentMethod,
         });
 
       if (historyError) throw historyError;
@@ -139,6 +142,7 @@ export const RefillManagementDialog = ({
     setPickupDate("");
     setStatus("completed");
     setNotes("");
+    setFulfillmentMethod("collection");
     setSelectedPharmacy("");
   };
 
@@ -185,6 +189,20 @@ export const RefillManagementDialog = ({
                   value={refillDate}
                   onChange={(e) => setRefillDate(e.target.value)}
                 />
+              </div>
+
+              <div>
+                <Label>Fulfillment Method</Label>
+                <RadioGroup value={fulfillmentMethod} onValueChange={setFulfillmentMethod}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="collection" id="collection" />
+                    <Label htmlFor="collection" className="font-normal cursor-pointer">Collection (Pickup)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="delivery" id="delivery" />
+                    <Label htmlFor="delivery" className="font-normal cursor-pointer">Delivery</Label>
+                  </div>
+                </RadioGroup>
               </div>
 
               <div>
@@ -290,15 +308,29 @@ export const RefillManagementDialog = ({
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="pickupDate">Pickup Date</Label>
-                  <Input
-                    id="pickupDate"
-                    type="date"
-                    value={pickupDate}
-                    onChange={(e) => setPickupDate(e.target.value)}
-                  />
-                </div>
+                {fulfillmentMethod === "collection" && (
+                  <div>
+                    <Label htmlFor="pickupDate">Pickup Date</Label>
+                    <Input
+                      id="pickupDate"
+                      type="date"
+                      value={pickupDate}
+                      onChange={(e) => setPickupDate(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {fulfillmentMethod === "delivery" && (
+                  <div>
+                    <Label htmlFor="pickupDate">Delivery Date</Label>
+                    <Input
+                      id="pickupDate"
+                      type="date"
+                      value={pickupDate}
+                      onChange={(e) => setPickupDate(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
