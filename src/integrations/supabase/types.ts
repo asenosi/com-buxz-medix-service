@@ -343,6 +343,7 @@ export type Database = {
       medications: {
         Row: {
           active: boolean | null
+          auto_refill_enabled: boolean | null
           created_at: string
           dosage: string
           end_date: string | null
@@ -353,12 +354,15 @@ export type Database = {
           image_url: string | null
           image_urls: string[] | null
           instructions: string | null
+          last_refill_date: string | null
           medication_color: string | null
           medication_icon: string | null
           missed_dose_cutoff_minutes: number | null
           name: string
           pills_remaining: number | null
+          preferred_pharmacy_id: string | null
           prescribing_doctor: string | null
+          prescription_number: string | null
           reason_for_taking: string | null
           refill_reminder_threshold: number | null
           refills_remaining: number | null
@@ -373,6 +377,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          auto_refill_enabled?: boolean | null
           created_at?: string
           dosage: string
           end_date?: string | null
@@ -383,12 +388,15 @@ export type Database = {
           image_url?: string | null
           image_urls?: string[] | null
           instructions?: string | null
+          last_refill_date?: string | null
           medication_color?: string | null
           medication_icon?: string | null
           missed_dose_cutoff_minutes?: number | null
           name: string
           pills_remaining?: number | null
+          preferred_pharmacy_id?: string | null
           prescribing_doctor?: string | null
+          prescription_number?: string | null
           reason_for_taking?: string | null
           refill_reminder_threshold?: number | null
           refills_remaining?: number | null
@@ -403,6 +411,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          auto_refill_enabled?: boolean | null
           created_at?: string
           dosage?: string
           end_date?: string | null
@@ -413,12 +422,15 @@ export type Database = {
           image_url?: string | null
           image_urls?: string[] | null
           instructions?: string | null
+          last_refill_date?: string | null
           medication_color?: string | null
           medication_icon?: string | null
           missed_dose_cutoff_minutes?: number | null
           name?: string
           pills_remaining?: number | null
+          preferred_pharmacy_id?: string | null
           prescribing_doctor?: string | null
+          prescription_number?: string | null
           reason_for_taking?: string | null
           refill_reminder_threshold?: number | null
           refills_remaining?: number | null
@@ -431,7 +443,15 @@ export type Database = {
           user_id?: string
           with_food_timing?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "medications_preferred_pharmacy_id_fkey"
+            columns: ["preferred_pharmacy_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       medications_database: {
         Row: {
@@ -511,6 +531,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pharmacies: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          fax_number: string | null
+          id: string
+          is_preferred: boolean | null
+          name: string
+          notes: string | null
+          phone_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          fax_number?: string | null
+          id?: string
+          is_preferred?: boolean | null
+          name: string
+          notes?: string | null
+          phone_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          fax_number?: string | null
+          id?: string
+          is_preferred?: boolean | null
+          name?: string
+          notes?: string | null
+          phone_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -573,6 +635,81 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      refill_history: {
+        Row: {
+          copay_amount: number | null
+          cost: number | null
+          created_at: string
+          id: string
+          insurance_covered: boolean | null
+          medication_id: string
+          notes: string | null
+          pharmacy_id: string | null
+          pickup_date: string | null
+          prescriber_name: string | null
+          prescription_number: string | null
+          quantity_added: number
+          refill_date: string
+          requested_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          copay_amount?: number | null
+          cost?: number | null
+          created_at?: string
+          id?: string
+          insurance_covered?: boolean | null
+          medication_id: string
+          notes?: string | null
+          pharmacy_id?: string | null
+          pickup_date?: string | null
+          prescriber_name?: string | null
+          prescription_number?: string | null
+          quantity_added: number
+          refill_date?: string
+          requested_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          copay_amount?: number | null
+          cost?: number | null
+          created_at?: string
+          id?: string
+          insurance_covered?: boolean | null
+          medication_id?: string
+          notes?: string | null
+          pharmacy_id?: string | null
+          pickup_date?: string | null
+          prescriber_name?: string | null
+          prescription_number?: string | null
+          quantity_added?: number
+          refill_date?: string
+          requested_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refill_history_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refill_history_pharmacy_id_fkey"
+            columns: ["pharmacy_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -235,10 +235,12 @@ const Alerts = () => {
 
       if (error) throw error;
 
+      // Auto-decrement pills when dose is taken
       if (dose.medication.pills_remaining && dose.medication.pills_remaining > 0) {
+        const newRemaining = dose.medication.pills_remaining - 1;
         await supabase
           .from("medications")
-          .update({ pills_remaining: dose.medication.pills_remaining - 1 })
+          .update({ pills_remaining: newRemaining })
           .eq("id", dose.medication.id);
       }
 
