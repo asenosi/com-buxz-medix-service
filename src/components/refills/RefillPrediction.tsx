@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, TrendingDown, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +29,6 @@ export const RefillPrediction = ({
 
   const calculatePrediction = async () => {
     try {
-      // Get dose logs from the past 30 days
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -48,7 +47,6 @@ export const RefillPrediction = ({
         return;
       }
 
-      // Calculate daily consumption rate
       const daysWithData = differenceInDays(new Date(), thirtyDaysAgo);
       const totalTaken = doseLogs.length;
       const dailyConsumption = totalTaken / daysWithData;
@@ -58,7 +56,6 @@ export const RefillPrediction = ({
         return;
       }
 
-      // Calculate days until refill needed (when reaching threshold or 0)
       const pillsUntilRefill = refillThreshold !== null ? 
         Math.max(pillsRemaining - refillThreshold, 0) : 
         pillsRemaining;
@@ -125,19 +122,23 @@ export const RefillPrediction = ({
           </div>
         </div>
 
-        <div className="pt-2 border-t">
+        <div className="pt-2">
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Estimated refill date:</span>
-            <span className="font-medium">
-              {format(prediction.estimatedRefillDate, "MMM d, yyyy")}
-            </span>
           </div>
+          <p className="text-base font-medium mt-1">
+            {format(prediction.estimatedRefillDate, "EEEE, MMMM d, yyyy")}
+          </p>
         </div>
 
-        <p className="text-xs text-muted-foreground italic">
-          Based on your usage over the past 30 days
-        </p>
+        {isUrgent && (
+          <div className="mt-3 p-3 bg-destructive/10 rounded-lg">
+            <p className="text-sm text-destructive font-medium">
+              ⚠️ Consider ordering a refill soon to avoid running out
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

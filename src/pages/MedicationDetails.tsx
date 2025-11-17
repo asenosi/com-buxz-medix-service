@@ -55,6 +55,7 @@ const MedicationDetails = () => {
   const [images, setImages] = useState<string[]>([]);
   const [showFullImage, setShowFullImage] = useState(false);
   const [showRefillDialog, setShowRefillDialog] = useState(false);
+  
   const defaultImageForForm = (form?: string | null) => {
     if (!form) return "";
     const f = (form || "").toLowerCase();
@@ -79,7 +80,7 @@ const MedicationDetails = () => {
           .single();
         if (mErr) throw mErr;
         setMed(m as Medication);
-        // Load up to 5 images from storage for this medication
+        
         try {
           const base = `${(m as Medication).user_id}/${(m as Medication).id}`;
           const { data: files } = await supabase.storage
@@ -96,12 +97,12 @@ const MedicationDetails = () => {
           .from("medication_schedules")
           .select("*")
           .eq("medication_id", id)
-          .order("time_of_day", { ascending: true });
+          .order("time_of_day");
         if (sErr) throw sErr;
-        setSchedules((scheds as Schedule[]) || []);
-      } catch (e) {
-        toast.error("Failed to load medication");
-        console.error(e);
+        setSchedules(scheds as Schedule[]);
+      } catch (error) {
+        console.error("Error loading medication:", error);
+        toast.error("Failed to load medication details");
       } finally {
         setLoading(false);
       }
@@ -110,360 +111,362 @@ const MedicationDetails = () => {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!id) return;
-    const ok = window.confirm("Delete this medication and related data? This cannot be undone.");
-    if (!ok) return;
+    if (!med) return;
+    if (!confirm(`Are you sure you want to delete ${med.name}?`)) return;
 
     try {
-      setLoading(true);
-      // delete related rows first (dose_logs, medication_schedules), then medication
-      await supabase.from("dose_logs").delete().eq("medication_id", id);
-      await supabase.from("medication_schedules").delete().eq("medication_id", id);
-      const { error: dErr } = await supabase.from("medications").delete().eq("id", id);
-      if (dErr) throw dErr;
-      toast.success("Medication deleted");
-      navigate("/dashboard");
-    } catch (e) {
+      const { error } = await supabase
+        .from("medications")
+        .delete()
+        .eq("id", med.id);
+
+      if (error) throw error;
+
+      toast.success(`${med.name} deleted successfully`);
+      navigate("/medications");
+    } catch (error) {
+      console.error("Error deleting medication:", error);
       toast.error("Failed to delete medication");
-      console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 
-  if (loading) {
-    return <MedicationDetailsSkeleton />;
-  }
-
-  if (!med) {
-    return (
-      <div className="min-h-screen bg-background p-6">
-        <Button variant="ghost" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-5 h-5 mr-2" /> Back
-        </Button>
-        <p className="mt-4 text-lg">Medication not found.</p>
-      </div>
-    );
-  }
-
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
   const formatDays = (days: number[] | null) => {
-    if (!days || days.length === 0) return "Everyday";
-    if (days.length === 7) return "Everyday";
-    if (days.length === 5 && !days.includes(0) && !days.includes(6)) return "Weekdays";
-    if (days.length === 2 && days.includes(0) && days.includes(6)) return "Weekends";
-    return days.sort((a, b) => a - b).map(d => dayNames[d]).join(", ");
+    if (!days || days.length === 0) return "No specific days";
+    if (days.length === 7) return "Every day";
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    return days.map(d => dayNames[d]).join(", ");
   };
 
   const getFrequencyText = () => {
     const activeSchedules = schedules.filter(s => s.active);
-    const count = activeSchedules.length;
-    if (count === 0) return "No active schedules";
-    if (count === 1) return "Once daily";
-    if (count === 2) return "Twice daily";
-    if (count === 3) return "Three times daily";
-    if (count === 4) return "Four times daily";
-    return `${count} times daily`;
+    if (activeSchedules.length === 0) return "No active schedules";
+    if (activeSchedules.length === 1) return "Once daily";
+    if (activeSchedules.length === 2) return "Twice daily";
+    if (activeSchedules.length === 3) return "3 times daily";
+    return `${activeSchedules.length} times daily`;
   };
 
+  const handleRefillComplete = () => {
+    if (id) {
+      const load = async () => {
+        const { data: m, error: mErr } = await supabase
+          .from("medications")
+          .select("*")
+          .eq("id", id)
+          .single();
+        if (!mErr && m) {
+          setMed(m as Medication);
+        }
+      };
+      load();
+    }
+  };
+
+  if (loading) return <MedicationDetailsSkeleton />;
+  if (!med) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-muted-foreground">Medication not found</p>
+        <Button onClick={() => navigate("/medications")} className="mt-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Medications
+        </Button>
+      </div>
+    );
+  }
+
+  const needsRefill = med.pills_remaining !== null && 
+    med.refill_reminder_threshold !== null && 
+    med.pills_remaining <= med.refill_reminder_threshold;
+
   return (
-    <div className="space-y-4 pb-6">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="flex items-center justify-between p-4">
-          <Button onClick={() => navigate(-1)} variant="ghost" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
-          </Button>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate(`/medications/add?edit=${med.id}`)}
-            >
-              <Edit className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Edit</span>
-            </Button>
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={handleDelete}
-            >
-              <Trash2 className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Delete</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-2 space-y-4">
-        {/* Title Section */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold break-words">{truncateText(med.name)}</h1>
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-muted-foreground">
-              {med.dosage || ""} {med.form ? `• ${med.form}` : ""}
-            </p>
-            {med.route_of_administration && (
-              <Badge variant="secondary">
-                {med.route_of_administration}
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Image Card */}
-        <Card className="overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6">
-            <div className="flex items-center justify-center">
-              <div className="w-48 h-48 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
-                <MedicationImageCarousel
-                  images={[...images, ...(med.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
-                  fallbackImage={med.image_url || defaultImageForForm(med.form)}
-                  alt={med.name}
-                  className="w-48 h-48"
-                  imageClassName="rounded-xl"
-                  onImageClick={() => setShowFullImage(true)}
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Medication Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Medication Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {med.reason_for_taking && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Reason</p>
-                <p className="text-sm">{med.reason_for_taking}</p>
-              </div>
-            )}
-
-            {med.with_food_timing && (
-              <>
-                <Separator />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Food Timing</p>
-                  <p className="text-sm">{med.with_food_timing}</p>
-                </div>
-              </>
-            )}
-
-            <Separator />
-            
-            <div className="grid grid-cols-2 gap-3">
-              {med.total_pills !== null && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Pills</p>
-                  <p className="text-sm font-medium">{med.total_pills}</p>
-                </div>
-              )}
-              {med.pills_remaining !== null && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Remaining</p>
-                  <p className="text-sm font-medium">{med.pills_remaining}</p>
-                </div>
-              )}
-              {med.start_date && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Start Date</p>
-                  <p className="text-sm font-medium">{new Date(med.start_date).toLocaleDateString()}</p>
-                </div>
-              )}
-              {med.end_date && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">End Date</p>
-                  <p className="text-sm font-medium">{new Date(med.end_date).toLocaleDateString()}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Schedules */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Schedule
-                </CardTitle>
-                <CardDescription className="mt-1">{getFrequencyText()}</CardDescription>
-              </div>
-              {schedules.length > 0 && (
-                <Badge variant="secondary" className="text-sm">
-                  {formatDays(schedules[0]?.days_of_week)}
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {schedules.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No schedules configured</p>
-            ) : (
-              <div className="space-y-4">
-                {/* Timing Section */}
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Times</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {schedules.filter(s => s.active).map((s) => (
-                      <div key={s.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
-                        <Clock className="w-4 h-4 text-primary shrink-0" />
-                        <span className="font-medium">{s.time_of_day}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Instructions Section */}
-                {(schedules.some(s => s.with_food) || schedules.some(s => s.special_instructions)) && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Instructions</p>
-                      <div className="space-y-2">
-                        {schedules.some(s => s.with_food) && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Pill className="w-4 h-4 text-primary" />
-                            <span>Take with food</span>
-                          </div>
-                        )}
-                        {schedules.map((s) => s.special_instructions && (
-                          <div key={s.id} className="text-sm text-muted-foreground">
-                            • {s.special_instructions}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Inactive Schedules */}
-                {schedules.filter(s => !s.active).length > 0 && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Inactive</p>
-                      <div className="flex flex-wrap gap-2">
-                        {schedules.filter(s => !s.active).map((s) => (
-                          <Badge key={s.id} variant="outline" className="text-xs">
-                            {s.time_of_day}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Refill Management Section */}
-        {med.pills_remaining !== null && (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Refill Information</span>
-                  <Button
-                    size="sm"
-                    onClick={() => setShowRefillDialog(true)}
-                    className="h-9"
-                  >
-                    <Package className="h-4 w-4 mr-2" />
-                    Add Refill
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-2xl font-bold">{med.pills_remaining ?? 0}</p>
-                    <p className="text-xs text-muted-foreground">Pills Remaining</p>
-                  </div>
-                  {med.refill_reminder_threshold !== null && (
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Alert at</span>
-                      </div>
-                      <p className="text-lg font-semibold mt-1">
-                        {med.refill_reminder_threshold} pills
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {med.refill_reminder_threshold !== null && 
-                 med.pills_remaining <= med.refill_reminder_threshold && (
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                    <div className="flex gap-2">
-                      <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">Time to refill!</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Your medication is running low.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Refill Prediction */}
-            {med.refill_reminder_threshold !== null && (
-              <RefillPrediction
-                medicationId={med.id}
-                pillsRemaining={med.pills_remaining}
-                refillThreshold={med.refill_reminder_threshold}
-              />
-            )}
-
-            {/* Refill History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Refill History</CardTitle>
-                <CardDescription>Track your refills and costs</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RefillHistory medicationId={med.id} />
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
-
-      {/* Full-screen Image Dialog */}
-      <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-transparent">
+    <div className="pb-24 px-4 space-y-4">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 -mx-4 px-4 border-b">
+        <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-2 z-50 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
-            onClick={() => setShowFullImage(false)}
+            onClick={() => navigate("/medications")}
           >
-            <X className="w-6 h-6" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="w-full h-full flex items-center justify-center p-4">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate(`/medications/${med.id}/edit`)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold break-words">{truncateText(med.name)}</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-muted-foreground">
+            {med.dosage || ""} {med.form ? `• ${med.form}` : ""}
+          </p>
+          {med.route_of_administration && (
+            <Badge variant="secondary">
+              {med.route_of_administration}
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      <Card className="overflow-hidden">
+        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6">
+          <div className="flex items-center justify-center">
+            <div className="w-48 h-48 rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
+              <MedicationImageCarousel
+                images={[...images, ...(med.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
+                fallbackImage={med.image_url || defaultImageForForm(med.form)}
+                alt={med.name}
+                className="w-48 h-48"
+                imageClassName="rounded-xl"
+                onImageClick={() => setShowFullImage(true)}
+              />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Medication Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {med.reason_for_taking && (
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Reason</p>
+              <p className="text-sm">{med.reason_for_taking}</p>
+            </div>
+          )}
+
+          {med.with_food_timing && (
+            <>
+              <Separator />
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Food Timing</p>
+                <p className="text-sm">{med.with_food_timing}</p>
+              </div>
+            </>
+          )}
+
+          <Separator />
+          
+          <div className="grid grid-cols-2 gap-3">
+            {med.total_pills !== null && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Total Pills</p>
+                <p className="text-sm font-medium">{med.total_pills}</p>
+              </div>
+            )}
+            {med.pills_remaining !== null && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Remaining</p>
+                <p className="text-sm font-medium">{med.pills_remaining}</p>
+              </div>
+            )}
+            {med.start_date && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Start Date</p>
+                <p className="text-sm font-medium">{new Date(med.start_date).toLocaleDateString()}</p>
+              </div>
+            )}
+            {med.end_date && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">End Date</p>
+                <p className="text-sm font-medium">{new Date(med.end_date).toLocaleDateString()}</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Schedule
+              </CardTitle>
+              <CardDescription className="mt-1">{getFrequencyText()}</CardDescription>
+            </div>
+            {schedules.length > 0 && (
+              <Badge variant="outline">
+                <Calendar className="w-3 h-3 mr-1" />
+                {schedules.length} time{schedules.length !== 1 ? 's' : ''}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {schedules.filter(s => s.active).map((schedule, idx) => (
+            <div key={schedule.id} className="border rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Pill className="h-4 w-4 text-primary" />
+                  <span className="font-medium">
+                    {new Date(`2000-01-01T${schedule.time_of_day}`).toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                </div>
+                <Badge variant="secondary" className="text-xs">
+                  {formatDays(schedule.days_of_week)}
+                </Badge>
+              </div>
+              {schedule.special_instructions && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {schedule.special_instructions}
+                </p>
+              )}
+            </div>
+          ))}
+          
+          {schedules.filter(s => !s.active).length > 0 && (
+            <>
+              <Separator className="my-4" />
+              <p className="text-sm text-muted-foreground font-medium mb-2">Inactive Schedules</p>
+              {schedules.filter(s => !s.active).map(schedule => (
+                <div key={schedule.id} className="border rounded-lg p-3 opacity-60">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">
+                      {new Date(`2000-01-01T${schedule.time_of_day}`).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </span>
+                    <Badge variant="outline" className="text-xs">Inactive</Badge>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          
+          {schedules.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No schedules configured
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {med.pills_remaining !== null && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Package className="w-5 h-5" />
+                Refill Information
+              </CardTitle>
+              <RefillStatusBadge 
+                pillsRemaining={med.pills_remaining}
+                refillThreshold={med.refill_reminder_threshold}
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Pills Remaining</p>
+                <p className="text-2xl font-bold">{med.pills_remaining}</p>
+              </div>
+              {med.refill_reminder_threshold !== null && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Refill Threshold</p>
+                  <p className="text-2xl font-bold">{med.refill_reminder_threshold}</p>
+                </div>
+              )}
+            </div>
+
+            {needsRefill && (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-amber-900 dark:text-amber-100">Refill Needed</p>
+                    <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">
+                      You're running low on {med.name}. Consider refilling soon.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Button 
+              onClick={() => setShowRefillDialog(true)}
+              className="w-full"
+              variant={needsRefill ? "default" : "outline"}
+            >
+              <Package className="mr-2 h-4 w-4" />
+              Record Refill
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {med.pills_remaining !== null && (
+        <RefillPrediction
+          medicationId={med.id}
+          pillsRemaining={med.pills_remaining}
+          refillThreshold={med.refill_reminder_threshold}
+        />
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Refill History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RefillHistory medicationId={med.id} />
+        </CardContent>
+      </Card>
+
+      <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
+        <DialogContent className="max-w-3xl p-0">
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background"
+              onClick={() => setShowFullImage(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
             <MedicationImageCarousel
-              images={[...images, ...(med?.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
-              fallbackImage={med?.image_url || defaultImageForForm(med?.form)}
-              alt={med?.name}
-              className="w-full h-full max-h-[90vh]"
-              imageClassName="rounded-lg object-contain"
+              images={[...images, ...(med.image_urls || [])].filter((url, index, self) => url && self.indexOf(url) === index)}
+              fallbackImage={med.image_url || defaultImageForForm(med.form)}
+              alt={med.name}
+              className="w-full h-[70vh]"
+              imageClassName="rounded-lg"
             />
           </div>
         </DialogContent>
       </Dialog>
+
+      <RefillManagementDialog
+        open={showRefillDialog}
+        onOpenChange={setShowRefillDialog}
+        medicationId={med.id}
+        medicationName={med.name}
+        currentRemaining={med.pills_remaining || 0}
+        onRefillComplete={handleRefillComplete}
+      />
     </div>
   );
 };
 
 export default MedicationDetails;
-
