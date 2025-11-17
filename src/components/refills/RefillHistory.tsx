@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
-import { Package, Calendar, DollarSign, Building2, FileText, User } from "lucide-react";
+import { Package, Calendar, DollarSign, Building2, FileText, User, Truck, Store } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface RefillHistoryItem {
@@ -20,6 +20,7 @@ interface RefillHistoryItem {
   pickup_date: string | null;
   status: string;
   notes: string | null;
+  fulfillment_method: string | null;
   pharmacy: {
     name: string;
   } | null;
@@ -118,6 +119,26 @@ export const RefillHistory = ({ medicationId }: RefillHistoryProps) => {
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Building2 className="h-4 w-4" />
                 <span>{item.pharmacy.name}</span>
+              </div>
+            )}
+
+            {item.fulfillment_method && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                {item.fulfillment_method === "delivery" ? (
+                  <Truck className="h-4 w-4" />
+                ) : (
+                  <Store className="h-4 w-4" />
+                )}
+                <span className="capitalize">{item.fulfillment_method}</span>
+              </div>
+            )}
+
+            {item.pickup_date && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  {item.fulfillment_method === "delivery" ? "Delivered" : "Picked up"}: {format(new Date(item.pickup_date), "MMM d, yyyy")}
+                </span>
               </div>
             )}
             

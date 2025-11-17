@@ -641,6 +641,7 @@ export type Database = {
           copay_amount: number | null
           cost: number | null
           created_at: string
+          fulfillment_method: string | null
           id: string
           insurance_covered: boolean | null
           medication_id: string
@@ -660,6 +661,7 @@ export type Database = {
           copay_amount?: number | null
           cost?: number | null
           created_at?: string
+          fulfillment_method?: string | null
           id?: string
           insurance_covered?: boolean | null
           medication_id: string
@@ -679,6 +681,7 @@ export type Database = {
           copay_amount?: number | null
           cost?: number | null
           created_at?: string
+          fulfillment_method?: string | null
           id?: string
           insurance_covered?: boolean | null
           medication_id?: string
