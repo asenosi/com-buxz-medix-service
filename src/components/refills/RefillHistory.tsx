@@ -120,6 +120,13 @@ export const RefillHistory = ({ medicationId }: RefillHistoryProps) => {
                 <span>{item.pharmacy.name}</span>
               </div>
             )}
+            
+            {item.prescription_number && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                <span>Rx #{item.prescription_number}</span>
+              </div>
+            )}
 
             {item.prescriber_name && (
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -128,30 +135,27 @@ export const RefillHistory = ({ medicationId }: RefillHistoryProps) => {
               </div>
             )}
 
-            {item.prescription_number && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <FileText className="h-4 w-4" />
-                <span>Rx# {item.prescription_number}</span>
-              </div>
-            )}
-
-            {item.cost !== null && (
+            {(item.cost !== null || item.copay_amount !== null) && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <DollarSign className="h-4 w-4" />
                 <span>
-                  ${item.cost.toFixed(2)}
-                  {item.insurance_covered && item.copay_amount !== null && (
-                    <span className="ml-1 text-xs">(Copay: ${item.copay_amount.toFixed(2)})</span>
-                  )}
-                  {item.insurance_covered && <Badge variant="secondary" className="ml-2 text-xs">Insured</Badge>}
+                  {item.cost !== null && `Total: R${item.cost.toFixed(2)}`}
+                  {item.cost !== null && item.copay_amount !== null && " | "}
+                  {item.copay_amount !== null && `Copay: R${item.copay_amount.toFixed(2)}`}
                 </span>
               </div>
+            )}
+
+            {item.insurance_covered && (
+              <Badge variant="secondary" className="text-xs">
+                Insurance Covered
+              </Badge>
             )}
 
             {item.notes && (
               <>
                 <Separator className="my-2" />
-                <p className="text-xs text-muted-foreground italic">{item.notes}</p>
+                <p className="text-muted-foreground italic">{item.notes}</p>
               </>
             )}
           </CardContent>

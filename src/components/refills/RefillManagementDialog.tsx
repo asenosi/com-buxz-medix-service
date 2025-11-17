@@ -8,9 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 
 interface Pharmacy {
   id: string;
@@ -39,7 +38,6 @@ export const RefillManagementDialog = ({
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [selectedPharmacy, setSelectedPharmacy] = useState<string>("");
   
-  // Refill details
   const [quantity, setQuantity] = useState("");
   const [prescriptionNumber, setPrescriptionNumber] = useState("");
   const [prescriberName, setPrescriberName] = useState("");
@@ -86,7 +84,6 @@ export const RefillManagementDialog = ({
 
       const newRemaining = currentRemaining + parseInt(quantity);
 
-      // Create refill history record
       const { error: historyError } = await supabase
         .from("refill_history")
         .insert({
@@ -108,25 +105,23 @@ export const RefillManagementDialog = ({
 
       if (historyError) throw historyError;
 
-      // Update medication pills_remaining and last_refill_date
       const { error: updateError } = await supabase
         .from("medications")
-        .update({ 
+        .update({
           pills_remaining: newRemaining,
           last_refill_date: refillDate,
-          prescription_number: prescriptionNumber || null,
         })
         .eq("id", medicationId);
 
       if (updateError) throw updateError;
 
-      toast.success(`Refilled ${medicationName} with ${quantity} pills`);
+      toast.success(`Added ${quantity} pills to ${medicationName}`);
       onRefillComplete();
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      console.error("Error processing refill:", error);
-      toast.error("Failed to process refill");
+      console.error("Error recording refill:", error);
+      toast.error("Failed to record refill");
     } finally {
       setLoading(false);
     }
@@ -149,220 +144,184 @@ export const RefillManagementDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Refill {medicationName}</DialogTitle>
+          <DialogTitle>Record Refill</DialogTitle>
           <DialogDescription>
-            Current stock: {currentRemaining} pills • Add new refill details
+            Add refill details for {medicationName}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="details">Details & Costs</TabsTrigger>
+            <TabsTrigger value="details">Additional Details</TabsTrigger>
           </TabsList>
 
           <TabsContent value="basic" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity Added *</Label>
-              <Input
-                id="quantity"
-                type="number"
-                placeholder="Number of pills"
-                value={quantity}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || (Number(val) >= 1 && Number(val) <= 10000)) {
-                    setQuantity(val);
-                  }
-                }}
-                min="1"
-                max="10000"
-                className="h-11"
-              />
-              <p className="text-xs text-muted-foreground">
-                New total: {currentRemaining + (parseInt(quantity) || 0)} pills
-              </p>
-            </div>
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="quantity">Quantity Added *</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="Number of pills"
+                />
+                {quantity && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    New total: {currentRemaining + parseInt(quantity)} pills
+                  </p>
+                )}
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="pharmacy">Pharmacy</Label>
-              <Select value={selectedPharmacy} onValueChange={setSelectedPharmacy}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select pharmacy" />
-                </SelectTrigger>
-                <SelectContent>
-                  {pharmacies.map((pharmacy) => (
-                    <SelectItem key={pharmacy.id} value={pharmacy.id}>
-                      {pharmacy.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={() => {
-                  // TODO: Open pharmacy management dialog
-                  toast.info("Pharmacy management coming soon");
-                }}
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Add New Pharmacy
-              </Button>
-            </div>
+              <div>
+                <Label htmlFor="refillDate">Refill Date</Label>
+                <Input
+                  id="refillDate"
+                  type="date"
+                  value={refillDate}
+                  onChange={(e) => setRefillDate(e.target.value)}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="refillDate">Refill Date</Label>
-              <Input
-                id="refillDate"
-                type="date"
-                value={refillDate}
-                onChange={(e) => setRefillDate(e.target.value)}
-                className="h-11"
-              />
-            </div>
+              <div>
+                <Label htmlFor="pharmacy">Pharmacy</Label>
+                <Select value={selectedPharmacy} onValueChange={setSelectedPharmacy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select pharmacy (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pharmacies.map((pharmacy) => (
+                      <SelectItem key={pharmacy.id} value={pharmacy.id}>
+                        {pharmacy.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="requested">Requested</SelectItem>
-                  <SelectItem value="ready">Ready for Pickup</SelectItem>
-                  <SelectItem value="picked_up">Picked Up</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="requested">Requested</SelectItem>
+                    <SelectItem value="ready">Ready for Pickup</SelectItem>
+                    <SelectItem value="picked_up">Picked Up</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="details" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="prescriptionNumber">Prescription Number</Label>
-              <Input
-                id="prescriptionNumber"
-                placeholder="Rx#"
-                value={prescriptionNumber}
-                onChange={(e) => setPrescriptionNumber(e.target.value)}
-                className="h-11"
-                maxLength={50}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="prescriberName">Prescriber Name</Label>
-              <Input
-                id="prescriberName"
-                placeholder="Doctor's name"
-                value={prescriberName}
-                onChange={(e) => setPrescriberName(e.target.value)}
-                className="h-11"
-                maxLength={100}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="requestedDate">Requested Date</Label>
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="prescriptionNumber">Prescription Number</Label>
                 <Input
-                  id="requestedDate"
-                  type="date"
-                  value={requestedDate}
-                  onChange={(e) => setRequestedDate(e.target.value)}
-                  className="h-11"
+                  id="prescriptionNumber"
+                  value={prescriptionNumber}
+                  onChange={(e) => setPrescriptionNumber(e.target.value)}
+                  placeholder="Rx #"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="pickupDate">Pickup Date</Label>
+              <div>
+                <Label htmlFor="prescriberName">Prescriber Name</Label>
                 <Input
-                  id="pickupDate"
-                  type="date"
-                  value={pickupDate}
-                  onChange={(e) => setPickupDate(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="cost">Total Cost ($)</Label>
-                <Input
-                  id="cost"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={cost}
-                  onChange={(e) => setCost(e.target.value)}
-                  className="h-11"
+                  id="prescriberName"
+                  value={prescriberName}
+                  onChange={(e) => setPrescriberName(e.target.value)}
+                  placeholder="Doctor's name"
                 />
               </div>
 
-              <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="insuranceCovered" className="cursor-pointer">
-                  Insurance Covered
-                </Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="cost">Total Cost</Label>
+                  <Input
+                    id="cost"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={cost}
+                    onChange={(e) => setCost(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="copay">Copay Amount</Label>
+                  <Input
+                    id="copay"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={copayAmount}
+                    onChange={(e) => setCopayAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
                 <Switch
-                  id="insuranceCovered"
+                  id="insurance"
                   checked={insuranceCovered}
                   onCheckedChange={setInsuranceCovered}
                 />
+                <Label htmlFor="insurance">Insurance Covered</Label>
               </div>
 
-              {insuranceCovered && (
-                <div className="space-y-2">
-                  <Label htmlFor="copayAmount">Copay Amount ($)</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="requestedDate">Requested Date</Label>
                   <Input
-                    id="copayAmount"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={copayAmount}
-                    onChange={(e) => setCopayAmount(e.target.value)}
-                    className="h-11"
+                    id="requestedDate"
+                    type="date"
+                    value={requestedDate}
+                    onChange={(e) => setRequestedDate(e.target.value)}
                   />
                 </div>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                placeholder="Additional notes..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                maxLength={500}
-              />
+                <div>
+                  <Label htmlFor="pickupDate">Pickup Date</Label>
+                  <Input
+                    id="pickupDate"
+                    type="date"
+                    value={pickupDate}
+                    onChange={(e) => setPickupDate(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Additional notes..."
+                  rows={3}
+                />
+              </div>
             </div>
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button 
-            variant="ghost" 
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-            className="h-11"
-          >
-            CANCEL
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={loading || !quantity || parseInt(quantity) <= 0}
-            className="h-11"
-          >
+          <Button onClick={handleSubmit} disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            SAVE REFILL
+            Record Refill
           </Button>
         </DialogFooter>
       </DialogContent>
