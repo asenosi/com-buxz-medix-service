@@ -11,10 +11,6 @@ import { MedicationDetailsSkeleton } from "@/components/LoadingSkeletons";
 import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { truncateText } from "@/lib/utils";
-import { RefillManagementDialog } from "@/components/refills/RefillManagementDialog";
-import { RefillStatusBadge } from "@/components/refills/RefillStatusBadge";
-import { RefillHistory } from "@/components/refills/RefillHistory";
-import { RefillPrediction } from "@/components/refills/RefillPrediction";
 
 type Medication = {
   id: string;
@@ -54,7 +50,6 @@ const MedicationDetails = () => {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [showFullImage, setShowFullImage] = useState(false);
-  const [showRefillDialog, setShowRefillDialog] = useState(false);
   
   const defaultImageForForm = (form?: string | null) => {
     if (!form) return "";
@@ -367,73 +362,25 @@ const MedicationDetails = () => {
       {med.pills_remaining !== null && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Refill Information
-              </CardTitle>
-              <RefillStatusBadge 
-                pillsRemaining={med.pills_remaining}
-                refillThreshold={med.refill_reminder_threshold}
-              />
-            </div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Refill Management
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Pills Remaining</p>
-                <p className="text-2xl font-bold">{med.pills_remaining}</p>
-              </div>
-              {med.refill_reminder_threshold !== null && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Refill Threshold</p>
-                  <p className="text-2xl font-bold">{med.refill_reminder_threshold}</p>
-                </div>
-              )}
-            </div>
-
-            {needsRefill && (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-amber-900 dark:text-amber-100">Refill Needed</p>
-                    <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">
-                      You're running low on {med.name}. Consider refilling soon.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Track refills, view history, and get predictions for when you'll need to refill {med.name}.
+            </p>
             <Button 
-              onClick={() => setShowRefillDialog(true)}
+              onClick={() => navigate(`/medications/${med.id}/refills`)}
               className="w-full"
-              variant={needsRefill ? "default" : "outline"}
             >
               <Package className="mr-2 h-4 w-4" />
-              Record Refill
+              View Refill Details
             </Button>
           </CardContent>
         </Card>
       )}
-
-      {med.pills_remaining !== null && (
-        <RefillPrediction
-          medicationId={med.id}
-          pillsRemaining={med.pills_remaining}
-          refillThreshold={med.refill_reminder_threshold}
-        />
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Refill History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RefillHistory medicationId={med.id} />
-        </CardContent>
-      </Card>
 
       <Dialog open={showFullImage} onOpenChange={setShowFullImage}>
         <DialogContent className="max-w-3xl p-0">
@@ -456,15 +403,6 @@ const MedicationDetails = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      <RefillManagementDialog
-        open={showRefillDialog}
-        onOpenChange={setShowRefillDialog}
-        medicationId={med.id}
-        medicationName={med.name}
-        currentRemaining={med.pills_remaining || 0}
-        onRefillComplete={handleRefillComplete}
-      />
     </div>
   );
 };
