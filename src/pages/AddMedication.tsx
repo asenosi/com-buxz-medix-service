@@ -547,7 +547,7 @@ const Medications = () => {
                 type="button"
                 variant="outline"
                 onClick={prevStep}
-                className="flex-1 h-10"
+                className="flex-1 h-10 rounded-full"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -559,7 +559,7 @@ const Medications = () => {
                 type="button"
                 onClick={nextStep}
                 disabled={!canProceed()}
-                className="flex-1 h-10"
+                className="flex-1 h-10 rounded-full"
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -568,7 +568,7 @@ const Medications = () => {
               <Button
                 type="submit"
                 disabled={loading || !canProceed()}
-                className="flex-1 h-10"
+                className="flex-1 h-10 rounded-full"
               >
                 {loading ? (editId ? "Updating..." : "Saving...") : (editId ? "Update Medication" : "Save Medication")}
               </Button>

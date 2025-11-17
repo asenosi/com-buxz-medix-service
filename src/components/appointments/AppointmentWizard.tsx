@@ -40,9 +40,10 @@ interface AppointmentWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointment?: Partial<Appointment>;
+  onAppointmentCreated?: (appointmentId: string, isNew: boolean) => void;
 }
 
-export function AppointmentWizard({ open, onOpenChange, appointment }: AppointmentWizardProps) {
+export function AppointmentWizard({ open, onOpenChange, appointment, onAppointmentCreated }: AppointmentWizardProps) {
   const [step, setStep] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState("09:00");
@@ -224,6 +225,12 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
         console.error("Appointment error:", error);
         toast.error(`Failed to ${appointment?.id ? "update" : "create"} appointment: ${error.message}`);
       } else {
+        const isNew = !appointment?.id;
+        const wasRescheduled = appointment?.id && (
+          appointmentData.appointment_date !== appointment.appointment_date ||
+          appointmentData.appointment_time !== appointment.appointment_time
+        );
+        
         toast.success(`Appointment ${appointment?.id ? "updated" : "created"} successfully`, {
           style: {
             background: "hsl(var(--success))",
@@ -231,6 +238,12 @@ export function AppointmentWizard({ open, onOpenChange, appointment }: Appointme
             border: "1px solid hsl(var(--success))",
           },
         });
+        
+        // Notify parent with appointment ID and whether it's new or rescheduled
+        if (insertedAppointment?.id && onAppointmentCreated) {
+          onAppointmentCreated(insertedAppointment.id, isNew || wasRescheduled);
+        }
+        
         onOpenChange(false);
         setStep(0);
       }
