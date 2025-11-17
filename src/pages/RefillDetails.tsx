@@ -9,6 +9,7 @@ import { RefillStatusBadge } from "@/components/refills/RefillStatusBadge";
 import { RefillHistory } from "@/components/refills/RefillHistory";
 import { RefillPrediction } from "@/components/refills/RefillPrediction";
 import { RefillManagementDialog } from "@/components/refills/RefillManagementDialog";
+import { PharmacyDialog } from "@/components/refills/PharmacyDialog";
 
 type Medication = {
   id: string;
@@ -25,6 +26,7 @@ const RefillDetails = () => {
   const [loading, setLoading] = useState(true);
   const [med, setMed] = useState<Medication | null>(null);
   const [showRefillDialog, setShowRefillDialog] = useState(false);
+  const [showPharmacyDialog, setShowPharmacyDialog] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -152,6 +154,14 @@ const RefillDetails = () => {
                 <Package className="mr-2 h-4 w-4" />
                 Record Refill
               </Button>
+              
+              <Button 
+                onClick={() => setShowPharmacyDialog(true)}
+                className="w-full"
+                variant="outline"
+              >
+                Add Pharmacy
+              </Button>
             </CardContent>
           </Card>
 
@@ -191,6 +201,11 @@ const RefillDetails = () => {
           onRefillComplete={handleRefillRecorded}
         />
       )}
+
+      <PharmacyDialog
+        open={showPharmacyDialog}
+        onOpenChange={setShowPharmacyDialog}
+      />
     </div>
   );
 };
