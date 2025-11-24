@@ -267,9 +267,6 @@ const Medications = () => {
               route_of_administration: route || null,
               reason_for_taking: reason || null,
               instructions: instructions || null,
-              total_pills: totalPills ? parseInt(totalPills) : null,
-              pills_remaining: totalPills ? parseInt(totalPills) : null,
-              refill_reminder_threshold: refillThreshold ? parseInt(refillThreshold) : null,
               with_food_timing: withFood || null,
               start_date: startDate || null,
               end_date: endDate,
@@ -442,7 +439,7 @@ const Medications = () => {
       case 3:
         return <Step3Route route={route} setRoute={setRoute} />;
       case 4:
-        return <Step4Reason reason={reason} setReason={setReason} dosage={dosage} setDosage={setDosage} />;
+        return <Step4Reason reason={reason} setReason={setReason} dosage={dosage} setDosage={setDosage} form={form} />;
       case 5:
         return (
           <Step5Frequency
@@ -461,11 +458,12 @@ const Medications = () => {
             setStartDate={setStartDate}
             treatmentDays={treatmentDays}
             setTreatmentDays={setTreatmentDays}
-            totalPills={totalPills}
-            setTotalPills={setTotalPills}
-            refillThreshold={refillThreshold}
-            setRefillThreshold={setRefillThreshold}
-            withFood={withFood}
+              totalPills={totalPills}
+              setTotalPills={setTotalPills}
+              refillThreshold={refillThreshold}
+              setRefillThreshold={setRefillThreshold}
+              isEditMode={!!editId}
+              withFood={withFood}
             setWithFood={setWithFood}
             instructions={instructions}
             setInstructions={setInstructions}

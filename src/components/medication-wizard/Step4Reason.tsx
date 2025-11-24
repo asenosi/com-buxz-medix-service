@@ -8,9 +8,28 @@ interface Step4ReasonProps {
   setReason: (value: string) => void;
   dosage: string;
   setDosage: (value: string) => void;
+  form: string;
 }
 
-export const Step4Reason = ({ reason, setReason, dosage, setDosage }: Step4ReasonProps) => {
+const getDosagePlaceholder = (form: string) => {
+  const placeholders: Record<string, string> = {
+    pill: "e.g., 100mg, 500mg, 10mg",
+    injection: "e.g., 0.5ml, 10mg/ml",
+    solution: "e.g., 5ml, 10ml",
+    drops: "e.g., 1 drop, 2 drops per eye",
+    inhaler: "e.g., 2 puffs, 100mcg per puff",
+    powder: "e.g., 1 sachet, 5g",
+    spray: "e.g., 2 sprays per nostril, 50mcg",
+    cream: "e.g., Apply thin layer, 1% cream",
+    strip: "e.g., 1 strip, 25mg",
+    stick: "e.g., 1 stick, 15g",
+    insert: "e.g., 1 insert, 100mg",
+    other: "e.g., As prescribed"
+  };
+  return placeholders[form] || "e.g., 100mg, 2 puffs, 1 drop";
+};
+
+export const Step4Reason = ({ reason, setReason, dosage, setDosage, form }: Step4ReasonProps) => {
   return (
     <Card>
       <CardContent className="pt-4 space-y-4">
@@ -53,7 +72,7 @@ export const Step4Reason = ({ reason, setReason, dosage, setDosage }: Step4Reaso
                 setDosage(val);
               }
             }}
-            placeholder="e.g., 100mg, 2 puffs, 1 drop"
+            placeholder={getDosagePlaceholder(form)}
             required
             maxLength={50}
             className="h-10"
