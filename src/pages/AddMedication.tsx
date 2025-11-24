@@ -439,7 +439,7 @@ const Medications = () => {
       case 3:
         return <Step3Route route={route} setRoute={setRoute} />;
       case 4:
-        return <Step4Reason reason={reason} setReason={setReason} dosage={dosage} setDosage={setDosage} />;
+        return <Step4Reason reason={reason} setReason={setReason} dosage={dosage} setDosage={setDosage} form={form} />;
       case 5:
         return (
           <Step5Frequency
