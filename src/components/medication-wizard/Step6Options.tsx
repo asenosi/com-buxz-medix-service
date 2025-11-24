@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Pill, Syringe, Droplet, Wind, Bandage, Clipboard } from "lucide-react";
 
 interface Step6OptionsProps {
   startDate: string;
@@ -21,23 +20,12 @@ interface Step6OptionsProps {
   setInstructions: (value: string) => void;
   medicationColor: string;
   setMedicationColor: (value: string) => void;
-  medicationIcon: string;
-  setMedicationIcon: (value: string) => void;
   imagePreviews: string[];
   onAddImages: (files: FileList | File[]) => void;
   onRemoveImage: (index: number) => void;
   medicationName: string;
   isEditMode?: boolean;
 }
-
-const iconOptions = [
-  { value: "pill", icon: Pill, label: "Pill" },
-  { value: "injection", icon: Syringe, label: "Injection" },
-  { value: "drop", icon: Droplet, label: "Drop" },
-  { value: "inhaler", icon: Wind, label: "Inhaler" },
-  { value: "bandage", icon: Bandage, label: "Bandage" },
-  { value: "clipboard", icon: Clipboard, label: "Other" },
-];
 
 const colorOptions = [
   { value: "blue", color: "bg-primary" },
@@ -63,8 +51,6 @@ export const Step6Options = ({
   setInstructions,
   medicationColor,
   setMedicationColor,
-  medicationIcon,
-  setMedicationIcon,
   imagePreviews,
   onAddImages,
   onRemoveImage,
@@ -240,29 +226,8 @@ export const Step6Options = ({
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-base font-semibold">Customize Icon</h3>
+          <h3 className="text-base font-semibold">Customize Color</h3>
           
-          <div className="space-y-2">
-            <Label className="text-sm">Select Icon</Label>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-              {iconOptions.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <Button
-                    key={option.value}
-                    type="button"
-                    variant={medicationIcon === option.value ? "default" : "outline"}
-                    onClick={() => setMedicationIcon(option.value)}
-                    className="h-16 flex flex-col gap-0.5"
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-xs">{option.label}</span>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
           <div className="space-y-2">
             <Label className="text-sm">Select Color</Label>
             <div className="grid grid-cols-6 gap-2">
