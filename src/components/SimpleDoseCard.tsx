@@ -94,7 +94,7 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className, isTak
             </div>
           )}
           {isSkipped && (
-            <div className="absolute -bottom-1 -right-1 bg-warning rounded-full p-0.5">
+            <div className="absolute -bottom-1 -right-1 bg-destructive rounded-full p-0.5">
               <XCircle className="w-4 h-4 text-white" />
             </div>
           )}
@@ -123,8 +123,8 @@ export const SimpleDoseCard = ({ medication, schedule, onClick, className, isTak
             </Badge>
           )}
           {isSkipped && (
-            <Badge variant="outline" className="mt-1 text-[10px] h-5 bg-warning/10 text-warning border-warning/30">
-              ⚠️ Skipped
+            <Badge variant="outline" className="mt-1 text-[10px] h-5 bg-destructive/10 text-destructive border-destructive/30">
+              ✕ Skipped
             </Badge>
           )}
           {isSnoozed && (
