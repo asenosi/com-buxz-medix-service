@@ -91,8 +91,9 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
       onClick={handleCardClick}
       className={cn(
         "rounded-lg border px-3 py-3 transition-all duration-300 hover:shadow-lg cursor-pointer",
-        dose.isTaken && "bg-success/5 border-success/30",
-        (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-warning/30",
+        dose.isTaken && "bg-success/10 border-success/40",
+        dose.isSkipped && "bg-destructive/10 border-destructive/40",
+        dose.isSnoozed && "bg-warning/10 border-warning/40",
         !isCompleted && dose.status === "overdue" && "bg-destructive/5 border-destructive/30",
         !isCompleted && dose.status === "due" && "bg-accent/5 border-accent/30"
       )}
@@ -170,7 +171,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
             <span className="text-success font-semibold bg-success/10 px-2 py-0.5 rounded-full">✓ Taken</span>
           )}
           {dose.isSkipped && (
-            <span className="text-warning font-semibold bg-warning/10 px-2 py-0.5 rounded-full">⚠️ Skipped</span>
+            <span className="text-destructive font-semibold bg-destructive/10 px-2 py-0.5 rounded-full">✕ Skipped</span>
           )}
           {dose.isSnoozed && dose.snoozeUntil && (
             <span className="text-warning font-semibold bg-warning/10 px-2 py-0.5 rounded-full text-[10px]">

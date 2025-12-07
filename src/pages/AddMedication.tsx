@@ -51,6 +51,25 @@ const Medications = () => {
   const [instructions, setInstructions] = useState("");
   const [medicationColor, setMedicationColor] = useState("blue");
   const [medicationIcon, setMedicationIcon] = useState("pill");
+
+  // Auto-set icon based on form
+  useEffect(() => {
+    const formToIconMap: Record<string, string> = {
+      pill: "pill",
+      injection: "syringe",
+      solution: "drop",
+      drops: "drop",
+      inhaler: "inhaler",
+      spray: "spray",
+      cream: "cream",
+      powder: "pill",
+      strip: "pill",
+      stick: "pill",
+      insert: "pill",
+      other: "pill",
+    };
+    setMedicationIcon(formToIconMap[form] || "pill");
+  }, [form]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(true);
@@ -469,8 +488,6 @@ const Medications = () => {
             setInstructions={setInstructions}
             medicationColor={medicationColor}
             setMedicationColor={setMedicationColor}
-            medicationIcon={medicationIcon}
-            setMedicationIcon={setMedicationIcon}
             imagePreviews={imagePreviews}
             medicationName={name}
             onAddImages={(files) => {
