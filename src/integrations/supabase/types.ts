@@ -719,7 +719,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_patient_ids_for_caregiver: { Args: never; Returns: string[] }
+      is_caregiver_of: { Args: { _patient_id: string }; Returns: boolean }
     }
     Enums: {
       appointment_status:

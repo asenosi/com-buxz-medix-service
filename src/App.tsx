@@ -28,6 +28,7 @@ const PractitionerDetails = lazy(() => import("./pages/PractitionerDetails"));
 const PractitionerForm = lazy(() => import("./pages/PractitionerForm"));
 const Refills = lazy(() => import("./pages/Refills"));
 const RefillDetails = lazy(() => import("./pages/RefillDetails"));
+const CaregiverDashboard = lazy(() => import("./pages/CaregiverDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/practitioners/:id" element={<PractitionerDetails />} />
               <Route path="/practitioners/:id/edit" element={<PractitionerForm />} />
               <Route path="/refills" element={<Refills />} />
+              <Route path="/caregiver" element={<CaregiverDashboard />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
