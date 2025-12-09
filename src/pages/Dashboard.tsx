@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, List, X, FileText } from "lucide-react";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeekCalendar } from "@/components/WeekCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { StreakCard } from "@/components/StreakCard";
+import { DashboardWeekStrip, DashboardRelativeDateLabel } from "@/components/DashboardWeekStrip";
 import { useNotification } from "@/hooks/use-notification";
 
 interface Medication {
@@ -1067,28 +1068,70 @@ const Dashboard = () => {
               </Card>
             ) : (
               <>
+            {/* Dashboard Week Strip Calendar */}
+            <DashboardWeekStrip
+              selectedDate={selectedCalendarDate}
+              onDateSelect={setSelectedCalendarDate}
+              adherenceData={(() => {
+                // Build adherence data from todayDoses for the current week/month
+                const data: Array<{ date: string; total: number; taken: number; skipped: number; snoozed: number }> = [];
+                
+                // For today's doses, create entry for today
+                const todayStr = format(new Date(), "yyyy-MM-dd");
+                const todayTotal = todayDoses.length;
+                const todayTaken = todayDoses.filter(d => d.isTaken).length;
+                const todaySkipped = todayDoses.filter(d => d.isSkipped).length;
+                const todaySnoozed = todayDoses.filter(d => d.isSnoozed).length;
+                
+                if (todayTotal > 0) {
+                  data.push({
+                    date: todayStr,
+                    total: todayTotal,
+                    taken: todayTaken,
+                    skipped: todaySkipped,
+                    snoozed: todaySnoozed,
+                  });
+                }
+                
+                return data;
+              })()}
+            />
+
+            {/* Relative Date Label */}
+            <div className="mb-4">
+              <DashboardRelativeDateLabel date={selectedCalendarDate} />
+            </div>
 
             <div className="mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 animate-slide-in-left hidden sm:block">Today's Schedule</h2>
-              <h2 className="text-2xl font-bold mb-4 sm:hidden text-gray-600">Today, {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</h2>
               
               {loading ? (
                 <DoseItemSkeleton count={3} />
-              ) : todayDoses.length === 0 ? (
-                <Card className="text-center py-6 sm:py-8 animate-fade-in">
-                  <CardContent>
-                    <p className="text-lg sm:text-xl text-muted-foreground px-4">
-                      No medications scheduled for today
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <>
-                  {/* Period-grouped layout for both mobile and desktop */}
-                  <div className="space-y-8">
-                    {(() => {
-                      const periodGroups = groupDosesByPeriod(filteredDoses.length === 0 ? [] : filteredDoses);
-                      const periods: Array<keyof typeof periodGroups> = ["morning", "midday", "evening", "night"];
+              ) : (() => {
+                // Filter doses for the selected date
+                const isToday = isSameDay(selectedCalendarDate, new Date());
+                const dosesToShow = isToday ? filteredDoses : todayDoses.filter(dose => 
+                  isSameDay(dose.nextDoseTime, selectedCalendarDate)
+                );
+                
+                if (dosesToShow.length === 0) {
+                  return (
+                    <Card className="text-center py-6 sm:py-8 animate-fade-in">
+                      <CardContent>
+                        <p className="text-lg sm:text-xl text-muted-foreground px-4">
+                          No medications scheduled for this day
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                
+                return (
+                  <>
+                    {/* Period-grouped layout for both mobile and desktop */}
+                    <div className="space-y-8">
+                      {(() => {
+                        const periodGroups = groupDosesByPeriod(dosesToShow);
+                        const periods: Array<keyof typeof periodGroups> = ["morning", "midday", "evening", "night"];
                       
                       return periods.map((period, periodIdx) => {
                         const doses = periodGroups[period];
@@ -1194,15 +1237,16 @@ const Dashboard = () => {
                     })()}
                   </div>
 
-                  {filteredDoses.length === 0 && (
+                  {dosesToShow.length === 0 && (
                     <Card className="text-center py-6 sm:py-8 animate-fade-in">
                       <CardContent>
-                        <p className="text-lg sm:text-xl text-muted-foreground px-4">No medications match your search/filter for today</p>
+                        <p className="text-lg sm:text-xl text-muted-foreground px-4">No medications match your search/filter</p>
                       </CardContent>
                     </Card>
                   )}
                 </>
-              )}
+                );
+              })()}
             </div>
               </>
             )}
