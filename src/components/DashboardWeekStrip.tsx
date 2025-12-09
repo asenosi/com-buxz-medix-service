@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, TouchEvent } from "react";
 import { format, startOfWeek, addDays, isSameDay, addMonths, subMonths, startOfMonth, isSameMonth, differenceInDays } from "date-fns";
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,17 +31,16 @@ export function DashboardWeekStrip({
 }: DashboardWeekStripProps) {
   const [expanded, setExpanded] = useState(false);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
+  
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
   
   const today = new Date();
 
   const getDayData = (date: Date): DayData | undefined => {
     const dateStr = format(date, "yyyy-MM-dd");
     return adherenceData.find(d => d.date === dateStr);
-  };
-
-  const hasDosesOnDate = (date: Date): boolean => {
-    const dayData = getDayData(date);
-    return dayData ? dayData.total > 0 : false;
   };
 
   const getDoseIndicator = (date: Date): { color: string; count: number } | null => {
@@ -82,6 +81,41 @@ export function DashboardWeekStrip({
       onDateSelect(date);
       setMonthPickerOpen(false);
     }
+  };
+
+  // Swipe gesture handlers
+  const handleTouchStart = (e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    
+    const diff = touchStartX.current - touchEndX.current;
+    const minSwipeDistance = 50;
+    
+    if (Math.abs(diff) > minSwipeDistance) {
+      if (diff > 0) {
+        // Swiped left - go to next
+        setSwipeDirection("left");
+        handleNext();
+      } else {
+        // Swiped right - go to prev
+        setSwipeDirection("right");
+        handlePrev();
+      }
+      
+      // Reset animation after transition
+      setTimeout(() => setSwipeDirection(null), 300);
+    }
+    
+    touchStartX.current = null;
+    touchEndX.current = null;
   };
 
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
@@ -153,9 +187,18 @@ export function DashboardWeekStrip({
         ))}
       </div>
 
-      {/* Week Strip */}
+      {/* Week Strip with swipe support */}
       {!expanded && (
-        <div className="grid grid-cols-7 gap-1">
+        <div 
+          className={cn(
+            "grid grid-cols-7 gap-1 transition-transform duration-200",
+            swipeDirection === "left" && "animate-fade-in",
+            swipeDirection === "right" && "animate-fade-in"
+          )}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {weekDays.map((day) => {
             const isSelected = isSameDay(day, selectedDate);
             const isToday = isSameDay(day, today);
@@ -194,9 +237,18 @@ export function DashboardWeekStrip({
         </div>
       )}
 
-      {/* Expanded Full Month Grid */}
+      {/* Expanded Full Month Grid with swipe support */}
       {expanded && (
-        <div className="grid grid-cols-7 gap-1">
+        <div 
+          className={cn(
+            "grid grid-cols-7 gap-1 transition-transform duration-200",
+            swipeDirection === "left" && "animate-fade-in",
+            swipeDirection === "right" && "animate-fade-in"
+          )}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {getMonthDays().map((day, index) => {
             const isSelected = isSameDay(day, selectedDate);
             const isToday = isSameDay(day, today);
