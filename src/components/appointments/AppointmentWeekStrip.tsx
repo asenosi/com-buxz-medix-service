@@ -101,49 +101,67 @@ export function AppointmentWeekStrip({
           </Button>
         </div>
 
-        {/* Week Strip */}
-        <div className="grid grid-cols-7 gap-1">
-          {weekDays.map((day) => {
-            const isSelected = isSameDay(day, selectedDate);
-            const isToday = isSameDay(day, today);
-            const hasAppointment = hasAppointmentOnDate(day);
+        {/* Week Strip - only show when collapsed */}
+        {!expanded && (
+          <div className="grid grid-cols-7 gap-1">
+            {weekDays.map((day) => {
+              const isSelected = isSameDay(day, selectedDate);
+              const isToday = isSameDay(day, today);
+              const hasAppointment = hasAppointmentOnDate(day);
 
-            return (
-              <button
-                key={day.toISOString()}
-                onClick={() => onDateSelect(day)}
-                className={cn(
-                  "flex flex-col items-center py-2 px-1 rounded-lg transition-all",
-                  "hover:bg-muted/50 active:scale-95",
-                  isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                )}
-              >
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-                  {format(day, "EEE").slice(0, 3)}
-                </span>
-                <span
+              return (
+                <button
+                  key={day.toISOString()}
+                  onClick={() => onDateSelect(day)}
                   className={cn(
-                    "mt-1 flex items-center justify-center w-9 h-9 text-sm font-semibold rounded-full transition-colors",
-                    isToday && !isSelected && "bg-muted text-foreground",
-                    isSelected && "bg-primary text-primary-foreground",
-                    !isToday && !isSelected && "text-foreground"
+                    "flex flex-col items-center py-2 px-1 rounded-lg transition-all",
+                    "hover:bg-muted/50 active:scale-95",
+                    isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                   )}
                 >
-                  {format(day, "d")}
-                </span>
-                {/* Appointment indicator dot */}
-                <div className="h-1.5 mt-1">
-                  {hasAppointment && (
-                    <div className={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      isSelected ? "bg-primary-foreground" : "bg-primary"
-                    )} />
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                    {format(day, "EEE").slice(0, 3)}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-1 flex items-center justify-center w-9 h-9 text-sm font-semibold rounded-full transition-colors",
+                      isToday && !isSelected && "bg-muted text-foreground",
+                      isSelected && "bg-primary text-primary-foreground",
+                      !isToday && !isSelected && "text-foreground"
+                    )}
+                  >
+                    {format(day, "d")}
+                  </span>
+                  {/* Appointment indicator dot */}
+                  <div className="h-1.5 mt-1">
+                    {hasAppointment && (
+                      <div className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        isSelected ? "bg-primary-foreground" : "bg-primary"
+                      )} />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Expanded Full Month Calendar - replaces week strip */}
+        {expanded && (
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => date && onDateSelect(date)}
+            modifiers={{
+              hasAppointment: appointments.map((apt) => new Date(apt.appointment_date)),
+            }}
+            modifiersClassNames={{
+              hasAppointment: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
+            }}
+            className="rounded-md border-0 mx-auto pointer-events-auto"
+          />
+        )}
 
         {/* Expand/Collapse Toggle */}
         <button
@@ -156,24 +174,6 @@ export function AppointmentWeekStrip({
             <ChevronDown className="h-5 w-5 text-muted-foreground" />
           )}
         </button>
-
-        {/* Expanded Full Month Calendar */}
-        {expanded && (
-          <div className="mt-3 pt-3 border-t border-border/50">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && onDateSelect(date)}
-              modifiers={{
-                hasAppointment: appointments.map((apt) => new Date(apt.appointment_date)),
-              }}
-              modifiersClassNames={{
-                hasAppointment: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
-              }}
-              className="rounded-md border-0 mx-auto pointer-events-auto"
-            />
-          </div>
-        )}
       </CardContent>
     </Card>
   );
