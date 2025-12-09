@@ -966,7 +966,7 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
-            {/* Dashboard Week Strip Calendar */}
+            {/* Dashboard Week Strip Calendar - Sticky at top */}
             <DashboardWeekStrip
               selectedDate={selectedCalendarDate}
               onDateSelect={setSelectedCalendarDate}
@@ -996,7 +996,7 @@ const Dashboard = () => {
             />
 
             {/* Relative Date Label */}
-            <div className="mb-4">
+            <div className="mb-4 mt-4">
               <DashboardRelativeDateLabel date={selectedCalendarDate} />
             </div>
 
