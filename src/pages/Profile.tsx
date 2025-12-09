@@ -11,10 +11,11 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Menu, LogOut, Trash2 } from "lucide-react";
+import { Menu, LogOut, Trash2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Calendar as CalendarIcon, Phone, ShieldCheck, User as UserIcon } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { CaregiverAccessManager } from "@/components/CaregiverAccessManager";
 
 type ProfileRow = {
   id?: string;
@@ -36,6 +37,7 @@ const Profile = () => {
   const [phone, setPhone] = useState("");
   const [isCaregiver, setIsCaregiver] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [copiedUserId, setCopiedUserId] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const initials = useMemo(() => {
@@ -294,6 +296,32 @@ const Profile = () => {
                 </div>
               </div>
 
+              {/* User ID for caregiver sharing */}
+              <div className="p-2.5 bg-muted/50 rounded-lg border">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">Your User ID</div>
+                    <div className="text-xs font-mono truncate">{session?.user?.id}</div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 shrink-0"
+                    onClick={() => {
+                      if (session?.user?.id) {
+                        navigator.clipboard.writeText(session.user.id);
+                        setCopiedUserId(true);
+                        toast.success("User ID copied to clipboard");
+                        setTimeout(() => setCopiedUserId(false), 2000);
+                      }
+                    }}
+                  >
+                    {copiedUserId ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">Share this ID with caregivers so they can monitor your medications</p>
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-2">
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
                 <Button size="sm" variant="outline" onClick={handleFilePick} className="w-full sm:w-auto">Upload Avatar</Button>
@@ -397,7 +425,12 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            <Card className="animate-fade-in border-destructive/50" style={{ animationDelay: "0.2s" }}>
+            {/* Caregiver Access Manager */}
+            <div className="animate-fade-in" style={{ animationDelay: "0.25s" }}>
+              <CaregiverAccessManager />
+            </div>
+
+            <Card className="animate-fade-in border-destructive/50" style={{ animationDelay: "0.3s" }}>
               <CardHeader className="p-3 bg-destructive/5">
                 <CardTitle className="text-sm font-medium text-destructive flex items-center gap-1.5">
                   <Trash2 className="w-3.5 h-3.5" />

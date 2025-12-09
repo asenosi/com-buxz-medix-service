@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Pill, Calendar as CalendarIcon, Search, User as UserIcon, SunMedium, Moon, Monitor, LogOut, Home, Bell, Stethoscope } from "lucide-react";
+import { Pill, Calendar as CalendarIcon, Search, User as UserIcon, SunMedium, Moon, Monitor, LogOut, Home, Bell, Stethoscope, Users } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -111,6 +111,14 @@ export default function DesktopSidebar() {
         >
           <Stethoscope className="h-4 w-4" />
           <span className="text-sm font-medium">Practitioners</span>
+        </button>
+        <button
+          onClick={() => navigate("/caregiver")}
+          className={`${itemBase} ${isActive("/caregiver") ? itemActive : itemHover}`}
+          aria-current={isActive("/caregiver") ? "page" : undefined}
+        >
+          <Users className="h-4 w-4" />
+          <span className="text-sm font-medium">Caregiver</span>
         </button>
       </div>
       <Separator className="my-3" />
