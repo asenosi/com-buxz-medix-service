@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks, differenceInDays } from "date-fns";
+import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks, addMonths, subMonths, differenceInDays } from "date-fns";
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,12 +39,20 @@ export function AppointmentWeekStrip({
     );
   };
 
-  const handlePrevWeek = () => {
-    onDateSelect(subWeeks(selectedDate, 1));
+  const handlePrev = () => {
+    if (expanded) {
+      onDateSelect(subMonths(selectedDate, 1));
+    } else {
+      onDateSelect(subWeeks(selectedDate, 1));
+    }
   };
 
-  const handleNextWeek = () => {
-    onDateSelect(addWeeks(selectedDate, 1));
+  const handleNext = () => {
+    if (expanded) {
+      onDateSelect(addMonths(selectedDate, 1));
+    } else {
+      onDateSelect(addWeeks(selectedDate, 1));
+    }
   };
 
   const handleMonthSelect = (date: Date | undefined) => {
@@ -63,7 +71,7 @@ export function AppointmentWeekStrip({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={handlePrevWeek}
+            onClick={handlePrev}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -95,7 +103,7 @@ export function AppointmentWeekStrip({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={handleNextWeek}
+            onClick={handleNext}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -153,11 +161,16 @@ export function AppointmentWeekStrip({
             mode="single"
             selected={selectedDate}
             onSelect={(date) => date && onDateSelect(date)}
+            month={selectedDate}
             modifiers={{
               hasAppointment: appointments.map((apt) => new Date(apt.appointment_date)),
             }}
             modifiersClassNames={{
               hasAppointment: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
+            }}
+            classNames={{
+              caption: "hidden",
+              nav: "hidden",
             }}
             className="rounded-md border-0 mx-auto pointer-events-auto"
           />
