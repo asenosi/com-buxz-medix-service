@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, List, X, FileText } from "lucide-react";
+import { Plus, LogOut, Pill, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, X, FileText } from "lucide-react";
 import { format, isSameDay } from "date-fns";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -23,9 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SplitMediaCard } from "@/components/SplitMediaCard";
 import { cn } from "@/lib/utils";
 import { DoseItemSkeleton, MedCardGridSkeleton } from "@/components/LoadingSkeletons";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { WeekCalendar } from "@/components/WeekCalendar";
-import { MonthCalendar } from "@/components/MonthCalendar";
+
 import { StreakCard } from "@/components/StreakCard";
 import { DashboardWeekStrip, DashboardRelativeDateLabel } from "@/components/DashboardWeekStrip";
 import { useNotification } from "@/hooks/use-notification";
@@ -97,9 +95,8 @@ const Dashboard = () => {
   const [selectedDose, setSelectedDose] = useState<TodayDose | null>(null);
   const [showDoseDialog, setShowDoseDialog] = useState(false);
   const [doseLogs, setDoseLogs] = useState<DoseLog[]>([]);
-  const [viewMode, setViewMode] = useState<"list" | "calendar" | "stats">("list");
+  const [viewMode, setViewMode] = useState<"list" | "stats">("list");
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(new Date());
-  const [calendarViewType, setCalendarViewType] = useState<"week" | "month">("week");
   const [userName, setUserName] = useState<string>("");
   const { permission, preferences, requestPermission, sendNotification } = useNotification();
   const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(false);
@@ -874,36 +871,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Tabs - Only show if there are medications */}
-        {medications.length > 0 && (
-          <div className="mb-6">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar" | "stats")}>
-              <TabsList className="grid h-auto w-full max-w-3xl mx-auto grid-cols-3 bg-muted">
-                <TabsTrigger 
-                  value="list" 
-                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-                >
-                  <List className="w-5 h-5" />
-                  List
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="calendar" 
-                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-                >
-                  <Calendar className="w-5 h-5" />
-                  Calendar
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="stats" 
-                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
-                >
-                  <BarChart3 className="w-5 h-5" />
-                  Stats
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        )}
 
         {medications.length === 0 ? (
           /* Empty State */
@@ -961,113 +928,44 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+        ) : viewMode === "stats" ? (
+          <div className="animate-fade-in">
+            <AdherenceStats
+              streak={streak}
+              todayProgress={todayProgress}
+              weeklyAdherence={weeklyAdherence}
+              totalTaken={totalTaken}
+            />
+            
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Your Health Journey</CardTitle>
+                <CardDescription>
+                  Keep track of your medication adherence and build healthy habits
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b">
+                    <span className="text-sm font-medium">Active Medications</span>
+                    <span className="text-2xl font-bold">{medications.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-2 border-b">
+                    <span className="text-sm font-medium">Today's Doses</span>
+                    <span className="text-2xl font-bold">{todayDoses.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-2 border-b">
+                    <span className="text-sm font-medium">Completed Today</span>
+                    <span className="text-2xl font-bold">
+                      {todayDoses.filter(d => d.isTaken).length}/{todayDoses.length}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         ) : (
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar" | "stats")}>
-            <TabsContent value="calendar">
-            <div className="animate-fade-in">
-              <div className="mb-4">
-                <Tabs value={calendarViewType} onValueChange={(v) => setCalendarViewType(v as "week" | "month")} className="w-full">
-                  <TabsList className="grid h-auto w-full max-w-md mx-auto grid-cols-2">
-                    <TabsTrigger value="week" className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center gap-2 justify-center">
-                      <List className="w-4 h-4" />
-                      Week
-                    </TabsTrigger>
-                    <TabsTrigger value="month" className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center gap-2 justify-center">
-                      <Calendar className="w-4 h-4" />
-                      Month
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              {calendarViewType === "week" ? (
-                <WeekCalendar 
-                  selectedDate={selectedCalendarDate}
-                  onDateSelect={setSelectedCalendarDate}
-                />
-              ) : (
-                <MonthCalendar
-                  selectedDate={selectedCalendarDate}
-                  onDateSelect={setSelectedCalendarDate}
-                />
-              )}
-              
-              <div className="mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
-                  {format(selectedCalendarDate, "EEEE, MMMM d, yyyy")}
-                </h2>
-                
-                {loading ? (
-                  <DoseItemSkeleton count={3} />
-                ) : (() => {
-                  const selectedDayStart = new Date(selectedCalendarDate);
-                  selectedDayStart.setHours(0, 0, 0, 0);
-                  const selectedDayEnd = new Date(selectedCalendarDate);
-                  selectedDayEnd.setHours(23, 59, 59, 999);
-                  
-                  const dosesForDay = todayDoses.filter(dose => {
-                    const doseDate = new Date(dose.nextDoseTime);
-                    return doseDate >= selectedDayStart && doseDate <= selectedDayEnd;
-                  });
-                  
-                  const todayStart = new Date();
-                  todayStart.setHours(0, 0, 0, 0);
-                  const isPastDate = selectedDayStart < todayStart;
-
-                  if (dosesForDay.length === 0) {
-                    return (
-                      <Card className="text-center py-6 sm:py-8">
-                        <CardContent>
-                          <p className="text-lg sm:text-xl text-muted-foreground px-4">
-                            {isPastDate 
-                              ? "No medications were scheduled for this day"
-                              : "No medications scheduled for this day"
-                            }
-                          </p>
-                        </CardContent>
-                      </Card>
-                    );
-                  }
-                  
-                  return (
-                    <div className="grid gap-3 sm:gap-4">
-                      {dosesForDay.map((dose, idx) => (
-                        <div 
-                          key={`${dose.schedule.id}-${idx}`}
-                          className="animate-slide-in-right"
-                          style={{ animationDelay: `${idx * 0.1}s` }}
-                        >
-                          <DoseCard
-                            dose={dose}
-                            isPastDate={isPastDate}
-                            onMarkTaken={markAsTaken}
-                            onMarkSkipped={markAsSkipped}
-                            onMarkSnoozed={markAsSnoozed}
-                            onEdit={handleEditMedication}
-                            onOpenDetails={(id) => navigate(`/medications/${id}`)}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="list">
-            {!loading && medications.length === 0 ? (
-              <Card className="text-center py-12 sm:py-16 animate-fade-in">
-                <CardContent>
-                  <Pill className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground mx-auto mb-4 sm:mb-6 animate-pulse" />
-                  <h2 className="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">No Medications Yet</h2>
-                  <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6 px-4">
-                    Get started by adding your first medication
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
+          <>
             {/* Dashboard Week Strip Calendar */}
             <DashboardWeekStrip
               selectedDate={selectedCalendarDate}
@@ -1248,48 +1146,7 @@ const Dashboard = () => {
                 );
               })()}
             </div>
-              </>
-            )}
-          </TabsContent>
-
-          <TabsContent value="stats">
-            <div className="animate-fade-in">
-              <AdherenceStats
-                streak={streak}
-                todayProgress={todayProgress}
-                weeklyAdherence={weeklyAdherence}
-                totalTaken={totalTaken}
-              />
-              
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Your Health Journey</CardTitle>
-                  <CardDescription>
-                    Keep track of your medication adherence and build healthy habits
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pb-2 border-b">
-                      <span className="text-sm font-medium">Active Medications</span>
-                      <span className="text-2xl font-bold">{medications.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between pb-2 border-b">
-                      <span className="text-sm font-medium">Today's Doses</span>
-                      <span className="text-2xl font-bold">{todayDoses.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between pb-2 border-b">
-                      <span className="text-sm font-medium">Completed Today</span>
-                      <span className="text-2xl font-bold">
-                        {todayDoses.filter(d => d.isTaken).length}/{todayDoses.length}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+          </>
         )}
       </main>
 
