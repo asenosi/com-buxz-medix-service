@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks, addMonths, subMonths, differenceInDays } from "date-fns";
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { format, startOfWeek, addDays, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, isSameMonth, differenceInDays } from "date-fns";
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -28,9 +28,6 @@ export function AppointmentWeekStrip({
   const [expanded, setExpanded] = useState(false);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  
   const today = new Date();
 
   const hasAppointmentOnDate = (date: Date) => {
@@ -43,7 +40,8 @@ export function AppointmentWeekStrip({
     if (expanded) {
       onDateSelect(subMonths(selectedDate, 1));
     } else {
-      onDateSelect(subWeeks(selectedDate, 1));
+      // Move back one week
+      onDateSelect(addDays(selectedDate, -7));
     }
   };
 
@@ -51,7 +49,8 @@ export function AppointmentWeekStrip({
     if (expanded) {
       onDateSelect(addMonths(selectedDate, 1));
     } else {
-      onDateSelect(addWeeks(selectedDate, 1));
+      // Move forward one week
+      onDateSelect(addDays(selectedDate, 7));
     }
   };
 
@@ -61,6 +60,30 @@ export function AppointmentWeekStrip({
       setMonthPickerOpen(false);
     }
   };
+
+  // Get week days for collapsed view
+  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  // Get all days for the month grid in expanded view
+  const getMonthDays = () => {
+    const monthStart = startOfMonth(selectedDate);
+    const monthEnd = endOfMonth(selectedDate);
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+    
+    const days: Date[] = [];
+    let currentDay = calendarStart;
+    
+    // Generate 6 weeks (42 days) to ensure we cover all possible month layouts
+    for (let i = 0; i < 42; i++) {
+      days.push(currentDay);
+      currentDay = addDays(currentDay, 1);
+    }
+    
+    return days;
+  };
+
+  const dayLabels = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
   return (
     <Card className="shadow-sm border-border/50">
@@ -109,6 +132,15 @@ export function AppointmentWeekStrip({
           </Button>
         </div>
 
+        {/* Day Labels */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {dayLabels.map((label) => (
+            <div key={label} className="text-center text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              {label}
+            </div>
+          ))}
+        </div>
+
         {/* Week Strip - only show when collapsed */}
         {!expanded && (
           <div className="grid grid-cols-7 gap-1">
@@ -122,17 +154,13 @@ export function AppointmentWeekStrip({
                   key={day.toISOString()}
                   onClick={() => onDateSelect(day)}
                   className={cn(
-                    "flex flex-col items-center py-2 px-1 rounded-lg transition-all",
-                    "hover:bg-muted/50 active:scale-95",
-                    isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    "flex flex-col items-center py-1.5 rounded-lg transition-all",
+                    "hover:bg-muted/50 active:scale-95"
                   )}
                 >
-                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-                    {format(day, "EEE").slice(0, 3)}
-                  </span>
                   <span
                     className={cn(
-                      "mt-1 flex items-center justify-center w-9 h-9 text-sm font-semibold rounded-full transition-colors",
+                      "flex items-center justify-center w-10 h-10 text-sm font-semibold rounded-full transition-colors",
                       isToday && !isSelected && "bg-muted text-foreground",
                       isSelected && "bg-primary text-primary-foreground",
                       !isToday && !isSelected && "text-foreground"
@@ -141,7 +169,7 @@ export function AppointmentWeekStrip({
                     {format(day, "d")}
                   </span>
                   {/* Appointment indicator dot */}
-                  <div className="h-1.5 mt-1">
+                  <div className="h-1.5 mt-0.5">
                     {hasAppointment && (
                       <div className={cn(
                         "w-1.5 h-1.5 rounded-full",
@@ -155,25 +183,48 @@ export function AppointmentWeekStrip({
           </div>
         )}
 
-        {/* Expanded Full Month Calendar - replaces week strip */}
+        {/* Expanded Full Month Grid */}
         {expanded && (
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && onDateSelect(date)}
-            month={selectedDate}
-            modifiers={{
-              hasAppointment: appointments.map((apt) => new Date(apt.appointment_date)),
-            }}
-            modifiersClassNames={{
-              hasAppointment: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
-            }}
-            classNames={{
-              caption: "hidden",
-              nav: "hidden",
-            }}
-            className="rounded-md border-0 mx-auto pointer-events-auto"
-          />
+          <div className="grid grid-cols-7 gap-1">
+            {getMonthDays().map((day, index) => {
+              const isSelected = isSameDay(day, selectedDate);
+              const isToday = isSameDay(day, today);
+              const hasAppointment = hasAppointmentOnDate(day);
+              const isCurrentMonth = isSameMonth(day, selectedDate);
+
+              return (
+                <button
+                  key={index}
+                  onClick={() => onDateSelect(day)}
+                  className={cn(
+                    "flex flex-col items-center py-1.5 rounded-lg transition-all",
+                    "hover:bg-muted/50 active:scale-95",
+                    !isCurrentMonth && "opacity-40"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex items-center justify-center w-10 h-10 text-sm font-semibold rounded-full transition-colors",
+                      isToday && !isSelected && "bg-muted text-foreground",
+                      isSelected && "bg-primary text-primary-foreground",
+                      !isToday && !isSelected && "text-foreground"
+                    )}
+                  >
+                    {format(day, "d")}
+                  </span>
+                  {/* Appointment indicator dot */}
+                  <div className="h-1.5 mt-0.5">
+                    {hasAppointment && (
+                      <div className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        isSelected ? "bg-primary-foreground" : "bg-primary"
+                      )} />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         )}
 
         {/* Expand/Collapse Toggle */}
