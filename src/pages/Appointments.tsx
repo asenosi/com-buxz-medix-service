@@ -2,17 +2,16 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar as CalendarIcon, List, Plus, Filter, Search, X, Grid } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Filter, Search, X } from "lucide-react";
 import { AppointmentWizard } from "@/components/appointments/AppointmentWizard";
-import { AppointmentCard } from "@/components/appointments/AppointmentCard";
-import { AppointmentCalendar } from "@/components/appointments/AppointmentCalendar";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
 import { CalendarSyncDialog } from "@/components/appointments/CalendarSyncDialog";
+import { AppointmentWeekStrip, RelativeDateLabel } from "@/components/appointments/AppointmentWeekStrip";
+import { AppointmentListItem } from "@/components/appointments/AppointmentListItem";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 import { useHaptic } from "@/hooks/use-haptic";
 import { cn } from "@/lib/utils";
@@ -26,7 +25,7 @@ export default function Appointments() {
   const { triggerHaptic } = useHaptic();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Partial<Appointment> | null>(null);
-  const [view, setView] = useState<"list" | "calendar">("list");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [filters, setFilters] = useState({
     status: "all",
     type: "all",
@@ -34,7 +33,6 @@ export default function Appointments() {
     dateTo: null as Date | null,
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [appointmentView, setAppointmentView] = useState<"upcoming" | "past">("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
@@ -122,21 +120,10 @@ export default function Appointments() {
     );
   });
 
-  const upcomingAppointments = filteredAppointments?.filter((apt) => {
-    if (apt.status !== "scheduled") return false;
-    const [year, month, day] = apt.appointment_date.split('-').map(Number);
-    const [hours, minutes] = apt.appointment_time.split(':').map(Number);
-    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
-    return appointmentDateTime > new Date();
-  });
-
-  const pastAppointments = filteredAppointments?.filter((apt) => {
-    if (apt.status !== "scheduled") return true;
-    const [year, month, day] = apt.appointment_date.split('-').map(Number);
-    const [hours, minutes] = apt.appointment_time.split(':').map(Number);
-    const appointmentDateTime = new Date(year, month - 1, day, hours, minutes);
-    return appointmentDateTime <= new Date();
-  });
+  // Get appointments for selected date
+  const appointmentsForSelectedDate = filteredAppointments?.filter((apt) =>
+    isSameDay(new Date(apt.appointment_date), selectedDate)
+  ) || [];
 
   // Count active filters
   const activeFilterCount = [
@@ -276,151 +263,56 @@ export default function Appointments() {
         <AppointmentFilters filters={filters} setFilters={setFilters} />
       )}
 
-      <Tabs value={view} onValueChange={(v) => setView(v as "list" | "calendar")} className="space-y-3">
-        <TabsList className="grid w-full grid-cols-2 h-9 rounded-lg p-0.5">
-          <TabsTrigger value="list" className="gap-1.5 rounded-md text-sm transition-all">
-            <List className="w-4 h-4" />
-            <span>List</span>
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="gap-1.5 rounded-md text-sm transition-all">
-            <CalendarIcon className="w-4 h-4" />
-            <span>Calendar</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Week Calendar Strip */}
+      <AppointmentWeekStrip
+        selectedDate={selectedDate}
+        onDateSelect={setSelectedDate}
+        appointments={filteredAppointments || []}
+      />
 
-        <TabsContent value="list" className="space-y-3 mt-0">
-          {isLoading ? (
-            <div className="text-center text-muted-foreground py-12 animate-fade-in">
-              Loading appointments...
-            </div>
-          ) : !appointments?.length ? (
-            <Card className="text-center py-10 animate-fade-in relative overflow-visible border-2 border-dashed border-border rounded-xl">
-              <CardContent className="pb-24">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center animate-scale-in">
-                  <CalendarIcon className="w-8 h-8 text-primary" />
-                </div>
-                <h2 className="text-lg sm:text-xl font-semibold mb-2">No Appointments Yet</h2>
-                <p className="text-sm text-muted-foreground px-4 max-w-md mx-auto mb-6">
-                  Start organizing your healthcare by adding your first appointment.
-                </p>
-                <Button onClick={() => setDialogOpen(true)} size="default" className="mx-auto rounded-lg">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Appointment
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <div className="inline-flex h-9 items-center justify-center rounded-lg p-0.5 text-muted-foreground w-full">
-                <button
-                  onClick={() => setAppointmentView("upcoming")}
-                  className={cn(
-                    "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all flex-1 gap-1.5",
-                    appointmentView === "upcoming" && "bg-background text-foreground shadow-sm"
-                  )}
-                >
-                  Upcoming <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-xs">{upcomingAppointments?.length || 0}</Badge>
-                </button>
-                <button
-                  onClick={() => setAppointmentView("past")}
-                  className={cn(
-                    "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all flex-1 gap-1.5",
-                    appointmentView === "past" && "bg-background text-foreground shadow-sm"
-                  )}
-                >
-                  History <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-xs bg-muted text-muted-foreground">{pastAppointments?.length || 0}</Badge>
-                </button>
+      {/* Appointments for Selected Date */}
+      <div className="space-y-3">
+        <RelativeDateLabel date={selectedDate} />
+
+        {isLoading ? (
+          <div className="text-center text-muted-foreground py-12 animate-fade-in">
+            Loading appointments...
+          </div>
+        ) : appointmentsForSelectedDate.length === 0 ? (
+          <Card className="text-center py-10 animate-fade-in border-2 border-dashed border-border rounded-xl">
+            <CardContent>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <CalendarIcon className="w-8 h-8 text-muted-foreground" />
               </div>
-
-              {appointmentView === "upcoming" && (
-                <>
-                  {upcomingAppointments && upcomingAppointments.length > 0 ? (
-                    <div className="space-y-3">
-                      {upcomingAppointments.map((appointment) => (
-                        <AppointmentCard
-                          key={appointment.id}
-                          appointment={appointment}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card className="text-center py-8 animate-fade-in border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
-                      <CardContent className="space-y-3">
-                        <div className="relative mx-auto w-14 h-14">
-                          <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse" />
-                          <div className="relative w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                            <CalendarIcon className="w-7 h-7 text-primary" />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <h3 className="text-base font-semibold text-foreground">No Upcoming Appointments</h3>
-                          <p className="text-sm text-muted-foreground px-4 max-w-sm mx-auto">
-                            Your schedule is clear. Add a new appointment to stay organized.
-                          </p>
-                        </div>
-                        <Button 
-                          onClick={() => setDialogOpen(true)} 
-                          size="sm" 
-                          className="mx-auto rounded-lg mt-2"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Schedule Appointment
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              )}
-
-              {appointmentView === "past" && (
-                <>
-                  {pastAppointments && pastAppointments.length > 0 ? (
-                    <div className="space-y-3">
-                      {pastAppointments.map((appointment) => (
-                        <AppointmentCard
-                          key={appointment.id}
-                          appointment={appointment}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card className="text-center py-8 animate-fade-in border-2 border-dashed border-border/50 rounded-xl bg-muted/20">
-                      <CardContent className="space-y-3">
-                        <div className="relative mx-auto w-14 h-14">
-                          <div className="absolute inset-0 rounded-full bg-muted-foreground/10 animate-pulse" />
-                          <div className="relative w-14 h-14 rounded-full bg-muted-foreground/5 flex items-center justify-center">
-                            <Grid className="w-7 h-7 text-muted-foreground/50" />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <h3 className="text-base font-semibold text-foreground">No Past Appointments</h3>
-                          <p className="text-sm text-muted-foreground px-4 max-w-sm mx-auto">
-                            Your appointment history will appear here.
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="calendar">
-          <AppointmentCalendar
-            appointments={appointments || []}
-            onAppointmentClick={(appointment) => {
-              setSelectedAppointment(appointment);
-              setDialogOpen(true);
-            }}
-            onDateClick={(date) => {
-              setSelectedAppointment({ appointment_date: format(date, "yyyy-MM-dd") });
-              setDialogOpen(true);
-            }}
-          />
-        </TabsContent>
-      </Tabs>
+              <h2 className="text-lg font-semibold mb-1 text-foreground">No events</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                No appointments scheduled for this date
+              </p>
+              <Button 
+                onClick={() => {
+                  setSelectedAppointment({ appointment_date: format(selectedDate, "yyyy-MM-dd") });
+                  setDialogOpen(true);
+                }} 
+                size="sm"
+                variant="outline"
+                className="rounded-lg"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Appointment
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {appointmentsForSelectedDate.map((appointment) => (
+              <AppointmentListItem
+                key={appointment.id}
+                appointment={appointment}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <AppointmentWizard
         open={dialogOpen}
