@@ -101,7 +101,16 @@ const Dashboard = () => {
   const { permission, preferences, requestPermission, sendNotification } = useNotification();
   const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(false);
   const [periodStates, setPeriodStates] = useState<Map<string, boolean>>(new Map());
-  
+  const [showGreeting, setShowGreeting] = useState(true);
+
+  // Auto-hide greeting after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowGreeting(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
     const f = form.toLowerCase();
@@ -775,100 +784,54 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 sm:pb-28">
-        {/* Welcome Message */}
-        <div className="mb-6 animate-fade-in">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-            {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground">
-            {medications.length === 0 
-              ? "Welcome to your medication tracker! Let's get started by adding your first medication."
-              : todayDoses.length > 0 
-                ? `You have ${todayDoses.length} medication${todayDoses.length > 1 ? 's' : ''} scheduled today. Stay on track with your health journey!`
-                : "Great job staying on top of your medications! Keep up the excellent work."}
-          </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-24 sm:pb-28">
+        {/* Welcome Message - Auto-hides after 3 seconds */}
+        <div 
+          className={cn(
+            "overflow-hidden transition-all duration-700 ease-in-out",
+            showGreeting ? "max-h-32 opacity-100 mb-4" : "max-h-0 opacity-0 mb-0"
+          )}
+        >
+          <div className="py-3">
+            <h2 className="text-xl sm:text-2xl font-bold">
+              {getTimeGreeting()}{userName ? `, ${userName}` : ""}! 👋
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {medications.length === 0 
+                ? "Welcome! Let's add your first medication."
+                : todayDoses.length > 0 
+                  ? `${todayDoses.length} dose${todayDoses.length > 1 ? 's' : ''} scheduled today`
+                  : "Great job staying on track!"}
+            </p>
+          </div>
         </div>
 
-        {/* Streak Card - Only show if there are medications */}
-        {medications.length > 0 && (
-          <div className="mb-6 animate-fade-in">
-            <StreakCard streak={streak} onClick={() => setViewMode("stats")} />
-          </div>
-        )}
-
-        {/* Search and Filters - Only show if there are medications */}
-        {medications.length > 0 && (
-          <div className="mb-4 space-y-3">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search doses"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  className="pl-9 h-10 text-sm"
-                />
-              </div>
-              <Button variant="outline" className="h-10 px-3" onClick={() => setShowFilters(s => !s)}>
-                <SlidersHorizontal className="w-4 h-4" />
-              </Button>
-              {(searchText || statusFilter !== "all" || timeBucket !== "all" || withFood !== "any" || sortOpt !== "timeAsc") && (
-                <Button
-                  variant="ghost"
-                  className="h-10 px-3"
-                  onClick={() => { setSearchText(""); setStatusFilter("all"); setTimeBucket("all"); setWithFood("any"); setSortOpt("timeAsc"); setShowFilters(false); }}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-            {showFilters && (
-              <Card>
-                <CardContent className="pt-4 pb-3">
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                    <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All statuses</SelectItem>
-                        <SelectItem value="upcoming">Upcoming</SelectItem>
-                        <SelectItem value="due">Due</SelectItem>
-                        <SelectItem value="overdue">Overdue</SelectItem>
-                        <SelectItem value="taken">Taken</SelectItem>
-                        <SelectItem value="snoozed">Snoozed</SelectItem>
-                        <SelectItem value="skipped">Skipped</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={timeBucket} onValueChange={(v: TimeBucket) => setTimeBucket(v)}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Time of day" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Any time</SelectItem>
-                        <SelectItem value="morning">Morning (5–11)</SelectItem>
-                        <SelectItem value="afternoon">Afternoon (11–17)</SelectItem>
-                        <SelectItem value="evening">Evening (17–21)</SelectItem>
-                        <SelectItem value="night">Night (21–5)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={withFood} onValueChange={(v: WithFood) => setWithFood(v)}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="With food" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">With or without</SelectItem>
-                        <SelectItem value="yes">With food</SelectItem>
-                        <SelectItem value="no">Without food</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={sortOpt} onValueChange={(v: SortOpt) => setSortOpt(v)}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Sort" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="timeAsc">Time ↑</SelectItem>
-                        <SelectItem value="timeDesc">Time ↓</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+        {/* Dashboard Week Strip Calendar - At top, sticky */}
+        {medications.length > 0 && viewMode === "list" && (
+          <DashboardWeekStrip
+            selectedDate={selectedCalendarDate}
+            onDateSelect={setSelectedCalendarDate}
+            adherenceData={(() => {
+              const data: Array<{ date: string; total: number; taken: number; skipped: number; snoozed: number }> = [];
+              const todayStr = format(new Date(), "yyyy-MM-dd");
+              const todayTotal = todayDoses.length;
+              const todayTaken = todayDoses.filter(d => d.isTaken).length;
+              const todaySkipped = todayDoses.filter(d => d.isSkipped).length;
+              const todaySnoozed = todayDoses.filter(d => d.isSnoozed).length;
+              
+              if (todayTotal > 0) {
+                data.push({
+                  date: todayStr,
+                  total: todayTotal,
+                  taken: todayTaken,
+                  skipped: todaySkipped,
+                  snoozed: todaySnoozed,
+                });
+              }
+              
+              return data;
+            })()}
+          />
         )}
 
 
@@ -963,38 +926,16 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+            <Button 
+              variant="outline" 
+              className="mt-4 w-full"
+              onClick={() => setViewMode("list")}
+            >
+              Back to Doses
+            </Button>
           </div>
         ) : (
           <>
-            {/* Dashboard Week Strip Calendar - Sticky at top */}
-            <DashboardWeekStrip
-              selectedDate={selectedCalendarDate}
-              onDateSelect={setSelectedCalendarDate}
-              adherenceData={(() => {
-                // Build adherence data from todayDoses for the current week/month
-                const data: Array<{ date: string; total: number; taken: number; skipped: number; snoozed: number }> = [];
-                
-                // For today's doses, create entry for today
-                const todayStr = format(new Date(), "yyyy-MM-dd");
-                const todayTotal = todayDoses.length;
-                const todayTaken = todayDoses.filter(d => d.isTaken).length;
-                const todaySkipped = todayDoses.filter(d => d.isSkipped).length;
-                const todaySnoozed = todayDoses.filter(d => d.isSnoozed).length;
-                
-                if (todayTotal > 0) {
-                  data.push({
-                    date: todayStr,
-                    total: todayTotal,
-                    taken: todayTaken,
-                    skipped: todaySkipped,
-                    snoozed: todaySnoozed,
-                  });
-                }
-                
-                return data;
-              })()}
-            />
-
             {/* Relative Date Label */}
             <div className="mb-4 mt-4">
               <DashboardRelativeDateLabel date={selectedCalendarDate} />
