@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import ThemePicker from "@/components/ThemePicker";
-import { Bell, LogOut, Settings, Monitor, Pill, Menu, SunMedium, Moon, Home, Calendar as CalendarIcon, Search, User as UserIcon, CalendarCheck } from "lucide-react";
+import { Bell, LogOut, Settings, Monitor, Pill, Menu, SunMedium, Moon, Home, Calendar as CalendarIcon, Search, User as UserIcon, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, isToday, isTomorrow } from "date-fns";
@@ -17,7 +17,13 @@ const brand = {
   name: "TreatMate",
 };
 
-export default function AppHeader() {
+interface AppHeaderProps {
+  calendarLabel?: string;
+  onCalendarPrev?: () => void;
+  onCalendarNext?: () => void;
+}
+
+export default function AppHeader({ calendarLabel, onCalendarPrev, onCalendarNext }: AppHeaderProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, setMode } = useTheme();
@@ -218,8 +224,31 @@ export default function AppHeader() {
           </div>
         </Sheet>
 
-        <div className="flex min-w-0 items-center gap-2">
-          {/* Brand removed */}
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+          {/* Calendar Month/Year display for Dashboard */}
+          {calendarLabel && onCalendarPrev && onCalendarNext && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onCalendarPrev}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-semibold min-w-[120px] text-center">
+                {calendarLabel}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onCalendarNext}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="ml-auto flex items-center gap-1">

@@ -27,6 +27,7 @@ import { DoseItemSkeleton, MedCardGridSkeleton } from "@/components/LoadingSkele
 import { StreakCard } from "@/components/StreakCard";
 import { DashboardWeekStrip, DashboardRelativeDateLabel } from "@/components/DashboardWeekStrip";
 import { useNotification } from "@/hooks/use-notification";
+import { useDashboardCalendar } from "@/contexts/DashboardCalendarContext";
 
 interface Medication {
   id: string;
@@ -102,6 +103,17 @@ const Dashboard = () => {
   const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(false);
   const [periodStates, setPeriodStates] = useState<Map<string, boolean>>(new Map());
   const [showGreeting, setShowGreeting] = useState(true);
+  const { setCalendarInfo, clearCalendarInfo } = useDashboardCalendar();
+
+  // Clear calendar info on unmount
+  useEffect(() => {
+    return () => clearCalendarInfo();
+  }, [clearCalendarInfo]);
+
+  // Callback for DashboardWeekStrip to set header calendar info
+  const handleMonthYearChange = useCallback((label: string, onPrev: () => void, onNext: () => void) => {
+    setCalendarInfo(label, onPrev, onNext);
+  }, [setCalendarInfo]);
 
   // Auto-hide greeting after 3 seconds
   useEffect(() => {

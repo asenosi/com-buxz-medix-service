@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PageLoader from "@/components/PageLoader";
 import AppLayout from "@/components/AppLayout";
+import { DashboardCalendarProvider } from "@/contexts/DashboardCalendarContext";
 
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -36,43 +37,45 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
+      <DashboardCalendarProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
 
-            <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/medications" element={<ManageMedications />} />
-              <Route path="/medications/list" element={<MedicationsList />} />
-              <Route path="/medications/add" element={<AddMedication />} />
-              <Route path="/medications/:id" element={<MedicationDetails />} />
-              <Route path="/medications/:id/refills" element={<RefillDetails />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/calendar/day" element={<CalendarDay />} />
-              <Route path="/search" element={<Search />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/notification-settings" element={<NotificationSettingsPage />} />
-              <Route path="/install" element={<InstallPWA />} />
-              <Route path="/appointments" element={<Appointments />} />
-              <Route path="/appointments/:id" element={<AppointmentDetails />} />
-              <Route path="/practitioners" element={<Practitioners />} />
-              <Route path="/practitioners/add" element={<PractitionerForm />} />
-              <Route path="/practitioners/:id" element={<PractitionerDetails />} />
-              <Route path="/practitioners/:id/edit" element={<PractitionerForm />} />
-              <Route path="/refills" element={<Refills />} />
-              <Route path="/caregiver" element={<CaregiverDashboard />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/medications" element={<ManageMedications />} />
+                <Route path="/medications/list" element={<MedicationsList />} />
+                <Route path="/medications/add" element={<AddMedication />} />
+                <Route path="/medications/:id" element={<MedicationDetails />} />
+                <Route path="/medications/:id/refills" element={<RefillDetails />} />
+                <Route path="/calendar" element={<Calendar />} />
+                <Route path="/calendar/day" element={<CalendarDay />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/notification-settings" element={<NotificationSettingsPage />} />
+                <Route path="/install" element={<InstallPWA />} />
+                <Route path="/appointments" element={<Appointments />} />
+                <Route path="/appointments/:id" element={<AppointmentDetails />} />
+                <Route path="/practitioners" element={<Practitioners />} />
+                <Route path="/practitioners/add" element={<PractitionerForm />} />
+                <Route path="/practitioners/:id" element={<PractitionerDetails />} />
+                <Route path="/practitioners/:id/edit" element={<PractitionerForm />} />
+                <Route path="/refills" element={<Refills />} />
+                <Route path="/caregiver" element={<CaregiverDashboard />} />
+                
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </DashboardCalendarProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
