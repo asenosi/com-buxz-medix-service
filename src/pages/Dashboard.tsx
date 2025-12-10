@@ -823,6 +823,7 @@ const Dashboard = () => {
           <DashboardWeekStrip
             selectedDate={selectedCalendarDate}
             onDateSelect={setSelectedCalendarDate}
+            onMonthYearChange={handleMonthYearChange}
             adherenceData={(() => {
               const data: Array<{ date: string; total: number; taken: number; skipped: number; snoozed: number }> = [];
               const todayStr = format(new Date(), "yyyy-MM-dd");
