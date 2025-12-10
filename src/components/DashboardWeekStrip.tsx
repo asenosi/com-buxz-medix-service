@@ -1,4 +1,4 @@
-import { useState, useRef, TouchEvent } from "react";
+import { useState, useRef, useEffect, TouchEvent } from "react";
 import { format, startOfWeek, addDays, isSameDay, addMonths, subMonths, startOfMonth, isSameMonth, differenceInDays } from "date-fns";
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,21 +22,30 @@ interface DashboardWeekStripProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
   adherenceData?: DayData[];
+  onMonthYearChange?: (label: string, onPrev: () => void, onNext: () => void) => void;
 }
 
 export function DashboardWeekStrip({
   selectedDate,
   onDateSelect,
   adherenceData = [],
+  onMonthYearChange,
 }: DashboardWeekStripProps) {
   const [expanded, setExpanded] = useState(false);
-  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
   
   const today = new Date();
+
+  // Notify parent of month/year changes for header display
+  useEffect(() => {
+    if (onMonthYearChange) {
+      const label = format(selectedDate, "MMMM yyyy");
+      onMonthYearChange(label, handlePrev, handleNext);
+    }
+  }, [selectedDate, expanded, onMonthYearChange]);
 
   const getDayData = (date: Date): DayData | undefined => {
     const dateStr = format(date, "yyyy-MM-dd");
@@ -76,12 +85,6 @@ export function DashboardWeekStrip({
     }
   };
 
-  const handleMonthSelect = (date: Date | undefined) => {
-    if (date) {
-      onDateSelect(date);
-      setMonthPickerOpen(false);
-    }
-  };
 
   // Swipe gesture handlers
   const handleTouchStart = (e: TouchEvent) => {
@@ -140,58 +143,22 @@ export function DashboardWeekStrip({
 
   return (
     <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-3 pt-2">
-      {/* Month Header with Navigation */}
-      <div className="flex items-center justify-between mb-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={handlePrev}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        
-        <Popover open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" className="gap-1.5 text-sm font-semibold">
-              {format(selectedDate, "MMMM yyyy")}
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 bg-background border border-border shadow-lg z-50" align="center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleMonthSelect}
-              className="rounded-md border-0 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={handleNext}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
       {/* Day Labels */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="grid grid-cols-9 gap-1 mb-1">
+        <div /> {/* Spacer for left arrow */}
         {dayLabels.map((label) => (
           <div key={label} className="text-center text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
             {label}
           </div>
         ))}
+        <div /> {/* Spacer for right arrow */}
       </div>
 
-      {/* Week Strip with swipe support */}
+      {/* Week Strip with side navigation */}
       {!expanded && (
         <div 
           className={cn(
-            "grid grid-cols-7 gap-1 transition-transform duration-200",
+            "grid grid-cols-9 gap-1 items-center transition-transform duration-200",
             swipeDirection === "left" && "animate-fade-in",
             swipeDirection === "right" && "animate-fade-in"
           )}
@@ -199,6 +166,14 @@ export function DashboardWeekStrip({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 justify-self-center"
+            onClick={handlePrev}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
           {weekDays.map((day) => {
             const isSelected = isSameDay(day, selectedDate);
             const isToday = isSameDay(day, today);
@@ -234,14 +209,22 @@ export function DashboardWeekStrip({
               </button>
             );
           })}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 justify-self-center"
+            onClick={handleNext}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       )}
 
-      {/* Expanded Full Month Grid with swipe support */}
+      {/* Expanded Full Month Grid with side navigation */}
       {expanded && (
         <div 
           className={cn(
-            "grid grid-cols-7 gap-1 transition-transform duration-200",
+            "grid grid-cols-9 gap-1 items-start transition-transform duration-200",
             swipeDirection === "left" && "animate-fade-in",
             swipeDirection === "right" && "animate-fade-in"
           )}
@@ -249,43 +232,61 @@ export function DashboardWeekStrip({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {getMonthDays().map((day, index) => {
-            const isSelected = isSameDay(day, selectedDate);
-            const isToday = isSameDay(day, today);
-            const indicator = getDoseIndicator(day);
-            const isCurrentMonth = isSameMonth(day, selectedDate);
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 justify-self-center mt-8"
+            onClick={handlePrev}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="col-span-7 grid grid-cols-7 gap-1">
+            {getMonthDays().map((day, index) => {
+              const isSelected = isSameDay(day, selectedDate);
+              const isToday = isSameDay(day, today);
+              const indicator = getDoseIndicator(day);
+              const isCurrentMonth = isSameMonth(day, selectedDate);
 
-            return (
-              <button
-                key={index}
-                onClick={() => onDateSelect(day)}
-                className={cn(
-                  "flex flex-col items-center py-1 rounded-lg transition-all",
-                  "hover:bg-muted/50 active:scale-95",
-                  !isCurrentMonth && "opacity-40"
-                )}
-              >
-                <span
+              return (
+                <button
+                  key={index}
+                  onClick={() => onDateSelect(day)}
                   className={cn(
-                    "flex items-center justify-center w-9 h-9 text-sm font-semibold rounded-full transition-colors",
-                    isToday && !isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-background",
-                    isSelected && "bg-primary text-primary-foreground",
-                    !isToday && !isSelected && "text-foreground"
+                    "flex flex-col items-center py-1 rounded-lg transition-all",
+                    "hover:bg-muted/50 active:scale-95",
+                    !isCurrentMonth && "opacity-40"
                   )}
                 >
-                  {format(day, "d")}
-                </span>
-                <div className="h-1.5 mt-0.5">
-                  {indicator && (
-                    <div className={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      isSelected ? "bg-primary-foreground" : indicator.color
-                    )} />
-                  )}
-                </div>
-              </button>
-            );
-          })}
+                  <span
+                    className={cn(
+                      "flex items-center justify-center w-9 h-9 text-sm font-semibold rounded-full transition-colors",
+                      isToday && !isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-background",
+                      isSelected && "bg-primary text-primary-foreground",
+                      !isToday && !isSelected && "text-foreground"
+                    )}
+                  >
+                    {format(day, "d")}
+                  </span>
+                  <div className="h-1.5 mt-0.5">
+                    {indicator && (
+                      <div className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        isSelected ? "bg-primary-foreground" : indicator.color
+                      )} />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 justify-self-center mt-8"
+            onClick={handleNext}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       )}
 
