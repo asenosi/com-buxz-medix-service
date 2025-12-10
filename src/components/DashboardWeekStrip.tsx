@@ -36,6 +36,8 @@ export function DashboardWeekStrip({
   
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const touchEndY = useRef<number | null>(null);
   
   const today = new Date();
 
@@ -89,36 +91,51 @@ export function DashboardWeekStrip({
   // Swipe gesture handlers
   const handleTouchStart = (e: TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
     touchEndX.current = null;
+    touchEndY.current = null;
   };
 
   const handleTouchMove = (e: TouchEvent) => {
     touchEndX.current = e.touches[0].clientX;
+    touchEndY.current = e.touches[0].clientY;
   };
 
   const handleTouchEnd = () => {
-    if (touchStartX.current === null || touchEndX.current === null) return;
+    if (touchStartX.current === null || touchStartY.current === null) return;
     
-    const diff = touchStartX.current - touchEndX.current;
+    const diffX = touchStartX.current - (touchEndX.current ?? touchStartX.current);
+    const diffY = touchStartY.current - (touchEndY.current ?? touchStartY.current);
     const minSwipeDistance = 50;
     
-    if (Math.abs(diff) > minSwipeDistance) {
-      if (diff > 0) {
-        // Swiped left - go to next
+    // Determine if horizontal or vertical swipe based on which axis has larger movement
+    const isHorizontalSwipe = Math.abs(diffX) > Math.abs(diffY);
+    
+    if (isHorizontalSwipe && Math.abs(diffX) > minSwipeDistance) {
+      // Horizontal swipe - navigate weeks/months
+      if (diffX > 0) {
         setSwipeDirection("left");
         handleNext();
       } else {
-        // Swiped right - go to prev
         setSwipeDirection("right");
         handlePrev();
       }
-      
-      // Reset animation after transition
       setTimeout(() => setSwipeDirection(null), 300);
+    } else if (!isHorizontalSwipe && Math.abs(diffY) > minSwipeDistance) {
+      // Vertical swipe - expand/collapse
+      if (diffY > 0) {
+        // Swipe up - collapse
+        setExpanded(false);
+      } else {
+        // Swipe down - expand
+        setExpanded(true);
+      }
     }
     
     touchStartX.current = null;
     touchEndX.current = null;
+    touchStartY.current = null;
+    touchEndY.current = null;
   };
 
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
