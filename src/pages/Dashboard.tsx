@@ -795,7 +795,12 @@ const Dashboard = () => {
         {/* Streak Card - Only show if there are medications */}
         {medications.length > 0 && (
           <div className="mb-6 animate-fade-in">
-            <StreakCard streak={streak} onClick={() => setViewMode("stats")} />
+            <StreakCard 
+              streak={streak} 
+              todayProgress={todayProgress}
+              weeklyAdherence={weeklyAdherence}
+              onClick={() => setViewMode("stats")} 
+            />
           </div>
         )}
 
@@ -877,27 +882,24 @@ const Dashboard = () => {
         {medications.length > 0 && (
           <div className="mb-6">
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "list" | "calendar" | "stats")}>
-              <TabsList className="grid h-auto w-full max-w-3xl mx-auto grid-cols-3 bg-muted">
+              <TabsList className="grid h-10 w-full max-w-xs mx-auto grid-cols-3 bg-muted">
                 <TabsTrigger 
                   value="list" 
-                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+                  className="flex items-center justify-center"
                 >
                   <List className="w-5 h-5" />
-                  List
                 </TabsTrigger>
                 <TabsTrigger 
                   value="calendar" 
-                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+                  className="flex items-center justify-center"
                 >
                   <Calendar className="w-5 h-5" />
-                  Calendar
                 </TabsTrigger>
                 <TabsTrigger 
                   value="stats" 
-                  className="min-w-0 whitespace-normal break-words text-sm sm:text-base flex items-center justify-center gap-2"
+                  className="flex items-center justify-center"
                 >
                   <BarChart3 className="w-5 h-5" />
-                  Stats
                 </TabsTrigger>
               </TabsList>
             </Tabs>
