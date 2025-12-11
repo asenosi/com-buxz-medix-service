@@ -1146,7 +1146,7 @@ const Dashboard = () => {
                               </CollapsibleTrigger>
                               
                               <CollapsibleContent className="transition-all duration-200 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                                {/* Mobile: SimpleDoseCard layout */}
+                                {/* Mobile: SimpleDoseCard layout with actions */}
                                 <div className="sm:hidden space-y-2">
                                   {doses.map((dose, idx) => (
                                     <SimpleDoseCard
@@ -1157,12 +1157,10 @@ const Dashboard = () => {
                                       isTaken={dose.isTaken}
                                       isSkipped={dose.isSkipped}
                                       isSnoozed={dose.isSnoozed}
-                                      className={cn(
-                                        dose.isTaken && "bg-success/5 border-l-success",
-                                        (dose.isSkipped || dose.isSnoozed) && "bg-warning/5 border-l-warning",
-                                        !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "overdue" && "bg-destructive/5 border-l-destructive",
-                                        !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && dose.status === "due" && "bg-accent/5 border-l-accent"
-                                      )}
+                                      snoozeUntil={dose.snoozeUntil}
+                                      onMarkTaken={() => markAsTaken(dose)}
+                                      onMarkSkipped={() => markAsSkipped(dose)}
+                                      onMarkSnoozed={(minutes) => markAsSnoozed(dose, minutes)}
                                     />
                                   ))}
                                 </div>
