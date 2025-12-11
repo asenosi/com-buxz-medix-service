@@ -11,7 +11,7 @@ interface Medication {
   name: string;
   dosage: string;
   form: string | null;
-  image_url: string | null;
+  image_url?: string | null;
   image_urls?: string[] | null;
   images?: string[];
   instructions?: string | null;
