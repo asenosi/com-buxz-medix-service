@@ -103,6 +103,8 @@ const Dashboard = () => {
   const { permission, preferences, requestPermission, sendNotification } = useNotification();
   const [showPrescriptionUpload, setShowPrescriptionUpload] = useState(false);
   const [periodStates, setPeriodStates] = useState<Map<string, boolean>>(new Map());
+  const [calendarDoses, setCalendarDoses] = useState<TodayDose[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
   
   const defaultImageForForm = useCallback((form?: string | null) => {
     if (!form) return "";
@@ -241,6 +243,141 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Helper to parse time string
+  const parseTime = useCallback((t?: unknown): [number, number] | null => {
+    if (typeof t !== "string") return null;
+    const parts = t.split(":");
+    if (parts.length < 2) return null;
+    const hours = Number(parts[0]);
+    const minutes = Number(parts[1]);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+    return [hours, minutes];
+  }, []);
+
+  // Compute doses for a specific date
+  const computeDosesForDate = useCallback(async (
+    targetDate: Date,
+    medsWithImages: Medication[],
+    schedulesData: { id: string; medication_id: string; time_of_day: string; days_of_week: number[] | null; with_food: boolean; special_instructions: string | null }[]
+  ): Promise<TodayDose[]> => {
+    const targetDayOfWeek = targetDate.getDay();
+    const targetDateStr = format(targetDate, "yyyy-MM-dd");
+    const now = new Date();
+    const isToday = format(now, "yyyy-MM-dd") === targetDateStr;
+    
+    // Fetch logs for the target date
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const { data: logsData } = await supabase
+      .from("dose_logs")
+      .select("*")
+      .gte("scheduled_time", startOfDay.toISOString())
+      .lte("scheduled_time", endOfDay.toISOString());
+
+    const doses: TodayDose[] = [];
+
+    medsWithImages.forEach(med => {
+      // Check if medication is active within the target date range
+      const medRecord = med as Medication & { start_date?: string; end_date?: string };
+      if (medRecord.start_date) {
+        const startDate = new Date(medRecord.start_date);
+        startDate.setHours(0, 0, 0, 0);
+        if (targetDate < startDate) return; // Skip if before start date
+      }
+      if (medRecord.end_date) {
+        const endDate = new Date(medRecord.end_date);
+        endDate.setHours(23, 59, 59, 999);
+        if (targetDate > endDate) return; // Skip if after end date
+      }
+
+      // Check supply - if pills_remaining is 0, skip (but allow null/undefined)
+      if (medRecord.pills_remaining !== null && medRecord.pills_remaining !== undefined && medRecord.pills_remaining <= 0) {
+        return;
+      }
+
+      const medSchedules = schedulesData?.filter(s => s.medication_id === med.id) || [];
+      
+      medSchedules.forEach(schedule => {
+        // Check if target day is in the days_of_week array
+        if (schedule.days_of_week && schedule.days_of_week.length > 0 && !schedule.days_of_week.includes(targetDayOfWeek)) {
+          return; // Skip this schedule if target day is not in the recurring days
+        }
+
+        const parsed = parseTime(schedule.time_of_day);
+        if (!parsed) return; // Skip invalid times
+        const [hours, minutes] = parsed;
+        const doseTime = new Date(targetDate);
+        doseTime.setHours(hours, minutes, 0, 0);
+
+        // Calculate status only for today
+        let status: "upcoming" | "due" | "overdue" = "upcoming";
+        if (isToday) {
+          const timeDiff = doseTime.getTime() - now.getTime();
+          const minutesDiff = timeDiff / (1000 * 60);
+          if (minutesDiff <= 0 && minutesDiff > -30) {
+            status = "due";
+          } else if (minutesDiff <= -30) {
+            status = "overdue";
+          }
+        } else if (targetDate < now) {
+          status = "overdue"; // Past dates are all overdue
+        }
+
+        // Check if this dose has been logged
+        const doseLog = logsData?.find(log => 
+          log.schedule_id === schedule.id &&
+          new Date(log.scheduled_time).getHours() === hours &&
+          new Date(log.scheduled_time).getMinutes() === minutes
+        );
+
+        // Calculate adherence status if taken
+        let adherenceStatus: "on_time" | "late" | "missed" | undefined;
+        let takenAtDate: Date | undefined;
+        
+        if (doseLog?.status === "taken") {
+          const takenTimeValue = doseLog.taken_at || doseLog.scheduled_time;
+          if (takenTimeValue) {
+            takenAtDate = new Date(takenTimeValue);
+            const scheduledTime = doseTime;
+            const minutesLate = Math.floor((takenAtDate.getTime() - scheduledTime.getTime()) / (60 * 1000));
+            const gracePeriod = med.grace_period_minutes || 60;
+            const missedCutoff = med.missed_dose_cutoff_minutes || 180;
+            
+            if (minutesLate <= gracePeriod) {
+              adherenceStatus = "on_time";
+            } else if (minutesLate <= missedCutoff) {
+              adherenceStatus = "late";
+            } else {
+              adherenceStatus = "missed";
+            }
+          }
+        }
+
+        doses.push({
+          medication: med,
+          schedule: schedule as Schedule,
+          nextDoseTime: doseTime,
+          status,
+          isTaken: doseLog?.status === "taken",
+          isSkipped: doseLog?.status === "skipped",
+          isSnoozed: doseLog?.status === "snoozed",
+          snoozeUntil: doseLog?.snooze_until ? new Date(doseLog.snooze_until) : undefined,
+          takenAt: takenAtDate,
+          adherenceStatus,
+        });
+      });
+    });
+
+    doses.sort((a, b) => a.nextDoseTime.getTime() - b.nextDoseTime.getTime());
+    return doses;
+  }, [parseTime]);
+
+  // Store schedules data for reuse
+  const [schedulesData, setSchedulesData] = useState<{ id: string; medication_id: string; time_of_day: string; days_of_week: number[] | null; with_food: boolean; special_instructions: string | null }[]>([]);
+
   const fetchMedications = useCallback(async () => {
     try {
       setLoading(true);
@@ -273,112 +410,18 @@ const Dashboard = () => {
 
       if (medsWithImages && medsWithImages.length > 0) {
         const medIds = medsWithImages.map(m => m.id);
-        const { data: schedulesData, error: schedError } = await supabase
+        const { data: schedData, error: schedError } = await supabase
           .from("medication_schedules")
           .select("*")
           .in("medication_id", medIds)
           .eq("active", true);
 
         if (schedError) throw schedError;
+        setSchedulesData(schedData || []);
 
-        // Fetch today's logs
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date();
-        endOfDay.setHours(23, 59, 59, 999);
-
-        const { data: logsData } = await supabase
-          .from("dose_logs")
-          .select("*")
-          .gte("scheduled_time", startOfDay.toISOString())
-          .lte("scheduled_time", endOfDay.toISOString());
-
-        const doses: TodayDose[] = [];
-        const now = new Date();
-        const currentDay = now.getDay();
-
-        const parseTime = (t?: unknown): [number, number] | null => {
-          if (typeof t !== "string") return null;
-          const parts = t.split(":");
-          if (parts.length < 2) return null;
-          const hours = Number(parts[0]);
-          const minutes = Number(parts[1]);
-          if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
-          return [hours, minutes];
-        };
-
-        medsWithImages.forEach(med => {
-          const medSchedules = schedulesData?.filter(s => s.medication_id === med.id) || [];
-          
-          medSchedules.forEach(schedule => {
-            // Check if today is in the days_of_week array
-            if (schedule.days_of_week && !schedule.days_of_week.includes(currentDay)) {
-              return; // Skip this schedule if today is not in the recurring days
-            }
-
-            const parsed = parseTime(schedule.time_of_day);
-            if (!parsed) return; // Skip invalid times
-            const [hours, minutes] = parsed;
-            const doseTime = new Date();
-            doseTime.setHours(hours, minutes, 0, 0);
-
-            const timeDiff = doseTime.getTime() - now.getTime();
-            const minutesDiff = timeDiff / (1000 * 60);
-
-            let status: "upcoming" | "due" | "overdue" = "upcoming";
-            if (minutesDiff <= 0 && minutesDiff > -30) {
-              status = "due";
-            } else if (minutesDiff <= -30) {
-              status = "overdue";
-            }
-
-            // Check if this dose has been logged
-            const doseLog = logsData?.find(log => 
-              log.schedule_id === schedule.id &&
-              new Date(log.scheduled_time).getHours() === hours &&
-              new Date(log.scheduled_time).getMinutes() === minutes
-            );
-
-            // Calculate adherence status if taken
-            let adherenceStatus: "on_time" | "late" | "missed" | undefined;
-            let takenAtDate: Date | undefined;
-            
-            if (doseLog?.status === "taken") {
-              // Use taken_at if available, otherwise fall back to scheduled_time
-              const takenTimeValue = doseLog.taken_at || doseLog.scheduled_time;
-              if (takenTimeValue) {
-                takenAtDate = new Date(takenTimeValue);
-                const scheduledTime = doseTime;
-                const minutesLate = Math.floor((takenAtDate.getTime() - scheduledTime.getTime()) / (60 * 1000));
-                const gracePeriod = med.grace_period_minutes || 60;
-                const missedCutoff = med.missed_dose_cutoff_minutes || 180;
-                
-                if (minutesLate <= gracePeriod) {
-                  adherenceStatus = "on_time";
-                } else if (minutesLate <= missedCutoff) {
-                  adherenceStatus = "late";
-                } else {
-                  adherenceStatus = "missed";
-                }
-              }
-            }
-
-            doses.push({
-              medication: med,
-              schedule,
-              nextDoseTime: doseTime,
-              status,
-              isTaken: doseLog?.status === "taken",
-              isSkipped: doseLog?.status === "skipped",
-              isSnoozed: doseLog?.status === "snoozed",
-              snoozeUntil: doseLog?.snooze_until ? new Date(doseLog.snooze_until) : undefined,
-              takenAt: takenAtDate,
-              adherenceStatus,
-            });
-          });
-        });
-
-        doses.sort((a, b) => a.nextDoseTime.getTime() - b.nextDoseTime.getTime());
+        // Compute today's doses
+        const today = new Date();
+        const doses = await computeDosesForDate(today, medsWithImages, schedData || []);
         setTodayDoses(doses);
 
         // Calculate today's progress
@@ -396,7 +439,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [fetchGamificationStats]);
+  }, [fetchGamificationStats, computeDosesForDate]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -456,6 +499,37 @@ const Dashboard = () => {
       scheduledRef.current.clear();
     };
   }, []);
+
+  // Fetch doses for selected calendar date
+  useEffect(() => {
+    const fetchCalendarDoses = async () => {
+      if (viewMode !== "calendar" || medications.length === 0 || schedulesData.length === 0) {
+        return;
+      }
+      
+      // Check if selected date is today - use todayDoses instead
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      const selectedStr = format(selectedCalendarDate, "yyyy-MM-dd");
+      
+      if (todayStr === selectedStr) {
+        setCalendarDoses(todayDoses);
+        return;
+      }
+
+      setCalendarLoading(true);
+      try {
+        const doses = await computeDosesForDate(selectedCalendarDate, medications, schedulesData);
+        setCalendarDoses(doses);
+      } catch (error) {
+        console.error("Failed to fetch calendar doses:", error);
+        setCalendarDoses([]);
+      } finally {
+        setCalendarLoading(false);
+      }
+    };
+
+    fetchCalendarDoses();
+  }, [selectedCalendarDate, viewMode, medications, schedulesData, todayDoses, computeDosesForDate]);
 
   const notify = useCallback((title: string, body: string) => {
     if (preferences?.enabled && preferences?.browser_enabled) {
@@ -992,24 +1066,16 @@ const Dashboard = () => {
                   {format(selectedCalendarDate, "EEEE, MMMM d, yyyy")}
                 </h2>
                 
-                {loading ? (
+                {(loading || calendarLoading) ? (
                   <DoseItemSkeleton count={3} />
                 ) : (() => {
-                  const selectedDayStart = new Date(selectedCalendarDate);
-                  selectedDayStart.setHours(0, 0, 0, 0);
-                  const selectedDayEnd = new Date(selectedCalendarDate);
-                  selectedDayEnd.setHours(23, 59, 59, 999);
-                  
-                  const dosesForDay = todayDoses.filter(dose => {
-                    const doseDate = new Date(dose.nextDoseTime);
-                    return doseDate >= selectedDayStart && doseDate <= selectedDayEnd;
-                  });
-                  
                   const todayStart = new Date();
                   todayStart.setHours(0, 0, 0, 0);
+                  const selectedDayStart = new Date(selectedCalendarDate);
+                  selectedDayStart.setHours(0, 0, 0, 0);
                   const isPastDate = selectedDayStart < todayStart;
 
-                  if (dosesForDay.length === 0) {
+                  if (calendarDoses.length === 0) {
                     return (
                       <Card className="text-center py-6 sm:py-8">
                         <CardContent>
@@ -1026,7 +1092,7 @@ const Dashboard = () => {
                   
                   return (
                     <div className="grid gap-3 sm:gap-4">
-                      {dosesForDay.map((dose, idx) => (
+                      {calendarDoses.map((dose, idx) => (
                         <div 
                           key={`${dose.schedule.id}-${idx}`}
                           className="animate-slide-in-right"
