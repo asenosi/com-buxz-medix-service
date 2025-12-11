@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, CheckCircle2, XCircle, Pill, AlarmClock, Calendar } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, Pill, AlarmClock, Calendar, ChevronDown } from "lucide-react";
 import { cn, truncateText } from "@/lib/utils";
 import { useState } from "react";
 import { useCountdown } from "@/hooks/use-countdown";
@@ -60,6 +60,7 @@ const statusColors: Record<string, string> = {
 export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEdit, onOpenDetails }: DoseCardProps) => {
   const [snoozeMinutes, setSnoozeMinutes] = useState("15");
   const [showSnoozeOptions, setShowSnoozeOptions] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const isCompleted = dose.isTaken || dose.isSkipped || dose.isSnoozed;
   const showCountdown = !isCompleted && dose.status === "upcoming";
   const countdown = useCountdown(showCountdown ? dose.nextDoseTime : null);
@@ -69,6 +70,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
   const now = new Date();
   const hoursUntilDose = (dose.nextDoseTime.getTime() - now.getTime()) / (1000 * 60 * 60);
   const isTooFarInFuture = hoursUntilDose > 3;
+  const canShowActions = !isCompleted && !isPastDate && !isTooFarInFuture;
   
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
@@ -89,6 +91,14 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
     const target = e.target as HTMLElement;
     if (target.closest("button,[role=button],a,input,select,textarea")) return;
     onOpenDetails(dose.medication.id);
+  };
+
+  const handleToggleActions = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowActions(!showActions);
+    if (showActions) {
+      setShowSnoozeOptions(false);
+    }
   };
 
   const getRelativeTime = () => {
@@ -173,13 +183,28 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
               </div>
             </div>
 
-            <p className={cn(
-              "text-sm font-medium shrink-0",
-              isCompleted ? "text-muted-foreground" : 
-              dose.status === "overdue" ? "text-destructive" : "text-primary"
-            )}>
-              {getRelativeTime()}
-            </p>
+            <div className="flex items-center gap-1 shrink-0">
+              <p className={cn(
+                "text-sm font-medium",
+                isCompleted ? "text-muted-foreground" : 
+                dose.status === "overdue" ? "text-destructive" : "text-primary"
+              )}>
+                {getRelativeTime()}
+              </p>
+              {canShowActions && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleToggleActions}
+                  className={cn(
+                    "h-7 w-7 p-0 rounded-full hover:bg-muted transition-transform",
+                    showActions && "rotate-180"
+                  )}
+                >
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Status chips */}
@@ -225,12 +250,12 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
             )}
           </div>
 
-          {/* Action buttons */}
-          {!isCompleted && !isPastDate && !isTooFarInFuture && (
-            <div className="space-y-2 pt-1 border-t border-border/50">
+          {/* Collapsible Action buttons */}
+          {showActions && canShowActions && (
+            <div className="space-y-2 pt-2 border-t border-border/50 animate-fade-in">
               <div className="grid grid-cols-3 gap-2">
                 <Button
-                  onClick={(e) => { e.stopPropagation(); onMarkTaken(dose); }}
+                  onClick={(e) => { e.stopPropagation(); onMarkTaken(dose); setShowActions(false); }}
                   size="sm"
                   className="rounded-xl h-9 text-xs"
                 >
@@ -245,7 +270,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
                   <AlarmClock className="w-4 h-4 mr-1" /> Snooze
                 </Button>
                 <Button 
-                  onClick={(e) => { e.stopPropagation(); onMarkSkipped(dose); }}
+                  onClick={(e) => { e.stopPropagation(); onMarkSkipped(dose); setShowActions(false); }}
                   size="sm" 
                   variant="outline" 
                   className="rounded-xl h-9 text-xs border-destructive text-destructive hover:bg-destructive/5"
@@ -255,7 +280,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
               </div>
               
               {showSnoozeOptions && (
-                <div className="flex flex-col gap-2 p-2 bg-muted/30 rounded-xl animate-fade-in">
+                <div className="flex flex-col gap-2 p-2 bg-muted/30 rounded-xl">
                   <span className="text-xs text-muted-foreground">Remind me in:</span>
                   <Select value={snoozeMinutes} onValueChange={setSnoozeMinutes}>
                     <SelectTrigger className="w-full h-8 text-xs rounded-lg">
@@ -275,6 +300,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
                       e.stopPropagation();
                       onMarkSnoozed(dose, parseInt(snoozeMinutes));
                       setShowSnoozeOptions(false);
+                      setShowActions(false);
                     }}
                     size="sm"
                     className="rounded-xl h-8 text-xs"

@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn, truncateText } from "@/lib/utils";
-import { Pill, CheckCircle2, XCircle, Clock, Calendar, AlarmClock } from "lucide-react";
+import { Pill, CheckCircle2, XCircle, Clock, Calendar, AlarmClock, ChevronDown } from "lucide-react";
 import { MedicationImageCarousel } from "@/components/MedicationImageCarousel";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,6 +57,7 @@ export const SimpleDoseCard = ({
   onMarkSkipped,
   onMarkSnoozed
 }: SimpleDoseCardProps) => {
+  const [showActions, setShowActions] = useState(false);
   const [showSnoozeOptions, setShowSnoozeOptions] = useState(false);
   const [snoozeMinutes, setSnoozeMinutes] = useState("15");
   const isCompleted = isTaken || isSkipped || isSnoozed;
@@ -72,7 +73,7 @@ export const SimpleDoseCard = ({
     return hoursUntilDose > 3;
   })();
   
-  const showActions = !isCompleted && !isPastDate && !isTooFarInFuture && (onMarkTaken || onMarkSkipped || onMarkSnoozed);
+  const canShowActions = !isCompleted && !isPastDate && !isTooFarInFuture && (onMarkTaken || onMarkSkipped || onMarkSnoozed);
 
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
@@ -107,6 +108,14 @@ export const SimpleDoseCard = ({
     const target = e.target as HTMLElement;
     if (target.closest("button,[role=button],input,select,textarea")) return;
     onClick?.();
+  };
+
+  const handleToggleActions = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowActions(!showActions);
+    if (showActions) {
+      setShowSnoozeOptions(false);
+    }
   };
 
   return (
@@ -164,11 +173,24 @@ export const SimpleDoseCard = ({
                   </p>
                 </div>
                 
-                {/* Status icon */}
-                <div className="shrink-0">
+                {/* Status icon or expand button */}
+                <div className="shrink-0 flex items-center gap-1">
                   {isTaken && <CheckCircle2 className="w-5 h-5 text-success" />}
                   {isSkipped && <XCircle className="w-5 h-5 text-destructive" />}
                   {isSnoozed && <Clock className="w-5 h-5 text-warning" />}
+                  {canShowActions && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleToggleActions}
+                      className={cn(
+                        "h-7 w-7 p-0 rounded-full hover:bg-muted transition-transform",
+                        showActions && "rotate-180"
+                      )}
+                    >
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -213,67 +235,70 @@ export const SimpleDoseCard = ({
             </div>
           </div>
 
-          {/* Action buttons */}
-          {showActions && (
-            <div className="flex items-center gap-2 pt-2 border-t border-border/30">
-              {onMarkTaken && (
-                <Button
-                  onClick={(e) => { e.stopPropagation(); onMarkTaken(); }}
-                  size="sm"
-                  className="flex-1 rounded-xl h-8 text-xs font-medium"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Take
-                </Button>
+          {/* Collapsible Action buttons */}
+          {showActions && canShowActions && (
+            <div className="space-y-2 pt-2 border-t border-border/30 animate-fade-in">
+              <div className="flex items-center gap-2">
+                {onMarkTaken && (
+                  <Button
+                    onClick={(e) => { e.stopPropagation(); onMarkTaken(); setShowActions(false); }}
+                    size="sm"
+                    className="flex-1 rounded-xl h-8 text-xs font-medium"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Take
+                  </Button>
+                )}
+                {onMarkSnoozed && (
+                  <Button 
+                    onClick={(e) => { e.stopPropagation(); setShowSnoozeOptions(!showSnoozeOptions); }}
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1 rounded-xl h-8 text-xs font-medium"
+                  >
+                    <AlarmClock className="w-3.5 h-3.5 mr-1" /> Snooze
+                  </Button>
+                )}
+                {onMarkSkipped && (
+                  <Button 
+                    onClick={(e) => { e.stopPropagation(); onMarkSkipped(); setShowActions(false); }}
+                    size="sm" 
+                    variant="ghost" 
+                    className="rounded-xl h-8 text-xs font-medium text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <XCircle className="w-3.5 h-3.5 mr-1" /> Skip
+                  </Button>
+                )}
+              </div>
+              
+              {/* Snooze options */}
+              {showSnoozeOptions && onMarkSnoozed && (
+                <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-xl">
+                  <Select value={snoozeMinutes} onValueChange={setSnoozeMinutes}>
+                    <SelectTrigger className="flex-1 h-8 text-xs rounded-lg bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border shadow-lg z-50">
+                      <SelectItem value="5">5 min</SelectItem>
+                      <SelectItem value="10">10 min</SelectItem>
+                      <SelectItem value="15">15 min</SelectItem>
+                      <SelectItem value="30">30 min</SelectItem>
+                      <SelectItem value="60">1 hour</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMarkSnoozed(parseInt(snoozeMinutes));
+                      setShowSnoozeOptions(false);
+                      setShowActions(false);
+                    }}
+                    size="sm"
+                    className="rounded-xl h-8 text-xs px-4"
+                  >
+                    Confirm
+                  </Button>
+                </div>
               )}
-              {onMarkSnoozed && (
-                <Button 
-                  onClick={(e) => { e.stopPropagation(); setShowSnoozeOptions(!showSnoozeOptions); }}
-                  size="sm" 
-                  variant="outline" 
-                  className="flex-1 rounded-xl h-8 text-xs font-medium"
-                >
-                  <AlarmClock className="w-3.5 h-3.5 mr-1" /> Snooze
-                </Button>
-              )}
-              {onMarkSkipped && (
-                <Button 
-                  onClick={(e) => { e.stopPropagation(); onMarkSkipped(); }}
-                  size="sm" 
-                  variant="ghost" 
-                  className="rounded-xl h-8 text-xs font-medium text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <XCircle className="w-3.5 h-3.5 mr-1" /> Skip
-                </Button>
-              )}
-            </div>
-          )}
-          
-          {/* Snooze options */}
-          {showSnoozeOptions && onMarkSnoozed && (
-            <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-xl animate-fade-in">
-              <Select value={snoozeMinutes} onValueChange={setSnoozeMinutes}>
-                <SelectTrigger className="flex-1 h-8 text-xs rounded-lg bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border shadow-lg z-50">
-                  <SelectItem value="5">5 min</SelectItem>
-                  <SelectItem value="10">10 min</SelectItem>
-                  <SelectItem value="15">15 min</SelectItem>
-                  <SelectItem value="30">30 min</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMarkSnoozed(parseInt(snoozeMinutes));
-                  setShowSnoozeOptions(false);
-                }}
-                size="sm"
-                className="rounded-xl h-8 text-xs px-4"
-              >
-                Confirm
-              </Button>
             </div>
           )}
         </div>
