@@ -1075,6 +1075,16 @@ const Dashboard = () => {
                   selectedDayStart.setHours(0, 0, 0, 0);
                   const isPastDate = selectedDayStart < todayStart;
 
+                  // Calculate adherence summary for past days
+                  const adherenceSummary = isPastDate && calendarDoses.length > 0 ? (() => {
+                    const taken = calendarDoses.filter(d => d.isTaken).length;
+                    const skipped = calendarDoses.filter(d => d.isSkipped).length;
+                    const missed = calendarDoses.filter(d => !d.isTaken && !d.isSkipped && !d.isSnoozed).length;
+                    const total = calendarDoses.length;
+                    const adherencePercent = total > 0 ? Math.round((taken / total) * 100) : 0;
+                    return { taken, skipped, missed, total, adherencePercent };
+                  })() : null;
+
                   if (calendarDoses.length === 0) {
                     return (
                       <Card className="text-center py-6 sm:py-8">
@@ -1092,6 +1102,54 @@ const Dashboard = () => {
                   
                   return (
                     <div className="grid gap-3 sm:gap-4">
+                      {/* Adherence Summary for Past Days */}
+                      {adherenceSummary && (
+                        <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
+                          <CardContent className="py-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={cn(
+                                  "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold",
+                                  adherenceSummary.adherencePercent >= 80 
+                                    ? "bg-success/20 text-success" 
+                                    : adherenceSummary.adherencePercent >= 50 
+                                      ? "bg-warning/20 text-warning"
+                                      : "bg-destructive/20 text-destructive"
+                                )}>
+                                  {adherenceSummary.adherencePercent}%
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">Day Adherence</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {adherenceSummary.taken} of {adherenceSummary.total} doses taken
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex gap-3 text-xs">
+                                {adherenceSummary.taken > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-success" />
+                                    <span className="text-muted-foreground">{adherenceSummary.taken} taken</span>
+                                  </div>
+                                )}
+                                {adherenceSummary.skipped > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-warning" />
+                                    <span className="text-muted-foreground">{adherenceSummary.skipped} skipped</span>
+                                  </div>
+                                )}
+                                {adherenceSummary.missed > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-destructive" />
+                                    <span className="text-muted-foreground">{adherenceSummary.missed} missed</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                      
                       {calendarDoses.map((dose, idx) => (
                         <div 
                           key={`${dose.schedule.id}-${idx}`}
