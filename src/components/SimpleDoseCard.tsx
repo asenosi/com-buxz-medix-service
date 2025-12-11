@@ -164,30 +164,26 @@ export const SimpleDoseCard = ({
 
         {/* Expanded content */}
         {expanded && (
-          <div className="px-4 pb-3 pt-0 border-t border-border/50 mt-0 space-y-2 animate-fade-in">
+          <div className="px-4 pb-3 pt-0 border-t border-border/50 mt-0 animate-fade-in">
             <div className="pt-3 space-y-2 text-sm">
-              {/* Instructions */}
-              {(schedule.special_instructions || medication.instructions) && (
-                <div className="flex items-start gap-2 text-muted-foreground">
-                  <FileText className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span className="line-clamp-2">
-                    {schedule.special_instructions || medication.instructions}
-                  </span>
-                </div>
-              )}
-
-              {/* Reason for taking */}
-              {medication.reason_for_taking && (
-                <div className="flex items-start gap-2 text-muted-foreground">
-                  <User className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span className="line-clamp-2">{medication.reason_for_taking}</span>
-                </div>
-              )}
-
-              {/* Status badges */}
-              <div className="flex items-center gap-2 pt-1">
+              {/* Info row - horizontal layout */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
+                {(schedule.special_instructions || medication.instructions) && (
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate max-w-[150px]">
+                      {schedule.special_instructions || medication.instructions}
+                    </span>
+                  </div>
+                )}
+                {medication.reason_for_taking && (
+                  <div className="flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate max-w-[120px]">{medication.reason_for_taking}</span>
+                  </div>
+                )}
                 {medication.form && (
-                  <Badge variant="secondary" className="text-xs capitalize">
+                  <Badge variant="secondary" className="text-[10px] capitalize h-5 px-1.5">
                     {medication.form}
                   </Badge>
                 )}
@@ -195,7 +191,7 @@ export const SimpleDoseCard = ({
                   <Badge 
                     variant="outline" 
                     className={cn(
-                      "text-xs capitalize",
+                      "text-[10px] capitalize h-5 px-1.5",
                       isTaken && statusColors.taken,
                       isSkipped && statusColors.skipped,
                       isSnoozed && statusColors.snoozed
@@ -208,69 +204,67 @@ export const SimpleDoseCard = ({
                 )}
               </div>
 
-              {/* Action buttons */}
+              {/* Action buttons - compact inline */}
               {canShowActions && (
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center gap-2">
-                    {onMarkTaken && (
-                      <Button
-                        onClick={(e) => { e.stopPropagation(); onMarkTaken(); }}
-                        size="sm"
-                        className="flex-1 rounded-xl h-9 text-xs font-medium"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Take
-                      </Button>
-                    )}
-                    {onMarkSnoozed && (
-                      <Button 
-                        onClick={(e) => { e.stopPropagation(); setShowSnoozeOptions(!showSnoozeOptions); }}
-                        size="sm" 
-                        variant="outline" 
-                        className="flex-1 rounded-xl h-9 text-xs font-medium"
-                      >
-                        <AlarmClock className="w-3.5 h-3.5 mr-1.5" /> Snooze
-                      </Button>
-                    )}
-                    {onMarkSkipped && (
-                      <Button 
-                        onClick={(e) => { e.stopPropagation(); onMarkSkipped(); }}
-                        size="sm" 
-                        variant="ghost" 
-                        className="rounded-xl h-9 text-xs font-medium text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <XCircle className="w-3.5 h-3.5 mr-1.5" /> Skip
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {/* Snooze options */}
-                  {showSnoozeOptions && onMarkSnoozed && (
-                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-xl">
-                      <Select value={snoozeMinutes} onValueChange={setSnoozeMinutes}>
-                        <SelectTrigger className="flex-1 h-9 text-xs rounded-lg bg-background">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover border shadow-lg z-50">
-                          <SelectItem value="5">5 min</SelectItem>
-                          <SelectItem value="10">10 min</SelectItem>
-                          <SelectItem value="15">15 min</SelectItem>
-                          <SelectItem value="30">30 min</SelectItem>
-                          <SelectItem value="60">1 hour</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onMarkSnoozed(parseInt(snoozeMinutes));
-                          setShowSnoozeOptions(false);
-                        }}
-                        size="sm"
-                        className="rounded-xl h-9 text-xs px-4"
-                      >
-                        Confirm
-                      </Button>
-                    </div>
+                <div className="flex items-center gap-1.5 pt-1">
+                  {onMarkTaken && (
+                    <Button
+                      onClick={(e) => { e.stopPropagation(); onMarkTaken(); }}
+                      size="sm"
+                      className="rounded-lg h-7 text-[11px] font-medium px-2.5"
+                    >
+                      <CheckCircle2 className="w-3 h-3 mr-1" /> Take
+                    </Button>
                   )}
+                  {onMarkSnoozed && (
+                    <Button 
+                      onClick={(e) => { e.stopPropagation(); setShowSnoozeOptions(!showSnoozeOptions); }}
+                      size="sm" 
+                      variant="outline" 
+                      className="rounded-lg h-7 text-[11px] font-medium px-2.5"
+                    >
+                      <AlarmClock className="w-3 h-3 mr-1" /> Snooze
+                    </Button>
+                  )}
+                  {onMarkSkipped && (
+                    <Button 
+                      onClick={(e) => { e.stopPropagation(); onMarkSkipped(); }}
+                      size="sm" 
+                      variant="ghost" 
+                      className="rounded-lg h-7 text-[11px] font-medium px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <XCircle className="w-3 h-3 mr-1" /> Skip
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              {/* Snooze options - compact */}
+              {showSnoozeOptions && onMarkSnoozed && (
+                <div className="flex items-center gap-1.5 p-1.5 bg-muted/50 rounded-lg">
+                  <Select value={snoozeMinutes} onValueChange={setSnoozeMinutes}>
+                    <SelectTrigger className="flex-1 h-7 text-[11px] rounded-md bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border shadow-lg z-50">
+                      <SelectItem value="5">5 min</SelectItem>
+                      <SelectItem value="10">10 min</SelectItem>
+                      <SelectItem value="15">15 min</SelectItem>
+                      <SelectItem value="30">30 min</SelectItem>
+                      <SelectItem value="60">1 hour</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMarkSnoozed(parseInt(snoozeMinutes));
+                      setShowSnoozeOptions(false);
+                    }}
+                    size="sm"
+                    className="rounded-lg h-7 text-[11px] px-3"
+                  >
+                    OK
+                  </Button>
                 </div>
               )}
             </div>
