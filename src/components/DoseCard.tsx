@@ -65,6 +65,11 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
   const countdown = useCountdown(showCountdown ? dose.nextDoseTime : null);
   const snoozeCountdown = useCountdown(dose.isSnoozed && dose.snoozeUntil ? dose.snoozeUntil : null);
   
+  // Check if dose is more than 3 hours in the future
+  const now = new Date();
+  const hoursUntilDose = (dose.nextDoseTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const isTooFarInFuture = hoursUntilDose > 3;
+  
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
     const f = form.toLowerCase();
@@ -221,7 +226,7 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
           </div>
 
           {/* Action buttons */}
-          {!isCompleted && !isPastDate && (
+          {!isCompleted && !isPastDate && !isTooFarInFuture && (
             <div className="space-y-2 pt-1 border-t border-border/50">
               <div className="grid grid-cols-3 gap-2">
                 <Button

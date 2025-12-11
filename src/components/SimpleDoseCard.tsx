@@ -60,7 +60,19 @@ export const SimpleDoseCard = ({
   const [showSnoozeOptions, setShowSnoozeOptions] = useState(false);
   const [snoozeMinutes, setSnoozeMinutes] = useState("15");
   const isCompleted = isTaken || isSkipped || isSnoozed;
-  const showActions = !isCompleted && !isPastDate && (onMarkTaken || onMarkSkipped || onMarkSnoozed);
+  
+  // Check if dose is more than 3 hours in the future
+  const isTooFarInFuture = (() => {
+    if (!schedule.time_of_day) return false;
+    const [hours, minutes] = schedule.time_of_day.split(':').map(Number);
+    const now = new Date();
+    const doseTime = new Date();
+    doseTime.setHours(hours, minutes, 0, 0);
+    const hoursUntilDose = (doseTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilDose > 3;
+  })();
+  
+  const showActions = !isCompleted && !isPastDate && !isTooFarInFuture && (onMarkTaken || onMarkSkipped || onMarkSnoozed);
 
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
