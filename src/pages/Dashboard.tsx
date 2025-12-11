@@ -709,42 +709,36 @@ const Dashboard = () => {
   const getPeriodInfo = (period: string, doses: TodayDose[]) => {
     const totalCount = doses.length;
     const takenCount = doses.filter(d => d.isTaken).length;
+    const skippedCount = doses.filter(d => d.isSkipped).length;
+    const completedCount = takenCount + skippedCount;
     const isComplete = totalCount > 0 && doses.every(d => d.isTaken || d.isSnoozed);
     const hasUpcoming = doses.some(d => !d.isTaken && !d.isSkipped && d.status === "upcoming");
     const hasDue = doses.some(d => !d.isTaken && !d.isSkipped && d.status === "due");
+    const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
     
     let icon = "🌅";
-    let title = "Morning Medications";
-    let celebrationMsg = "🎉 Amazing! You've completed all your morning meds!";
-    let encourageMsg = "💪 Time for your morning medications!";
+    let title = "Morning";
     
     if (period === "midday") {
       icon = "☀️";
-      title = "Midday Medications";
-      celebrationMsg = "🎉 Great job! All midday medications completed!";
-      encourageMsg = "☀️ Don't forget your midday medications!";
+      title = "Midday";
     } else if (period === "evening") {
       icon = "🌆";
-      title = "Evening Medications";
-      celebrationMsg = "🎉 Excellent! Evening medications all done!";
-      encourageMsg = "🌆 Time for your evening medications!";
+      title = "Evening";
     } else if (period === "night") {
       icon = "🌙";
-      title = "Night Medications";
-      celebrationMsg = "🎉 Perfect! Night medications complete!";
-      encourageMsg = "🌙 Don't forget your night medications before bed!";
+      title = "Night";
     }
     
     return {
       icon,
       title,
-      celebrationMsg,
-      encourageMsg,
       isComplete,
       hasUpcoming,
       hasDue,
       takenCount,
       totalCount,
+      progressPercent,
     };
   };
 
@@ -1112,38 +1106,27 @@ const Dashboard = () => {
                             >
                               {/* Period Header with Status */}
                               <CollapsibleTrigger className="w-full group">
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-3 cursor-pointer group-hover:opacity-70 transition-all duration-200">
-                                    <span className="text-xl">{info.icon}</span>
-                                    <div className="flex-1 text-left">
-                                      <h3 className="text-base font-medium">{info.title}</h3>
-                                      <p className="text-xs text-muted-foreground">
-                                        {info.takenCount} of {info.totalCount} completed
-                                      </p>
+                                <div className="flex items-center gap-3 cursor-pointer group-hover:opacity-70 transition-all duration-200">
+                                  <span className="text-xl">{info.icon}</span>
+                                  <div className="flex-1 text-left">
+                                    <h3 className="text-sm font-medium">{info.title}</h3>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                        <div 
+                                          className={`h-full rounded-full transition-all duration-300 ${info.isComplete ? 'bg-success' : 'bg-primary'}`}
+                                          style={{ width: `${info.progressPercent}%` }}
+                                        />
+                                      </div>
+                                      <span className={`text-xs font-medium min-w-[32px] text-right ${info.isComplete ? 'text-success' : 'text-muted-foreground'}`}>
+                                        {info.takenCount}/{info.totalCount}
+                                      </span>
                                     </div>
                                     <ChevronDown 
                                       className={`h-4 w-4 text-muted-foreground/50 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                                     />
                                   </div>
-                                  
-                                  {/* Celebratory or Encouraging Message */}
-                                  {info.isComplete ? (
-                                    <Card className="bg-success/5 border-success/10">
-                                      <CardContent className="py-2 px-3">
-                                        <p className="text-xs text-success-foreground/80">
-                                          {info.celebrationMsg}
-                                        </p>
-                                      </CardContent>
-                                    </Card>
-                                  ) : info.hasDue || info.hasUpcoming ? (
-                                    <Card className="bg-primary/5 border-primary/10">
-                                      <CardContent className="py-2 px-3">
-                                        <p className="text-xs text-primary-foreground/80">
-                                          {info.encourageMsg}
-                                        </p>
-                                      </CardContent>
-                                    </Card>
-                                  ) : null}
                                 </div>
                               </CollapsibleTrigger>
                               
