@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, List, X, FileText } from "lucide-react";
+import { Plus, LogOut, Pill, Calendar, User as UserIcon, Menu, Sun, Moon, Monitor, Search as SearchIcon, SlidersHorizontal, BarChart3, Activity, Clock, List, X, FileText, Heart } from "lucide-react";
 import { format } from "date-fns";
 import ThemePicker from "@/components/ThemePicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -1108,15 +1108,52 @@ const Dashboard = () => {
                           <CardContent className="py-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <div className={cn(
-                                  "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold",
-                                  adherenceSummary.adherencePercent >= 80 
-                                    ? "bg-success/20 text-success" 
-                                    : adherenceSummary.adherencePercent >= 50 
-                                      ? "bg-warning/20 text-warning"
-                                      : "bg-destructive/20 text-destructive"
-                                )}>
-                                  {adherenceSummary.adherencePercent}%
+                                {/* Heart with liquid fill */}
+                                <div className="relative w-14 h-14 flex items-center justify-center">
+                                  {/* Background heart (empty) */}
+                                  <Heart 
+                                    className={cn(
+                                      "w-14 h-14 absolute",
+                                      adherenceSummary.adherencePercent >= 90 
+                                        ? "text-success/20" 
+                                        : adherenceSummary.adherencePercent >= 70 
+                                          ? "text-warning/20"
+                                          : "text-destructive/20"
+                                    )} 
+                                    fill="currentColor"
+                                  />
+                                  {/* Liquid fill container - clipped to heart shape */}
+                                  <div 
+                                    className="absolute inset-0 overflow-hidden"
+                                    style={{
+                                      clipPath: "path('M28 5.2c-4.4-4.8-11.6-5.2-16.4-0.8C7 8.4 6.4 15.2 10 20l18 20 18-20c3.6-4.8 3-11.6-1.6-16-4.8-4.4-12-4-16.4 0.8z')",
+                                    }}
+                                  >
+                                    <div 
+                                      className={cn(
+                                        "absolute bottom-0 left-0 right-0 transition-all duration-500",
+                                        adherenceSummary.adherencePercent >= 90 
+                                          ? "bg-success" 
+                                          : adherenceSummary.adherencePercent >= 70 
+                                            ? "bg-warning"
+                                            : "bg-destructive"
+                                      )}
+                                      style={{ 
+                                        height: `${adherenceSummary.adherencePercent}%`,
+                                      }}
+                                    />
+                                  </div>
+                                  {/* Percentage text overlay */}
+                                  <span className={cn(
+                                    "relative z-10 text-xs font-bold",
+                                    adherenceSummary.adherencePercent >= 90 
+                                      ? "text-success" 
+                                      : adherenceSummary.adherencePercent >= 70 
+                                        ? "text-warning"
+                                        : "text-destructive"
+                                  )}>
+                                    {adherenceSummary.adherencePercent}%
+                                  </span>
                                 </div>
                                 <div>
                                   <p className="text-sm font-medium text-foreground">Day Adherence</p>
@@ -1125,7 +1162,7 @@ const Dashboard = () => {
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex gap-3 text-xs">
+                              <div className="flex flex-col gap-1 text-xs">
                                 {adherenceSummary.taken > 0 && (
                                   <div className="flex items-center gap-1">
                                     <div className="w-2 h-2 rounded-full bg-success" />
