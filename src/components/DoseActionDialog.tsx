@@ -50,6 +50,7 @@ interface DoseActionDialogProps {
   isTaken?: boolean;
   isSkipped?: boolean;
   isSnoozed?: boolean;
+  isPastDate?: boolean;
   doseLogs?: DoseLog[];
   onTake: () => void;
   onSkip: () => void;
@@ -72,6 +73,7 @@ export const DoseActionDialog = ({
   isTaken = false,
   isSkipped = false,
   isSnoozed = false,
+  isPastDate = false,
   doseLogs = [],
   onTake,
   onSkip,
@@ -81,7 +83,7 @@ export const DoseActionDialog = ({
   onInfo,
 }: DoseActionDialogProps) => {
   const [showFullImage, setShowFullImage] = useState(false);
-  const isCompleted = isTaken || isSkipped;
+  const isCompleted = isTaken || isSkipped || isPastDate; // Past dates are considered completed (missed)
   
   // Calculate time difference and dose status
   const now = new Date();
@@ -372,6 +374,7 @@ export const DoseActionDialog = ({
               <p className="text-sm text-muted-foreground">
                 {isTaken && "✓ This dose has been taken"}
                 {isSkipped && "⚠️ This dose was skipped"}
+                {!isTaken && !isSkipped && isPastDate && "⚠️ This dose was missed"}
               </p>
             </div>
           ) : (

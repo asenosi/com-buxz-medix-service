@@ -1526,33 +1526,42 @@ const Dashboard = () => {
       />
 
       {/* Dose Action Dialog */}
-      {selectedDose && (
-        <DoseActionDialog
-          open={showDoseDialog}
-          onOpenChange={setShowDoseDialog}
-          medication={selectedDose.medication}
-          schedule={selectedDose.schedule}
-          scheduledTime={selectedDose.nextDoseTime}
-          dosage={selectedDose.medication.dosage}
-          gracePeriodMinutes={selectedDose.medication.grace_period_minutes || 60}
-          missedDoseCutoffMinutes={selectedDose.medication.missed_dose_cutoff_minutes || 180}
-          isTaken={selectedDose.isTaken}
-          isSkipped={selectedDose.isSkipped}
-          isSnoozed={selectedDose.isSnoozed}
-          doseLogs={doseLogs}
-          onTake={() => markAsTaken(selectedDose)}
-          onSkip={() => markAsSkipped(selectedDose)}
-          onReschedule={() => {
-            markAsSnoozed(selectedDose, 15);
-          }}
-          onEdit={() => handleEditMedication(selectedDose.medication.id)}
-          onDelete={() => {
-            // TODO: Implement delete functionality
-            toast.info("Delete functionality coming soon");
-          }}
-          onInfo={() => navigate(`/medications/${selectedDose.medication.id}`)}
-        />
-      )}
+      {selectedDose && (() => {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const selectedDayStart = new Date(selectedCalendarDate);
+        selectedDayStart.setHours(0, 0, 0, 0);
+        const dialogIsPastDate = selectedDayStart < todayStart;
+        
+        return (
+          <DoseActionDialog
+            open={showDoseDialog}
+            onOpenChange={setShowDoseDialog}
+            medication={selectedDose.medication}
+            schedule={selectedDose.schedule}
+            scheduledTime={selectedDose.nextDoseTime}
+            dosage={selectedDose.medication.dosage}
+            gracePeriodMinutes={selectedDose.medication.grace_period_minutes || 60}
+            missedDoseCutoffMinutes={selectedDose.medication.missed_dose_cutoff_minutes || 180}
+            isTaken={selectedDose.isTaken}
+            isSkipped={selectedDose.isSkipped}
+            isSnoozed={selectedDose.isSnoozed}
+            isPastDate={dialogIsPastDate}
+            doseLogs={doseLogs}
+            onTake={() => markAsTaken(selectedDose)}
+            onSkip={() => markAsSkipped(selectedDose)}
+            onReschedule={() => {
+              markAsSnoozed(selectedDose, 15);
+            }}
+            onEdit={() => handleEditMedication(selectedDose.medication.id)}
+            onDelete={() => {
+              // TODO: Implement delete functionality
+              toast.info("Delete functionality coming soon");
+            }}
+            onInfo={() => navigate(`/medications/${selectedDose.medication.id}`)}
+          />
+        );
+      })()}
 
       {/* Bulk Prescription Upload Dialog */}
       <BulkPrescriptionUpload
