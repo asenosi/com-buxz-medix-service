@@ -63,8 +63,9 @@ export const SimpleDoseCard = ({
   const [snoozeMinutes, setSnoozeMinutes] = useState("15");
   const isCompleted = isTaken || isSkipped || isSnoozed;
   
-  // Check if dose is more than 3 hours in the future
+  // Check if dose is more than 3 hours in the future (only applies for current/future dates)
   const isTooFarInFuture = (() => {
+    if (isPastDate) return false; // Allow actions on past dates
     if (!schedule.time_of_day) return false;
     const [hours, minutes] = schedule.time_of_day.split(':').map(Number);
     const now = new Date();
@@ -74,7 +75,7 @@ export const SimpleDoseCard = ({
     return hoursUntilDose > 3;
   })();
   
-  const canShowActions = !isCompleted && !isPastDate && !isTooFarInFuture && (onMarkTaken || onMarkSkipped || onMarkSnoozed);
+  const canShowActions = !isCompleted && !isTooFarInFuture && (onMarkTaken || onMarkSkipped || onMarkSnoozed);
 
   const getBorderColor = () => {
     if (isTaken) return "bg-success";

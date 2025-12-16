@@ -66,11 +66,11 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
   const countdown = useCountdown(showCountdown ? dose.nextDoseTime : null);
   const snoozeCountdown = useCountdown(dose.isSnoozed && dose.snoozeUntil ? dose.snoozeUntil : null);
   
-  // Check if dose is more than 3 hours in the future
+  // Check if dose is more than 3 hours in the future (only applies for current/future dates)
   const now = new Date();
   const hoursUntilDose = (dose.nextDoseTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const isTooFarInFuture = hoursUntilDose > 3;
-  const canShowActions = !isCompleted && !isPastDate && !isTooFarInFuture;
+  const isTooFarInFuture = !isPastDate && hoursUntilDose > 3; // Allow actions on past dates
+  const canShowActions = !isCompleted && !isTooFarInFuture;
   
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
