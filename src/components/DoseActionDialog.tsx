@@ -91,6 +91,26 @@ export const DoseActionDialog = ({
   const isLate = minutesLate > gracePeriodMinutes;
   const isTooLate = minutesLate > missedDoseCutoffMinutes;
   const isEarly = minutesLate < 0;
+
+  // Format late time intelligently
+  const formatLateTime = (minutes: number): string => {
+    const absMinutes = Math.abs(minutes);
+    if (absMinutes < 60) {
+      return `${absMinutes} min`;
+    } else if (absMinutes < 1440) { // Less than a day
+      const hours = Math.floor(absMinutes / 60);
+      const remainingMins = absMinutes % 60;
+      return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
+    } else if (absMinutes < 10080) { // Less than a week
+      const days = Math.floor(absMinutes / 1440);
+      const remainingHours = Math.floor((absMinutes % 1440) / 60);
+      return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+    } else {
+      const weeks = Math.floor(absMinutes / 10080);
+      const remainingDays = Math.floor((absMinutes % 10080) / 1440);
+      return remainingDays > 0 ? `${weeks}w ${remainingDays}d` : `${weeks}w`;
+    }
+  };
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
     const f = form.toLowerCase();
@@ -163,7 +183,7 @@ export const DoseActionDialog = ({
                 <div className="flex-1">
                   <p className="font-semibold text-destructive text-sm">Dose Window Exceeded</p>
                   <p className="text-xs text-destructive/80">
-                    {minutesLate} min late • Logged as MISSED
+                    {formatLateTime(minutesLate)} late • Logged as MISSED
                   </p>
                 </div>
               </div>
@@ -177,7 +197,7 @@ export const DoseActionDialog = ({
                 <div className="flex-1">
                   <p className="font-semibold text-warning-foreground text-sm">Outside Grace Period</p>
                   <p className="text-xs text-warning-foreground/80">
-                    {minutesLate} min late • Logged as LATE
+                    {formatLateTime(minutesLate)} late • Logged as LATE
                   </p>
                 </div>
               </div>
@@ -191,7 +211,7 @@ export const DoseActionDialog = ({
                 <div className="flex-1">
                   <p className="font-semibold text-primary text-sm">Taking Early</p>
                   <p className="text-xs text-primary/80">
-                    Scheduled in {Math.abs(minutesLate)} min
+                    Scheduled in {formatLateTime(minutesLate)}
                   </p>
                 </div>
               </div>
@@ -336,10 +356,10 @@ export const DoseActionDialog = ({
                     statusLabel = "On Time";
                     statusColor = "text-success";
                   } else if (minutesLate <= missedDoseCutoffMinutes) {
-                    statusLabel = `Late (${minutesLate}m)`;
+                    statusLabel = `Late (${formatLateTime(minutesLate)})`;
                     statusColor = "text-warning";
                   } else {
-                    statusLabel = `Missed (${minutesLate}m)`;
+                    statusLabel = `Missed (${formatLateTime(minutesLate)})`;
                     statusColor = "text-destructive";
                   }
                 } else if (log.status === "skipped") {
