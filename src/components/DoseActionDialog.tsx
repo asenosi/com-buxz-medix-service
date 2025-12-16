@@ -175,36 +175,80 @@ export const DoseActionDialog = ({
             </div>
           </div>
 
-          {/* Status Banner */}
-          {isTooLate && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+          {/* Status Banner - Show positive status for taken doses */}
+          {isTaken && (
+            <div className="p-3 rounded-lg bg-success/10 border border-success/30">
               <div className="flex items-center gap-2">
-                <span className="text-lg">⚠️</span>
+                <span className="text-lg">✅</span>
                 <div className="flex-1">
-                  <p className="font-semibold text-destructive text-sm">Dose Window Exceeded</p>
-                  <p className="text-xs text-destructive/80">
-                    {formatLateTime(minutesLate)} late • Logged as MISSED
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {isLate && !isTooLate && (
-            <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">⏰</span>
-                <div className="flex-1">
-                  <p className="font-semibold text-warning-foreground text-sm">Outside Grace Period</p>
-                  <p className="text-xs text-warning-foreground/80">
-                    {formatLateTime(minutesLate)} late • Logged as LATE
+                  <p className="font-semibold text-success text-sm">Dose Taken</p>
+                  <p className="text-xs text-success/80">
+                    {doseLogs.length > 0 && doseLogs[0].dose_status === 'ON_TIME' 
+                      ? 'Taken on time' 
+                      : doseLogs.length > 0 && doseLogs[0].dose_status === 'LATE'
+                        ? 'Taken late'
+                        : 'Completed'}
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {isEarly && Math.abs(minutesLate) > 30 && (
+          {isSkipped && (
+            <div className="p-3 rounded-lg bg-muted border border-border">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏭️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-muted-foreground text-sm">Dose Skipped</p>
+                  <p className="text-xs text-muted-foreground/80">This dose was skipped</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isPastDate && !isTaken && !isSkipped && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-destructive text-sm">Dose Missed</p>
+                  <p className="text-xs text-destructive/80">
+                    {formatLateTime(minutesLate)} ago • Not taken
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isTaken && !isSkipped && !isPastDate && isTooLate && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-destructive text-sm">Dose Window Exceeded</p>
+                  <p className="text-xs text-destructive/80">
+                    {formatLateTime(minutesLate)} late • Will be logged as MISSED
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {!isTaken && !isSkipped && !isPastDate && isLate && !isTooLate && (
+            <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏰</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-warning-foreground text-sm">Outside Grace Period</p>
+                  <p className="text-xs text-warning-foreground/80">
+                    {formatLateTime(minutesLate)} late • Will be logged as LATE
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isTaken && !isSkipped && !isPastDate && isEarly && Math.abs(minutesLate) > 30 && (
             <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
               <div className="flex items-center gap-2">
                 <span className="text-lg">ℹ️</span>
