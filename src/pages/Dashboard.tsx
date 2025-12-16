@@ -1128,22 +1128,54 @@ const Dashboard = () => {
                                       )}
                                       strokeWidth="1"
                                     />
-                                    {/* Liquid fill */}
+                                    {/* Liquid fill with wave */}
                                     <g clipPath="url(#heartClip)">
-                                      <rect 
-                                        x="0" 
-                                        y={24 - (24 * adherenceSummary.adherencePercent / 100)} 
-                                        width="24" 
-                                        height={24 * adherenceSummary.adherencePercent / 100}
-                                        className={cn(
-                                          adherenceSummary.adherencePercent >= 90 
-                                            ? "fill-success" 
-                                            : adherenceSummary.adherencePercent >= 70 
-                                              ? "fill-warning"
-                                              : "fill-destructive"
-                                        )}
-                                      />
+                                      {/* Wave animation */}
+                                      <g style={{ 
+                                        transform: `translateY(${24 - (24 * adherenceSummary.adherencePercent / 100)}px)`,
+                                      }}>
+                                        <path 
+                                          d="M-4 2 Q-2 0, 0 2 T4 2 T8 2 T12 2 T16 2 T20 2 T24 2 T28 2 V24 H-4 Z"
+                                          className={cn(
+                                            "animate-[wave_2s_ease-in-out_infinite]",
+                                            adherenceSummary.adherencePercent >= 90 
+                                              ? "fill-success" 
+                                              : adherenceSummary.adherencePercent >= 70 
+                                                ? "fill-warning"
+                                                : "fill-destructive"
+                                          )}
+                                        />
+                                        <path 
+                                          d="M-4 3 Q-2 1, 0 3 T4 3 T8 3 T12 3 T16 3 T20 3 T24 3 T28 3 V24 H-4 Z"
+                                          className={cn(
+                                            "animate-[wave_2s_ease-in-out_infinite_reverse]",
+                                            adherenceSummary.adherencePercent >= 90 
+                                              ? "fill-success/70" 
+                                              : adherenceSummary.adherencePercent >= 70 
+                                                ? "fill-warning/70"
+                                                : "fill-destructive/70"
+                                          )}
+                                          style={{ animationDelay: '-0.5s' }}
+                                        />
+                                      </g>
                                     </g>
+                                    {/* Percentage text */}
+                                    <text 
+                                      x="12" 
+                                      y="13" 
+                                      textAnchor="middle" 
+                                      dominantBaseline="middle"
+                                      className={cn(
+                                        "text-[5px] font-bold",
+                                        adherenceSummary.adherencePercent >= 90 
+                                          ? "fill-success-foreground" 
+                                          : adherenceSummary.adherencePercent >= 70 
+                                            ? "fill-warning-foreground"
+                                            : "fill-destructive-foreground"
+                                      )}
+                                    >
+                                      {adherenceSummary.adherencePercent}%
+                                    </text>
                                   </svg>
                                 </div>
                                 <div>
