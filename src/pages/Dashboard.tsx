@@ -1110,50 +1110,41 @@ const Dashboard = () => {
                               <div className="flex items-center gap-3">
                                 {/* Heart with liquid fill */}
                                 <div className="relative w-14 h-14 flex items-center justify-center">
-                                  {/* Background heart (empty) */}
-                                  <Heart 
-                                    className={cn(
-                                      "w-14 h-14 absolute",
-                                      adherenceSummary.adherencePercent >= 90 
-                                        ? "text-success/20" 
-                                        : adherenceSummary.adherencePercent >= 70 
-                                          ? "text-warning/20"
-                                          : "text-destructive/20"
-                                    )} 
-                                    fill="currentColor"
-                                  />
-                                  {/* Liquid fill container - clipped to heart shape */}
-                                  <div 
-                                    className="absolute inset-0 overflow-hidden"
-                                    style={{
-                                      clipPath: "path('M28 5.2c-4.4-4.8-11.6-5.2-16.4-0.8C7 8.4 6.4 15.2 10 20l18 20 18-20c3.6-4.8 3-11.6-1.6-16-4.8-4.4-12-4-16.4 0.8z')",
-                                    }}
-                                  >
-                                    <div 
+                                  <svg viewBox="0 0 24 24" className="w-14 h-14">
+                                    <defs>
+                                      <clipPath id="heartClip">
+                                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                                      </clipPath>
+                                    </defs>
+                                    {/* Background heart outline */}
+                                    <path 
+                                      d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
                                       className={cn(
-                                        "absolute bottom-0 left-0 right-0 transition-all duration-500",
                                         adherenceSummary.adherencePercent >= 90 
-                                          ? "bg-success" 
+                                          ? "fill-success/20 stroke-success/40" 
                                           : adherenceSummary.adherencePercent >= 70 
-                                            ? "bg-warning"
-                                            : "bg-destructive"
+                                            ? "fill-warning/20 stroke-warning/40"
+                                            : "fill-destructive/20 stroke-destructive/40"
                                       )}
-                                      style={{ 
-                                        height: `${adherenceSummary.adherencePercent}%`,
-                                      }}
+                                      strokeWidth="1"
                                     />
-                                  </div>
-                                  {/* Percentage text overlay */}
-                                  <span className={cn(
-                                    "relative z-10 text-xs font-bold",
-                                    adherenceSummary.adherencePercent >= 90 
-                                      ? "text-success" 
-                                      : adherenceSummary.adherencePercent >= 70 
-                                        ? "text-warning"
-                                        : "text-destructive"
-                                  )}>
-                                    {adherenceSummary.adherencePercent}%
-                                  </span>
+                                    {/* Liquid fill */}
+                                    <g clipPath="url(#heartClip)">
+                                      <rect 
+                                        x="0" 
+                                        y={24 - (24 * adherenceSummary.adherencePercent / 100)} 
+                                        width="24" 
+                                        height={24 * adherenceSummary.adherencePercent / 100}
+                                        className={cn(
+                                          adherenceSummary.adherencePercent >= 90 
+                                            ? "fill-success" 
+                                            : adherenceSummary.adherencePercent >= 70 
+                                              ? "fill-warning"
+                                              : "fill-destructive"
+                                        )}
+                                      />
+                                    </g>
+                                  </svg>
                                 </div>
                                 <div>
                                   <p className="text-sm font-medium text-foreground">Day Adherence</p>
