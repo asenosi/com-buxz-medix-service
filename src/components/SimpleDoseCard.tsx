@@ -33,6 +33,8 @@ interface SimpleDoseCardProps {
   isSnoozed?: boolean;
   snoozeUntil?: Date;
   isPastDate?: boolean;
+  isFutureDate?: boolean;
+  doseStatus?: string | null; // 'ON_TIME', 'LATE', 'MISSED'
   onMarkTaken?: () => void;
   onMarkSkipped?: () => void;
   onMarkSnoozed?: (minutes: number) => void;
@@ -54,6 +56,8 @@ export const SimpleDoseCard = ({
   isSnoozed, 
   snoozeUntil,
   isPastDate = false,
+  isFutureDate = false,
+  doseStatus,
   onMarkTaken,
   onMarkSkipped,
   onMarkSnoozed
@@ -63,8 +67,9 @@ export const SimpleDoseCard = ({
   const [snoozeMinutes, setSnoozeMinutes] = useState("15");
   const isCompleted = isTaken || isSkipped || isSnoozed || isPastDate; // Past dates are considered completed (missed)
   
-  // Check if dose is more than 3 hours in the future
+  // Check if dose is more than 3 hours in the future OR if viewing a future date
   const isTooFarInFuture = (() => {
+    if (isFutureDate) return true; // Always disable for future dates
     if (!schedule.time_of_day) return false;
     const [hours, minutes] = schedule.time_of_day.split(':').map(Number);
     const now = new Date();
@@ -187,19 +192,34 @@ export const SimpleDoseCard = ({
                     {medication.form}
                   </Badge>
                 )}
-                {isCompleted && (
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      "text-[10px] capitalize h-5 px-1.5",
-                      isTaken && statusColors.taken,
-                      isSkipped && statusColors.skipped,
-                      isSnoozed && statusColors.snoozed
-                    )}
-                  >
-                    {isTaken && "Taken"}
-                    {isSkipped && "Skipped"}
-                    {isSnoozed && "Snoozed"}
+                {isTaken && doseStatus === 'ON_TIME' && (
+                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-success text-success bg-success/10">
+                    ✓ On Time
+                  </Badge>
+                )}
+                {isTaken && doseStatus === 'LATE' && (
+                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-warning text-warning bg-warning/10">
+                    ✓ Late
+                  </Badge>
+                )}
+                {isTaken && !doseStatus && (
+                  <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5", statusColors.taken)}>
+                    ✓ Taken
+                  </Badge>
+                )}
+                {isSkipped && (
+                  <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5", statusColors.skipped)}>
+                    ✕ Skipped
+                  </Badge>
+                )}
+                {isPastDate && !isTaken && !isSkipped && !isSnoozed && (
+                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-destructive text-destructive bg-destructive/10">
+                    ⚠ Missed
+                  </Badge>
+                )}
+                {isSnoozed && (
+                  <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5", statusColors.snoozed)}>
+                    ⏰ Snoozed
                   </Badge>
                 )}
               </div>
