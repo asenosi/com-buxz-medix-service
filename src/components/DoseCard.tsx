@@ -39,11 +39,13 @@ interface TodayDose {
   isSkipped?: boolean;
   isSnoozed?: boolean;
   snoozeUntil?: Date;
+  doseStatus?: string | null; // 'ON_TIME', 'LATE', 'MISSED'
 }
 
 interface DoseCardProps {
   dose: TodayDose;
   isPastDate?: boolean;
+  isFutureDate?: boolean;
   onMarkTaken: (dose: TodayDose) => void;
   onMarkSkipped: (dose: TodayDose) => void;
   onMarkSnoozed: (dose: TodayDose, minutes: number) => void;
@@ -57,7 +59,7 @@ const statusColors: Record<string, string> = {
   snoozed: "bg-warning/10 text-warning",
 };
 
-export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEdit, onOpenDetails }: DoseCardProps) => {
+export const DoseCard = ({ dose, isPastDate = false, isFutureDate = false, onMarkTaken, onMarkSkipped, onMarkSnoozed, onEdit, onOpenDetails }: DoseCardProps) => {
   const [snoozeMinutes, setSnoozeMinutes] = useState("15");
   const [showSnoozeOptions, setShowSnoozeOptions] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -66,11 +68,11 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
   const countdown = useCountdown(showCountdown ? dose.nextDoseTime : null);
   const snoozeCountdown = useCountdown(dose.isSnoozed && dose.snoozeUntil ? dose.snoozeUntil : null);
   
-  // Check if dose is more than 3 hours in the future
+  // Check if dose is more than 3 hours in the future OR if viewing a future date
   const now = new Date();
   const hoursUntilDose = (dose.nextDoseTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const isTooFarInFuture = hoursUntilDose > 3;
-  const canShowActions = !isCompleted && !isPastDate && !isTooFarInFuture; // No actions on past dates
+  const isTooFarInFuture = isFutureDate || hoursUntilDose > 3;
+  const canShowActions = !isCompleted && !isPastDate && !isTooFarInFuture; // No actions on past or future dates
   
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
@@ -209,7 +211,17 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
 
           {/* Status chips */}
           <div className="flex flex-wrap gap-1.5">
-            {dose.isTaken && (
+            {dose.isTaken && dose.doseStatus === 'ON_TIME' && (
+              <Badge variant="secondary" className="text-xs font-normal bg-success/10 text-success border-success/30">
+                ✓ On Time
+              </Badge>
+            )}
+            {dose.isTaken && dose.doseStatus === 'LATE' && (
+              <Badge variant="secondary" className="text-xs font-normal bg-warning/10 text-warning border-warning/30">
+                ✓ Late
+              </Badge>
+            )}
+            {dose.isTaken && !dose.doseStatus && (
               <Badge variant="secondary" className={cn("text-xs font-normal", statusColors.taken)}>
                 ✓ Taken
               </Badge>
@@ -217,6 +229,11 @@ export const DoseCard = ({ dose, isPastDate = false, onMarkTaken, onMarkSkipped,
             {dose.isSkipped && (
               <Badge variant="secondary" className={cn("text-xs font-normal", statusColors.skipped)}>
                 ✕ Skipped
+              </Badge>
+            )}
+            {isPastDate && !dose.isTaken && !dose.isSkipped && !dose.isSnoozed && (
+              <Badge variant="secondary" className="text-xs font-normal bg-destructive/10 text-destructive border-destructive/30">
+                ⚠ Missed
               </Badge>
             )}
             {dose.isSnoozed && (

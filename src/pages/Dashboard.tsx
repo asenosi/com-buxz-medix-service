@@ -67,6 +67,7 @@ interface TodayDose {
   snoozeUntil?: Date;
   takenAt?: Date;
   adherenceStatus?: "on_time" | "late" | "missed";
+  doseStatus?: string | null; // 'ON_TIME', 'LATE', 'MISSED'
 }
 
 interface DoseLog {
@@ -77,6 +78,7 @@ interface DoseLog {
   taken_at: string | null;
   status: "taken" | "skipped" | "snoozed" | "missed";
   snooze_until: string | null;
+  dose_status?: string | null;
 }
 
 const Dashboard = () => {
@@ -367,6 +369,7 @@ const Dashboard = () => {
           snoozeUntil: doseLog?.snooze_until ? new Date(doseLog.snooze_until) : undefined,
           takenAt: takenAtDate,
           adherenceStatus,
+          doseStatus: doseLog?.dose_status || null,
         });
       });
     });
@@ -1074,6 +1077,7 @@ const Dashboard = () => {
                   const selectedDayStart = new Date(selectedCalendarDate);
                   selectedDayStart.setHours(0, 0, 0, 0);
                   const isPastDate = selectedDayStart < todayStart;
+                  const isFutureDate = selectedDayStart > todayStart;
 
                   // Calculate adherence summary for past days
                   const adherenceSummary = isPastDate && calendarDoses.length > 0 ? (() => {
@@ -1278,9 +1282,12 @@ const Dashboard = () => {
                                           isSkipped={dose.isSkipped}
                                           isSnoozed={dose.isSnoozed}
                                           snoozeUntil={dose.snoozeUntil}
-                                          onMarkTaken={isPastDate ? undefined : () => markAsTaken(dose)}
-                                          onMarkSkipped={isPastDate ? undefined : () => markAsSkipped(dose)}
-                                          onMarkSnoozed={isPastDate ? undefined : (minutes) => markAsSnoozed(dose, minutes)}
+                                          isPastDate={isPastDate}
+                                          isFutureDate={isFutureDate}
+                                          doseStatus={dose.doseStatus}
+                                          onMarkTaken={(isPastDate || isFutureDate) ? undefined : () => markAsTaken(dose)}
+                                          onMarkSkipped={(isPastDate || isFutureDate) ? undefined : () => markAsSkipped(dose)}
+                                          onMarkSnoozed={(isPastDate || isFutureDate) ? undefined : (minutes) => markAsSnoozed(dose, minutes)}
                                         />
                                       ))}
                                     </div>
@@ -1296,6 +1303,7 @@ const Dashboard = () => {
                                           <DoseCard
                                             dose={dose}
                                             isPastDate={isPastDate}
+                                            isFutureDate={isFutureDate}
                                             onMarkTaken={markAsTaken}
                                             onMarkSkipped={markAsSkipped}
                                             onMarkSnoozed={markAsSnoozed}
@@ -1412,6 +1420,7 @@ const Dashboard = () => {
                                       isSkipped={dose.isSkipped}
                                       isSnoozed={dose.isSnoozed}
                                       snoozeUntil={dose.snoozeUntil}
+                                      doseStatus={dose.doseStatus}
                                       onMarkTaken={() => markAsTaken(dose)}
                                       onMarkSkipped={() => markAsSkipped(dose)}
                                       onMarkSnoozed={(minutes) => markAsSnoozed(dose, minutes)}
