@@ -181,7 +181,7 @@ export const ValidationSaveStep = ({
   };
 
   return (
-    <div className="flex flex-col h-[85vh]">
+    <div className="flex flex-col h-[85vh] max-h-[85vh]">
       {/* Header */}
       <div className="p-4 border-b shrink-0">
         <h2 className="text-lg font-semibold">Validate & Save</h2>
@@ -191,8 +191,8 @@ export const ValidationSaveStep = ({
       </div>
 
       {/* Content */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="p-4 space-y-4">
           {hasLowConfidence && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
               <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
@@ -211,16 +211,16 @@ export const ValidationSaveStep = ({
             const times = generateScheduleTimes(frequencyType);
 
             return (
-              <Card key={idx}>
+              <Card key={idx} className="overflow-hidden">
                 <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Pill className="h-4 w-4 text-primary" />
-                      {medication.name || "Unknown Medication"}
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-base flex items-center gap-2 min-w-0">
+                      <Pill className="h-4 w-4 text-primary shrink-0" />
+                      <span className="truncate">{medication.name || "Unknown Medication"}</span>
                     </CardTitle>
                     <Badge
                       variant="outline"
-                      className={getConfidenceColor(prescription.confidence)}
+                      className={`shrink-0 ${getConfidenceColor(prescription.confidence)}`}
                     >
                       {prescription.confidence}
                     </Badge>
@@ -228,11 +228,11 @@ export const ValidationSaveStep = ({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Medication Details */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-muted-foreground text-xs">Dosage</p>
                       <p className="font-medium">
-                        {medication.strength}{medication.strengthUnit || "mg"}
+                        {medication.strength}{medication.strengthUnit || "MG"}
                       </p>
                     </div>
                     <div>
@@ -253,16 +253,16 @@ export const ValidationSaveStep = ({
 
                   {/* Dosage Instructions */}
                   <div className="flex items-start gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div className="text-sm">
-                      <p className="font-medium">
+                    <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="text-sm min-w-0">
+                      <p className="font-medium break-words">
                         {dosage.quantityPerDose || "Take as directed"} • {dosage.frequency || "As prescribed"}
                       </p>
                       {dosage.timing && (
-                        <p className="text-muted-foreground">{dosage.timing}</p>
+                        <p className="text-muted-foreground break-words">{dosage.timing}</p>
                       )}
                       {dosage.condition && (
-                        <p className="text-muted-foreground">{dosage.condition}</p>
+                        <p className="text-muted-foreground break-words">{dosage.condition}</p>
                       )}
                       <p className="text-xs text-primary mt-1">
                         Schedule: {times.join(", ")} ({frequencyType.replace(/_/g, " ")})
@@ -275,16 +275,16 @@ export const ValidationSaveStep = ({
                     <>
                       <Separator />
                       <div className="flex items-start gap-2">
-                        <Building2 className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <div className="text-sm space-y-1">
+                        <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div className="text-sm space-y-1 min-w-0">
                           {metadata.pharmacyName && (
-                            <p className="font-medium">{metadata.pharmacyName}</p>
+                            <p className="font-medium break-words">{metadata.pharmacyName}</p>
                           )}
                           {metadata.pharmacyPhone && (
                             <p className="text-muted-foreground">{metadata.pharmacyPhone}</p>
                           )}
                           {metadata.doctorName && (
-                            <p className="text-muted-foreground">
+                            <p className="text-muted-foreground break-words">
                               Prescribed by: {metadata.doctorName}
                             </p>
                           )}
@@ -305,31 +305,32 @@ export const ValidationSaveStep = ({
       </ScrollArea>
 
       {/* Footer */}
-      <Separator />
-      <div className="p-4 flex gap-3 justify-between shrink-0">
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <Button variant="ghost" onClick={onRescan}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Rescan
+      <div className="border-t p-4 shrink-0 bg-background">
+        <div className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onBack} className="flex-1 sm:flex-none">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <Button variant="ghost" onClick={onRescan} className="flex-1 sm:flex-none">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Rescan
+            </Button>
+          </div>
+          <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Add Medications
+              </>
+            )}
           </Button>
         </div>
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Add to Medication List
-            </>
-          )}
-        </Button>
       </div>
     </div>
   );
