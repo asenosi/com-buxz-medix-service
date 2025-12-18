@@ -50,6 +50,7 @@ interface DoseActionDialogProps {
   isTaken?: boolean;
   isSkipped?: boolean;
   isSnoozed?: boolean;
+  isPastDate?: boolean;
   doseLogs?: DoseLog[];
   onTake: () => void;
   onSkip: () => void;
@@ -72,6 +73,7 @@ export const DoseActionDialog = ({
   isTaken = false,
   isSkipped = false,
   isSnoozed = false,
+  isPastDate = false,
   doseLogs = [],
   onTake,
   onSkip,
@@ -81,7 +83,7 @@ export const DoseActionDialog = ({
   onInfo,
 }: DoseActionDialogProps) => {
   const [showFullImage, setShowFullImage] = useState(false);
-  const isCompleted = isTaken || isSkipped;
+  const isCompleted = isTaken || isSkipped || isPastDate; // Past dates are considered completed (missed)
   
   // Calculate time difference and dose status
   const now = new Date();
@@ -89,6 +91,26 @@ export const DoseActionDialog = ({
   const isLate = minutesLate > gracePeriodMinutes;
   const isTooLate = minutesLate > missedDoseCutoffMinutes;
   const isEarly = minutesLate < 0;
+
+  // Format late time intelligently
+  const formatLateTime = (minutes: number): string => {
+    const absMinutes = Math.abs(minutes);
+    if (absMinutes < 60) {
+      return `${absMinutes} min`;
+    } else if (absMinutes < 1440) { // Less than a day
+      const hours = Math.floor(absMinutes / 60);
+      const remainingMins = absMinutes % 60;
+      return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
+    } else if (absMinutes < 10080) { // Less than a week
+      const days = Math.floor(absMinutes / 1440);
+      const remainingHours = Math.floor((absMinutes % 1440) / 60);
+      return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+    } else {
+      const weeks = Math.floor(absMinutes / 10080);
+      const remainingDays = Math.floor((absMinutes % 10080) / 1440);
+      return remainingDays > 0 ? `${weeks}w ${remainingDays}d` : `${weeks}w`;
+    }
+  };
   const getDefaultImage = (form: string | null): string | null => {
     if (!form) return null;
     const f = form.toLowerCase();
@@ -153,43 +175,87 @@ export const DoseActionDialog = ({
             </div>
           </div>
 
-          {/* Status Banner */}
-          {isTooLate && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+          {/* Status Banner - Show positive status for taken doses */}
+          {isTaken && (
+            <div className="p-3 rounded-lg bg-success/10 border border-success/30">
               <div className="flex items-center gap-2">
-                <span className="text-lg">⚠️</span>
+                <span className="text-lg">✅</span>
                 <div className="flex-1">
-                  <p className="font-semibold text-destructive text-sm">Dose Window Exceeded</p>
-                  <p className="text-xs text-destructive/80">
-                    {minutesLate} min late • Logged as MISSED
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {isLate && !isTooLate && (
-            <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">⏰</span>
-                <div className="flex-1">
-                  <p className="font-semibold text-warning-foreground text-sm">Outside Grace Period</p>
-                  <p className="text-xs text-warning-foreground/80">
-                    {minutesLate} min late • Logged as LATE
+                  <p className="font-semibold text-success text-sm">Dose Taken</p>
+                  <p className="text-xs text-success/80">
+                    {doseLogs.length > 0 && doseLogs[0].dose_status === 'ON_TIME' 
+                      ? 'Taken on time' 
+                      : doseLogs.length > 0 && doseLogs[0].dose_status === 'LATE'
+                        ? 'Taken late'
+                        : 'Completed'}
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {isEarly && Math.abs(minutesLate) > 30 && (
+          {isSkipped && (
+            <div className="p-3 rounded-lg bg-muted border border-border">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏭️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-muted-foreground text-sm">Dose Skipped</p>
+                  <p className="text-xs text-muted-foreground/80">This dose was skipped</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isPastDate && !isTaken && !isSkipped && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-destructive text-sm">Dose Missed</p>
+                  <p className="text-xs text-destructive/80">
+                    {formatLateTime(minutesLate)} ago • Not taken
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isTaken && !isSkipped && !isPastDate && isTooLate && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚠️</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-destructive text-sm">Dose Window Exceeded</p>
+                  <p className="text-xs text-destructive/80">
+                    {formatLateTime(minutesLate)} late • Will be logged as MISSED
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {!isTaken && !isSkipped && !isPastDate && isLate && !isTooLate && (
+            <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⏰</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-warning-foreground text-sm">Outside Grace Period</p>
+                  <p className="text-xs text-warning-foreground/80">
+                    {formatLateTime(minutesLate)} late • Will be logged as LATE
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isTaken && !isSkipped && !isPastDate && isEarly && Math.abs(minutesLate) > 30 && (
             <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
               <div className="flex items-center gap-2">
                 <span className="text-lg">ℹ️</span>
                 <div className="flex-1">
                   <p className="font-semibold text-primary text-sm">Taking Early</p>
                   <p className="text-xs text-primary/80">
-                    Scheduled in {Math.abs(minutesLate)} min
+                    Scheduled in {formatLateTime(minutesLate)}
                   </p>
                 </div>
               </div>
@@ -334,10 +400,10 @@ export const DoseActionDialog = ({
                     statusLabel = "On Time";
                     statusColor = "text-success";
                   } else if (minutesLate <= missedDoseCutoffMinutes) {
-                    statusLabel = `Late (${minutesLate}m)`;
+                    statusLabel = `Late (${formatLateTime(minutesLate)})`;
                     statusColor = "text-warning";
                   } else {
-                    statusLabel = `Missed (${minutesLate}m)`;
+                    statusLabel = `Missed (${formatLateTime(minutesLate)})`;
                     statusColor = "text-destructive";
                   }
                 } else if (log.status === "skipped") {
@@ -372,6 +438,7 @@ export const DoseActionDialog = ({
               <p className="text-sm text-muted-foreground">
                 {isTaken && "✓ This dose has been taken"}
                 {isSkipped && "⚠️ This dose was skipped"}
+                {!isTaken && !isSkipped && isPastDate && "⚠️ This dose was missed"}
               </p>
             </div>
           ) : (

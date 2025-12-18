@@ -1,1 +1,4 @@
 project_id = "tuzclixxptjczuhgrnlq"
+
+[functions.extract-prescription-v2]
+verify_jwt = false

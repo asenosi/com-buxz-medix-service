@@ -67,6 +67,7 @@ interface TodayDose {
   snoozeUntil?: Date;
   takenAt?: Date;
   adherenceStatus?: "on_time" | "late" | "missed";
+  doseStatus?: string | null; // 'ON_TIME', 'LATE', 'MISSED'
 }
 
 interface DoseLog {
@@ -77,6 +78,7 @@ interface DoseLog {
   taken_at: string | null;
   status: "taken" | "skipped" | "snoozed" | "missed";
   snooze_until: string | null;
+  dose_status?: string | null;
 }
 
 const Dashboard = () => {
@@ -367,6 +369,7 @@ const Dashboard = () => {
           snoozeUntil: doseLog?.snooze_until ? new Date(doseLog.snooze_until) : undefined,
           takenAt: takenAtDate,
           adherenceStatus,
+          doseStatus: doseLog?.dose_status || null,
         });
       });
     });
@@ -1074,6 +1077,7 @@ const Dashboard = () => {
                   const selectedDayStart = new Date(selectedCalendarDate);
                   selectedDayStart.setHours(0, 0, 0, 0);
                   const isPastDate = selectedDayStart < todayStart;
+                  const isFutureDate = selectedDayStart > todayStart;
 
                   // Calculate adherence summary for past days
                   const adherenceSummary = isPastDate && calendarDoses.length > 0 ? (() => {
@@ -1101,7 +1105,7 @@ const Dashboard = () => {
                   }
                   
                   return (
-                    <div className="grid gap-3 sm:gap-4">
+                    <div className="space-y-4">
                       {/* Adherence Summary for Past Days */}
                       {adherenceSummary && (
                         <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
@@ -1112,7 +1116,7 @@ const Dashboard = () => {
                                 <div className="relative w-14 h-14 flex items-center justify-center">
                                   <svg viewBox="0 0 24 24" className="w-14 h-14">
                                     <defs>
-                                      <clipPath id="heartClip">
+                                      <clipPath id="heartClipCalendar">
                                         <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                                       </clipPath>
                                     </defs>
@@ -1129,7 +1133,7 @@ const Dashboard = () => {
                                       strokeWidth="1"
                                     />
                                     {/* Liquid fill with wave */}
-                                    <g clipPath="url(#heartClip)">
+                                    <g clipPath="url(#heartClipCalendar)">
                                       {/* Wave animation */}
                                       <g style={{ 
                                         transform: `translateY(${24 - (24 * adherenceSummary.adherencePercent / 100)}px)`,
@@ -1210,23 +1214,112 @@ const Dashboard = () => {
                         </Card>
                       )}
                       
-                      {calendarDoses.map((dose, idx) => (
-                        <div 
-                          key={`${dose.schedule.id}-${idx}`}
-                          className="animate-slide-in-right"
-                          style={{ animationDelay: `${idx * 0.1}s` }}
-                        >
-                          <DoseCard
-                            dose={dose}
-                            isPastDate={isPastDate}
-                            onMarkTaken={markAsTaken}
-                            onMarkSkipped={markAsSkipped}
-                            onMarkSnoozed={markAsSnoozed}
-                            onEdit={handleEditMedication}
-                            onOpenDetails={(id) => navigate(`/medications/${id}`)}
-                          />
-                        </div>
-                      ))}
+                      {/* Period-grouped layout matching list view */}
+                      <div className="space-y-8">
+                        {(() => {
+                          const periodGroups = groupDosesByPeriod(calendarDoses);
+                          const periods: Array<keyof typeof periodGroups> = ["morning", "midday", "evening", "night"];
+                          
+                          return periods.map((period, periodIdx) => {
+                            const doses = periodGroups[period];
+                            if (doses.length === 0) return null;
+                            
+                            const info = getPeriodInfo(period, doses);
+                            const isOpen = periodStates.has(`calendar-${period}`) ? periodStates.get(`calendar-${period}`)! : !info.isComplete;
+                            
+                            return (
+                              <Collapsible 
+                                key={period}
+                                open={isOpen}
+                                onOpenChange={() => {
+                                  setPeriodStates(prev => {
+                                    const next = new Map(prev);
+                                    next.set(`calendar-${period}`, !isOpen);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <div 
+                                  className="animate-fade-in space-y-4"
+                                  style={{ animationDelay: `${periodIdx * 0.1}s` }}
+                                >
+                                  {/* Period Header with Status */}
+                                  <CollapsibleTrigger className="w-full group">
+                                    <div className="flex items-center gap-3 cursor-pointer group-hover:opacity-70 transition-all duration-200">
+                                      <span className="text-xl">{info.icon}</span>
+                                      <div className="flex-1 text-left">
+                                        <h3 className="text-sm font-medium">{info.title}</h3>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1.5">
+                                          <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                            <div 
+                                              className={`h-full rounded-full transition-all duration-300 ${info.isComplete ? 'bg-success' : 'bg-primary'}`}
+                                              style={{ width: `${info.progressPercent}%` }}
+                                            />
+                                          </div>
+                                          <span className={`text-xs font-medium min-w-[32px] text-right ${info.isComplete ? 'text-success' : 'text-muted-foreground'}`}>
+                                            {info.takenCount}/{info.totalCount}
+                                          </span>
+                                        </div>
+                                        <ChevronDown 
+                                          className={`h-4 w-4 text-muted-foreground/50 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                                        />
+                                      </div>
+                                    </div>
+                                  </CollapsibleTrigger>
+                                  
+                                  <CollapsibleContent className="transition-all duration-200 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                                    {/* Mobile: SimpleDoseCard layout */}
+                                    <div className="sm:hidden space-y-2">
+                                      {doses.map((dose, idx) => (
+                                        <SimpleDoseCard
+                                          key={`${dose.schedule.id}-${idx}`}
+                                          medication={dose.medication}
+                                          schedule={dose.schedule}
+                                          onClick={() => handleDoseClick(dose)}
+                                          isTaken={dose.isTaken}
+                                          isSkipped={dose.isSkipped}
+                                          isSnoozed={dose.isSnoozed}
+                                          snoozeUntil={dose.snoozeUntil}
+                                          isPastDate={isPastDate}
+                                          isFutureDate={isFutureDate}
+                                          doseStatus={dose.doseStatus}
+                                          onMarkTaken={(isPastDate || isFutureDate) ? undefined : () => markAsTaken(dose)}
+                                          onMarkSkipped={(isPastDate || isFutureDate) ? undefined : () => markAsSkipped(dose)}
+                                          onMarkSnoozed={(isPastDate || isFutureDate) ? undefined : (minutes) => markAsSnoozed(dose, minutes)}
+                                        />
+                                      ))}
+                                    </div>
+                                    
+                                    {/* Desktop: DoseCard layout */}
+                                    <div className="hidden sm:grid gap-3 sm:gap-4">
+                                      {doses.map((dose, idx) => (
+                                        <div 
+                                          key={`${dose.schedule.id}-${idx}`}
+                                          className="animate-slide-in-right"
+                                          style={{ animationDelay: `${idx * 0.05}s` }}
+                                        >
+                                          <DoseCard
+                                            dose={dose}
+                                            isPastDate={isPastDate}
+                                            isFutureDate={isFutureDate}
+                                            onMarkTaken={markAsTaken}
+                                            onMarkSkipped={markAsSkipped}
+                                            onMarkSnoozed={markAsSnoozed}
+                                            onEdit={handleEditMedication}
+                                            onOpenDetails={(id) => navigate(`/medications/${id}`)}
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </CollapsibleContent>
+                                </div>
+                              </Collapsible>
+                            );
+                          });
+                        })()}
+                      </div>
                     </div>
                   );
                 })()}
@@ -1327,6 +1420,7 @@ const Dashboard = () => {
                                       isSkipped={dose.isSkipped}
                                       isSnoozed={dose.isSnoozed}
                                       snoozeUntil={dose.snoozeUntil}
+                                      doseStatus={dose.doseStatus}
                                       onMarkTaken={() => markAsTaken(dose)}
                                       onMarkSkipped={() => markAsSkipped(dose)}
                                       onMarkSnoozed={(minutes) => markAsSnoozed(dose, minutes)}
@@ -1441,33 +1535,42 @@ const Dashboard = () => {
       />
 
       {/* Dose Action Dialog */}
-      {selectedDose && (
-        <DoseActionDialog
-          open={showDoseDialog}
-          onOpenChange={setShowDoseDialog}
-          medication={selectedDose.medication}
-          schedule={selectedDose.schedule}
-          scheduledTime={selectedDose.nextDoseTime}
-          dosage={selectedDose.medication.dosage}
-          gracePeriodMinutes={selectedDose.medication.grace_period_minutes || 60}
-          missedDoseCutoffMinutes={selectedDose.medication.missed_dose_cutoff_minutes || 180}
-          isTaken={selectedDose.isTaken}
-          isSkipped={selectedDose.isSkipped}
-          isSnoozed={selectedDose.isSnoozed}
-          doseLogs={doseLogs}
-          onTake={() => markAsTaken(selectedDose)}
-          onSkip={() => markAsSkipped(selectedDose)}
-          onReschedule={() => {
-            markAsSnoozed(selectedDose, 15);
-          }}
-          onEdit={() => handleEditMedication(selectedDose.medication.id)}
-          onDelete={() => {
-            // TODO: Implement delete functionality
-            toast.info("Delete functionality coming soon");
-          }}
-          onInfo={() => navigate(`/medications/${selectedDose.medication.id}`)}
-        />
-      )}
+      {selectedDose && (() => {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const selectedDayStart = new Date(selectedCalendarDate);
+        selectedDayStart.setHours(0, 0, 0, 0);
+        const dialogIsPastDate = selectedDayStart < todayStart;
+        
+        return (
+          <DoseActionDialog
+            open={showDoseDialog}
+            onOpenChange={setShowDoseDialog}
+            medication={selectedDose.medication}
+            schedule={selectedDose.schedule}
+            scheduledTime={selectedDose.nextDoseTime}
+            dosage={selectedDose.medication.dosage}
+            gracePeriodMinutes={selectedDose.medication.grace_period_minutes || 60}
+            missedDoseCutoffMinutes={selectedDose.medication.missed_dose_cutoff_minutes || 180}
+            isTaken={selectedDose.isTaken}
+            isSkipped={selectedDose.isSkipped}
+            isSnoozed={selectedDose.isSnoozed}
+            isPastDate={dialogIsPastDate}
+            doseLogs={doseLogs}
+            onTake={() => markAsTaken(selectedDose)}
+            onSkip={() => markAsSkipped(selectedDose)}
+            onReschedule={() => {
+              markAsSnoozed(selectedDose, 15);
+            }}
+            onEdit={() => handleEditMedication(selectedDose.medication.id)}
+            onDelete={() => {
+              // TODO: Implement delete functionality
+              toast.info("Delete functionality coming soon");
+            }}
+            onInfo={() => navigate(`/medications/${selectedDose.medication.id}`)}
+          />
+        );
+      })()}
 
       {/* Bulk Prescription Upload Dialog */}
       <BulkPrescriptionUpload
