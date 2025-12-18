@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,8 @@ import {
   Pill, 
   Clock, 
   AlertTriangle,
-  Building2
+  Building2,
+  AlertCircle
 } from "lucide-react";
 import { ExtractedPrescription } from "@/types/prescription";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,11 @@ interface ValidationSaveStepProps {
   onSave: () => void;
   onBack: () => void;
   onRescan: () => void;
+}
+
+interface DuplicateInfo {
+  isDuplicate: boolean;
+  existingId?: string;
 }
 
 const parseFrequencyType = (frequency?: string, timing?: string): string => {
@@ -53,6 +59,21 @@ const generateScheduleTimes = (frequencyType: string): string[] => {
   }
 };
 
+const getFriendlyDosage = (prescription: ExtractedPrescription): string => {
+  const { dosage, medication } = prescription;
+  
+  // Use quantityPerDose if available (e.g., "1 tablet", "2 capsules")
+  if (dosage.quantityPerDose) {
+    return dosage.quantityPerDose;
+  }
+  
+  // Build friendly name from form and a default quantity
+  const form = medication.form?.toLowerCase() || "tablet";
+  const formPlural = form.endsWith("s") ? form : `${form}`;
+  
+  return `1 ${formPlural}`;
+};
+
 export const ValidationSaveStep = ({
   prescriptions,
   onSave,
@@ -60,6 +81,60 @@ export const ValidationSaveStep = ({
   onRescan,
 }: ValidationSaveStepProps) => {
   const [isSaving, setIsSaving] = useState(false);
+  const [duplicates, setDuplicates] = useState<Map<number, DuplicateInfo>>(new Map());
+  const [checkingDuplicates, setCheckingDuplicates] = useState(true);
+
+  // Check for duplicates on mount
+  useEffect(() => {
+    const checkDuplicates = async () => {
+      setCheckingDuplicates(true);
+      const duplicateMap = new Map<number, DuplicateInfo>();
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) {
+          setCheckingDuplicates(false);
+          return;
+        }
+
+        // Fetch user's existing medications
+        const { data: existingMeds } = await supabase
+          .from("medications")
+          .select("id, name, dosage, frequency_type")
+          .eq("user_id", session.user.id)
+          .eq("active", true);
+
+        if (existingMeds) {
+          prescriptions.forEach((prescription, idx) => {
+            const { medication, dosage } = prescription;
+            const frequencyType = parseFrequencyType(dosage.frequency, dosage.timing);
+            const dosageStr = [medication.strength, medication.strengthUnit].filter(Boolean).join("") || "As prescribed";
+
+            // Check for matching medication
+            const match = existingMeds.find((med) => {
+              const nameMatch = med.name.toLowerCase().trim() === medication.name.toLowerCase().trim();
+              const dosageMatch = med.dosage?.toLowerCase().trim() === dosageStr.toLowerCase().trim();
+              const freqMatch = med.frequency_type === frequencyType;
+              
+              return nameMatch && (dosageMatch || freqMatch);
+            });
+
+            duplicateMap.set(idx, {
+              isDuplicate: !!match,
+              existingId: match?.id,
+            });
+          });
+        }
+      } catch (error) {
+        console.error("Error checking duplicates:", error);
+      }
+
+      setDuplicates(duplicateMap);
+      setCheckingDuplicates(false);
+    };
+
+    checkDuplicates();
+  }, [prescriptions]);
 
   const getConfidenceColor = (confidence: string) => {
     switch (confidence) {
@@ -75,6 +150,7 @@ export const ValidationSaveStep = ({
   };
 
   const hasLowConfidence = prescriptions.some((p) => p.confidence === "low");
+  const hasDuplicates = Array.from(duplicates.values()).some((d) => d.isDuplicate);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -88,8 +164,18 @@ export const ValidationSaveStep = ({
 
       let successCount = 0;
       let failCount = 0;
+      let skippedCount = 0;
 
-      for (const prescription of prescriptions) {
+      for (let i = 0; i < prescriptions.length; i++) {
+        const prescription = prescriptions[i];
+        const duplicateInfo = duplicates.get(i);
+
+        // Skip duplicates
+        if (duplicateInfo?.isDuplicate) {
+          skippedCount++;
+          continue;
+        }
+
         try {
           const { medication, dosage, metadata } = prescription;
           
@@ -169,8 +255,16 @@ export const ValidationSaveStep = ({
         onSave();
       }
 
+      if (skippedCount > 0) {
+        toast.info(`Skipped ${skippedCount} duplicate medication${skippedCount > 1 ? "s" : ""}`);
+      }
+
       if (failCount > 0) {
         toast.error(`Failed to add ${failCount} medication${failCount > 1 ? "s" : ""}`);
+      }
+
+      if (successCount === 0 && skippedCount > 0 && failCount === 0) {
+        onSave(); // Close if all were duplicates
       }
     } catch (error) {
       console.error("Error saving medications:", error);
@@ -205,25 +299,53 @@ export const ValidationSaveStep = ({
             </div>
           )}
 
+          {hasDuplicates && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <AlertCircle className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-blue-700">Duplicates Detected</p>
+                <p className="text-blue-600">
+                  Some medications already exist in your list and will be skipped.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {checkingDuplicates && (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mr-2" />
+              <span className="text-sm text-muted-foreground">Checking for duplicates...</span>
+            </div>
+          )}
+
           {prescriptions.map((prescription, idx) => {
             const { medication, dosage, metadata } = prescription;
             const frequencyType = parseFrequencyType(dosage.frequency, dosage.timing);
             const times = generateScheduleTimes(frequencyType);
+            const duplicateInfo = duplicates.get(idx);
+            const friendlyDosage = getFriendlyDosage(prescription);
 
             return (
-              <Card key={idx} className="overflow-hidden">
+              <Card key={idx} className={`overflow-hidden ${duplicateInfo?.isDuplicate ? "opacity-60 border-dashed" : ""}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base flex items-center gap-2 min-w-0">
                       <Pill className="h-4 w-4 text-primary shrink-0" />
                       <span className="truncate">{medication.name || "Unknown Medication"}</span>
                     </CardTitle>
-                    <Badge
-                      variant="outline"
-                      className={`shrink-0 ${getConfidenceColor(prescription.confidence)}`}
-                    >
-                      {prescription.confidence}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {duplicateInfo?.isDuplicate && (
+                        <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30">
+                          Duplicate
+                        </Badge>
+                      )}
+                      <Badge
+                        variant="outline"
+                        className={getConfidenceColor(prescription.confidence)}
+                      >
+                        {prescription.confidence}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -231,21 +353,21 @@ export const ValidationSaveStep = ({
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-muted-foreground text-xs">Dosage</p>
-                      <p className="font-medium">
-                        {medication.strength}{medication.strengthUnit || "MG"}
-                      </p>
+                      <p className="font-medium capitalize">{friendlyDosage}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Form</p>
                       <p className="font-medium capitalize">{medication.form || "Pill"}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-xs">Quantity</p>
-                      <p className="font-medium">{medication.quantity || "-"}</p>
+                      <p className="text-muted-foreground text-xs">Strength</p>
+                      <p className="font-medium">
+                        {medication.strength}{medication.strengthUnit || "MG"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-xs">Schedule</p>
-                      <p className="font-medium">{medication.schedule || "-"}</p>
+                      <p className="text-muted-foreground text-xs">Quantity</p>
+                      <p className="font-medium">{medication.quantity || "-"}</p>
                     </div>
                   </div>
 
@@ -256,7 +378,7 @@ export const ValidationSaveStep = ({
                     <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     <div className="text-sm min-w-0">
                       <p className="font-medium break-words">
-                        {dosage.quantityPerDose || "Take as directed"} • {dosage.frequency || "As prescribed"}
+                        {friendlyDosage} • {dosage.frequency || "As prescribed"}
                       </p>
                       {dosage.timing && (
                         <p className="text-muted-foreground break-words">{dosage.timing}</p>
