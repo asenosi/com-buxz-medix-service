@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ExtractedPrescription } from "@/types/prescription";
 
 interface ImageCaptureStepProps {
-  onImageProcessed: (preview: string, prescriptions: ExtractedPrescription[]) => void;
+  onImageProcessed: (preview: string, prescriptions: ExtractedPrescription[], imageFile: File) => void;
 }
 
 export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) => {
@@ -45,7 +45,7 @@ export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) =>
 
       if (data?.prescriptions && data.prescriptions.length > 0) {
         toast.success(`Found ${data.prescriptions.length} medication(s) in prescription`);
-        onImageProcessed(previewUrl, data.prescriptions);
+        onImageProcessed(previewUrl, data.prescriptions, file);
       } else {
         toast.error("No medications found. Please try a clearer image.");
         setPreview(null);
