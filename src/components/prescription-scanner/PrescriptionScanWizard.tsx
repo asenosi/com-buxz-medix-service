@@ -20,14 +20,17 @@ export const PrescriptionScanWizard = ({
 }: PrescriptionScanWizardProps) => {
   const [step, setStep] = useState<WizardStep>("capture");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [extractedData, setExtractedData] = useState<ExtractedPrescription[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const handleImageProcessed = (
     preview: string,
-    prescriptions: ExtractedPrescription[]
+    prescriptions: ExtractedPrescription[],
+    file: File
   ) => {
     setImagePreview(preview);
+    setImageFile(file);
     setExtractedData(prescriptions);
     setSelectedIndex(0);
     setStep("review");
@@ -48,12 +51,14 @@ export const PrescriptionScanWizard = ({
   const handleRescan = () => {
     setStep("capture");
     setImagePreview(null);
+    setImageFile(null);
     setExtractedData([]);
   };
 
   const handleClose = () => {
     setStep("capture");
     setImagePreview(null);
+    setImageFile(null);
     setExtractedData([]);
     onOpenChange(false);
   };
@@ -83,6 +88,7 @@ export const PrescriptionScanWizard = ({
         {step === "validate" && (
           <ValidationSaveStep
             prescriptions={extractedData}
+            imageFile={imageFile}
             onSave={handleSaveComplete}
             onBack={() => setStep("review")}
             onRescan={handleRescan}

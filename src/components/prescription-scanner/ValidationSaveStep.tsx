@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   Building2,
   AlertCircle,
-  RefreshCcw
+  RefreshCcw,
+  ImageIcon
 } from "lucide-react";
 import { ExtractedPrescription } from "@/types/prescription";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 
 interface ValidationSaveStepProps {
   prescriptions: ExtractedPrescription[];
+  imageFile: File | null;
   onSave: () => void;
   onBack: () => void;
   onRescan: () => void;
@@ -76,6 +78,7 @@ const getFriendlyDosage = (prescription: ExtractedPrescription): string => {
 
 export const ValidationSaveStep = ({
   prescriptions,
+  imageFile,
   onSave,
   onBack,
   onRescan,
@@ -164,6 +167,36 @@ export const ValidationSaveStep = ({
   const hasLowConfidence = prescriptions.some((p) => p.confidence === "low");
   const hasDuplicates = Array.from(duplicates.values()).some((d) => d.isDuplicate);
 
+  const uploadPrescriptionImage = async (userId: string): Promise<string | null> => {
+    if (!imageFile) return null;
+
+    try {
+      const fileExt = imageFile.name.split(".").pop() || "jpg";
+      const fileName = `prescriptions/${userId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("medication-images")
+        .upload(fileName, imageFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("medication-images")
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error("Error uploading prescription image:", error);
+      return null;
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
 
@@ -172,6 +205,12 @@ export const ValidationSaveStep = ({
       if (!session?.user?.id) {
         toast.error("You must be logged in to save medications");
         return;
+      }
+
+      // Upload prescription image once for all medications
+      const prescriptionImageUrl = await uploadPrescriptionImage(session.user.id);
+      if (imageFile && !prescriptionImageUrl) {
+        console.warn("Failed to upload prescription image, continuing without it");
       }
 
       let successCount = 0;
@@ -206,20 +245,37 @@ export const ValidationSaveStep = ({
           ].filter(Boolean).join(" • ");
 
           if (duplicateInfo?.isDuplicate && duplicateInfo.action === "update" && duplicateInfo.existingId) {
+            // Build update object, optionally adding prescription image
+            const updateData: Record<string, unknown> = {
+              dosage: dosageStr,
+              form: medication.form || "pill",
+              route_of_administration: dosage.route || "by_mouth",
+              instructions: instructions || undefined,
+              frequency_type: frequencyType,
+              total_pills: medication.quantity || undefined,
+              pills_remaining: medication.quantity || undefined,
+              prescribing_doctor: metadata.doctorName || undefined,
+              prescription_number: metadata.prescriptionNumber || undefined,
+              updated_at: new Date().toISOString(),
+            };
+
+            // Add prescription image to image_urls array if uploaded
+            if (prescriptionImageUrl) {
+              const { data: existingMed } = await supabase
+                .from("medications")
+                .select("image_urls")
+                .eq("id", duplicateInfo.existingId)
+                .maybeSingle();
+
+              const existingUrls = existingMed?.image_urls || [];
+              if (!existingUrls.includes(prescriptionImageUrl)) {
+                updateData.image_urls = [...existingUrls, prescriptionImageUrl];
+              }
+            }
+
             const { error: updateError } = await supabase
               .from("medications")
-              .update({
-                dosage: dosageStr,
-                form: medication.form || "pill",
-                route_of_administration: dosage.route || "by_mouth",
-                instructions: instructions || undefined,
-                frequency_type: frequencyType,
-                total_pills: medication.quantity || undefined,
-                pills_remaining: medication.quantity || undefined,
-                prescribing_doctor: metadata.doctorName || undefined,
-                prescription_number: metadata.prescriptionNumber || undefined,
-                updated_at: new Date().toISOString(),
-              })
+              .update(updateData)
               .eq("id", duplicateInfo.existingId);
 
             if (updateError) throw updateError;
@@ -245,6 +301,7 @@ export const ValidationSaveStep = ({
 
             updatedCount++;
           } else {
+            // Insert new medication with prescription image
             const { data: med, error: medError } = await supabase
               .from("medications")
               .insert({
@@ -259,6 +316,7 @@ export const ValidationSaveStep = ({
                 pills_remaining: medication.quantity || undefined,
                 prescribing_doctor: metadata.doctorName || undefined,
                 prescription_number: metadata.prescriptionNumber || undefined,
+                image_urls: prescriptionImageUrl ? [prescriptionImageUrl] : [],
                 active: true,
               })
               .select()
@@ -335,6 +393,18 @@ export const ValidationSaveStep = ({
 
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4 space-y-4">
+          {imageFile && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+              <ImageIcon className="h-4 w-4 text-green-600 shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-green-700">Prescription Image</p>
+                <p className="text-green-600">
+                  The scanned image will be saved with your medication{prescriptions.length > 1 ? "s" : ""} for reference.
+                </p>
+              </div>
+            </div>
+          )}
+
           {hasLowConfidence && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
               <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
