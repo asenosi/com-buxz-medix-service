@@ -1,59 +1,93 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Camera, Upload, Loader2, ImageIcon, Scan } from "lucide-react";
+import { Camera, Upload, Loader2, ImageIcon, Scan, X, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExtractedPrescription } from "@/types/prescription";
 
 interface ImageCaptureStepProps {
-  onImageProcessed: (preview: string, prescriptions: ExtractedPrescription[], imageFile: File) => void;
+  onImageProcessed: (previews: string[], prescriptions: ExtractedPrescription[], imageFiles: File[]) => void;
 }
 
 export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const processImage = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+    
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`${file.name} is not an image file`);
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 10MB)`);
+        return;
+      }
+      if (selectedFiles.length + newFiles.length >= 5) {
+        toast.error("Maximum 5 images allowed");
+        return;
+      }
+      newFiles.push(file);
+      newPreviews.push(URL.createObjectURL(file));
+    });
+
+    setSelectedFiles((prev) => [...prev, ...newFiles]);
+    setPreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removeFile = (index: number) => {
+    URL.revokeObjectURL(previews[index]);
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const processImages = async () => {
+    if (selectedFiles.length === 0) {
+      toast.error("Please add at least one image");
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-    setPreview(previewUrl);
     setIsProcessing(true);
 
     try {
-      const base64 = await fileToBase64(file);
+      const allPrescriptions: ExtractedPrescription[] = [];
 
-      const { data, error } = await supabase.functions.invoke("extract-prescription-v2", {
-        body: { imageBase64: base64 },
-      });
+      for (const file of selectedFiles) {
+        const base64 = await fileToBase64(file);
 
-      if (error) {
-        console.error("Function error:", error);
-        throw new Error(error.message || "Failed to process image");
+        const { data, error } = await supabase.functions.invoke("extract-prescription-v2", {
+          body: { imageBase64: base64 },
+        });
+
+        if (error) {
+          console.error("Function error:", error);
+          toast.error(`Failed to process ${file.name}`);
+          continue;
+        }
+
+        if (data?.prescriptions && data.prescriptions.length > 0) {
+          allPrescriptions.push(...data.prescriptions);
+        }
       }
 
-      if (data?.prescriptions && data.prescriptions.length > 0) {
-        toast.success(`Found ${data.prescriptions.length} medication(s) in prescription`);
-        onImageProcessed(previewUrl, data.prescriptions, file);
+      if (allPrescriptions.length > 0) {
+        toast.success(`Found ${allPrescriptions.length} medication(s) from ${selectedFiles.length} image(s)`);
+        onImageProcessed(previews, allPrescriptions, selectedFiles);
       } else {
-        toast.error("No medications found. Please try a clearer image.");
-        setPreview(null);
+        toast.error("No medications found. Please try clearer images.");
       }
     } catch (error) {
-      console.error("Error processing prescription:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to process prescription");
-      setPreview(null);
+      console.error("Error processing prescriptions:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to process prescriptions");
     } finally {
       setIsProcessing(false);
     }
@@ -72,10 +106,8 @@ export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) =>
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      processImage(file);
-    }
+    addFiles(event.target.files);
+    event.target.value = "";
   };
 
   return (
@@ -86,11 +118,49 @@ export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) =>
           Scan Prescription
         </CardTitle>
         <CardDescription>
-          Take a photo or upload an image of your prescription label to automatically extract medication details
+          Upload multiple images of your prescription labels for better OCR accuracy
         </CardDescription>
       </CardHeader>
 
       <CardContent className="px-0 space-y-6">
+        {/* Selected Images Preview */}
+        {previews.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">{previews.length} image{previews.length !== 1 ? "s" : ""} selected</p>
+              <p className="text-xs text-muted-foreground">(max 5)</p>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+              {previews.map((preview, idx) => (
+                <div key={idx} className="relative group aspect-square">
+                  <img
+                    src={preview}
+                    alt={`Image ${idx + 1}`}
+                    className="w-full h-full object-cover rounded-lg border"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeFile(idx)}
+                    disabled={isProcessing}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+              {previews.length < 5 && !isProcessing && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-square rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center hover:bg-primary/10 transition-colors"
+                >
+                  <Plus className="h-6 w-6 text-primary/50" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Capture Area */}
         <Card className="border-2 border-dashed border-primary/30 bg-primary/5">
           <CardContent className="py-12">
@@ -101,29 +171,22 @@ export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) =>
                   <Scan className="h-6 w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary/50" />
                 </div>
                 <div className="text-center">
-                  <p className="font-medium">Processing prescription...</p>
+                  <p className="font-medium">Processing {selectedFiles.length} image{selectedFiles.length !== 1 ? "s" : ""}...</p>
                   <p className="text-sm text-muted-foreground">
                     AI is extracting medication details
                   </p>
                 </div>
-                {preview && (
-                  <img
-                    src={preview}
-                    alt="Processing"
-                    className="w-32 h-32 object-cover rounded-lg opacity-50"
-                  />
-                )}
               </div>
-            ) : (
+            ) : previews.length === 0 ? (
               <div className="flex flex-col items-center gap-6">
                 <div className="p-4 rounded-full bg-primary/10">
                   <ImageIcon className="h-12 w-12 text-primary" />
                 </div>
                 
                 <div className="text-center">
-                  <p className="font-medium mb-1">Position entire prescription label within frame</p>
+                  <p className="font-medium mb-1">Add prescription images</p>
                   <p className="text-sm text-muted-foreground">
-                    Ensure good lighting and all text is visible
+                    Upload up to 5 images for better accuracy
                   </p>
                 </div>
 
@@ -142,29 +205,40 @@ export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) =>
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="mr-2 h-5 w-5" />
-                    Upload Image
+                    Upload Images
                   </Button>
                 </div>
-
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,.heic"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Ready to scan {selectedFiles.length} image{selectedFiles.length !== 1 ? "s" : ""}
+                </p>
+                <Button onClick={processImages} size="lg" className="h-12 px-8">
+                  <Scan className="mr-2 h-5 w-5" />
+                  Scan All Images
+                </Button>
               </div>
             )}
           </CardContent>
         </Card>
+
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.heic"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+        />
 
         {/* Tips */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -173,7 +247,7 @@ export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) =>
               <span className="text-xs font-bold text-primary">1</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Ensure prescription label is flat and unobstructed
+              Capture front and back of medication labels
             </p>
           </div>
           <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
@@ -181,7 +255,7 @@ export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) =>
               <span className="text-xs font-bold text-primary">2</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Use good lighting to avoid shadows on text
+              Multiple angles help improve accuracy
             </p>
           </div>
           <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
@@ -189,13 +263,13 @@ export const ImageCaptureStep = ({ onImageProcessed }: ImageCaptureStepProps) =>
               <span className="text-xs font-bold text-primary">3</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Include all dosage instructions in the frame
+              Include all dosage instructions visible
             </p>
           </div>
         </div>
 
         <p className="text-xs text-center text-muted-foreground">
-          Supports JPEG, PNG, HEIC formats up to 10MB
+          Supports JPEG, PNG, HEIC formats up to 10MB each (max 5 images)
         </p>
       </CardContent>
     </div>
