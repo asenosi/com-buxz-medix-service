@@ -23,7 +23,7 @@ import { toast } from "sonner";
 
 interface ValidationSaveStepProps {
   prescriptions: ExtractedPrescription[];
-  imageFile: File | null;
+  imageFiles: File[];
   onSave: () => void;
   onBack: () => void;
   onRescan: () => void;
@@ -78,7 +78,7 @@ const getFriendlyDosage = (prescription: ExtractedPrescription): string => {
 
 export const ValidationSaveStep = ({
   prescriptions,
-  imageFile,
+  imageFiles,
   onSave,
   onBack,
   onRescan,
@@ -167,34 +167,39 @@ export const ValidationSaveStep = ({
   const hasLowConfidence = prescriptions.some((p) => p.confidence === "low");
   const hasDuplicates = Array.from(duplicates.values()).some((d) => d.isDuplicate);
 
-  const uploadPrescriptionImage = async (userId: string): Promise<string | null> => {
-    if (!imageFile) return null;
+  const uploadPrescriptionImages = async (userId: string): Promise<string[]> => {
+    if (imageFiles.length === 0) return [];
 
-    try {
-      const fileExt = imageFile.name.split(".").pop() || "jpg";
-      const fileName = `prescriptions/${userId}/${Date.now()}.${fileExt}`;
+    const uploadedUrls: string[] = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from("medication-images")
-        .upload(fileName, imageFile, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+    for (const file of imageFiles) {
+      try {
+        const fileExt = file.name.split(".").pop() || "jpg";
+        const fileName = `prescriptions/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
 
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        return null;
+        const { error: uploadError } = await supabase.storage
+          .from("medication-images")
+          .upload(fileName, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("medication-images")
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      } catch (error) {
+        console.error("Error uploading prescription image:", error);
       }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("medication-images")
-        .getPublicUrl(fileName);
-
-      return publicUrl;
-    } catch (error) {
-      console.error("Error uploading prescription image:", error);
-      return null;
     }
+
+    return uploadedUrls;
   };
 
   const handleSave = async () => {
@@ -207,10 +212,10 @@ export const ValidationSaveStep = ({
         return;
       }
 
-      // Upload prescription image once for all medications
-      const prescriptionImageUrl = await uploadPrescriptionImage(session.user.id);
-      if (imageFile && !prescriptionImageUrl) {
-        console.warn("Failed to upload prescription image, continuing without it");
+      // Upload all prescription images once for all medications
+      const prescriptionImageUrls = await uploadPrescriptionImages(session.user.id);
+      if (imageFiles.length > 0 && prescriptionImageUrls.length === 0) {
+        console.warn("Failed to upload prescription images, continuing without them");
       }
 
       let successCount = 0;
@@ -259,8 +264,8 @@ export const ValidationSaveStep = ({
               updated_at: new Date().toISOString(),
             };
 
-            // Add prescription image to image_urls array if uploaded
-            if (prescriptionImageUrl) {
+            // Add prescription images to image_urls array if uploaded
+            if (prescriptionImageUrls.length > 0) {
               const { data: existingMed } = await supabase
                 .from("medications")
                 .select("image_urls")
@@ -268,8 +273,9 @@ export const ValidationSaveStep = ({
                 .maybeSingle();
 
               const existingUrls = existingMed?.image_urls || [];
-              if (!existingUrls.includes(prescriptionImageUrl)) {
-                updateData.image_urls = [...existingUrls, prescriptionImageUrl];
+              const newUrls = prescriptionImageUrls.filter((url) => !existingUrls.includes(url));
+              if (newUrls.length > 0) {
+                updateData.image_urls = [...existingUrls, ...newUrls];
               }
             }
 
@@ -316,7 +322,7 @@ export const ValidationSaveStep = ({
                 pills_remaining: medication.quantity || undefined,
                 prescribing_doctor: metadata.doctorName || undefined,
                 prescription_number: metadata.prescriptionNumber || undefined,
-                image_urls: prescriptionImageUrl ? [prescriptionImageUrl] : [],
+                image_urls: prescriptionImageUrls.length > 0 ? prescriptionImageUrls : [],
                 active: true,
               })
               .select()
@@ -393,13 +399,13 @@ export const ValidationSaveStep = ({
 
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4 space-y-4">
-          {imageFile && (
+          {imageFiles.length > 0 && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
               <ImageIcon className="h-4 w-4 text-green-600 shrink-0" />
               <div className="text-sm">
-                <p className="font-medium text-green-700">Prescription Image</p>
+                <p className="font-medium text-green-700">{imageFiles.length} Prescription Image{imageFiles.length !== 1 ? "s" : ""}</p>
                 <p className="text-green-600">
-                  The scanned image will be saved with your medication{prescriptions.length > 1 ? "s" : ""} for reference.
+                  All scanned images will be saved with your medication{prescriptions.length > 1 ? "s" : ""} for reference.
                 </p>
               </div>
             </div>
