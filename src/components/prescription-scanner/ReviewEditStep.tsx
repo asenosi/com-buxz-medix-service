@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,11 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, RefreshCw, Pill, Clock, Building2, AlertCircle } from "lucide-react";
+import { ArrowRight, RefreshCw, Pill, Clock, Building2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { ExtractedPrescription } from "@/types/prescription";
 
 interface ReviewEditStepProps {
-  imagePreview: string;
+  imagePreviews: string[];
   prescriptions: ExtractedPrescription[];
   selectedIndex: number;
   onSelectPrescription: (index: number) => void;
@@ -44,7 +45,7 @@ const routeOptions = [
 const strengthUnits = ["mg", "mcg", "g", "mL", "IU", "%"];
 
 export const ReviewEditStep = ({
-  imagePreview,
+  imagePreviews,
   prescriptions,
   selectedIndex,
   onSelectPrescription,
@@ -52,6 +53,7 @@ export const ReviewEditStep = ({
   onProceed,
   onRescan,
 }: ReviewEditStepProps) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const current = prescriptions[selectedIndex];
 
   const updateField = <K extends keyof ExtractedPrescription>(
@@ -114,14 +116,54 @@ export const ReviewEditStep = ({
       <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
         {/* Left: Image Preview */}
         <div className="w-full md:w-2/5 p-4 border-b md:border-b-0 md:border-r bg-muted/30 shrink-0">
-          <div className="sticky top-0">
-            <img
-              src={imagePreview}
-              alt="Prescription"
-              className="w-full h-auto max-h-[30vh] md:max-h-[60vh] object-contain rounded-lg border shadow-sm"
-            />
+          <div className="sticky top-0 space-y-3">
+            <div className="relative">
+              <img
+                src={imagePreviews[currentImageIndex]}
+                alt={`Prescription ${currentImageIndex + 1}`}
+                className="w-full h-auto max-h-[30vh] md:max-h-[55vh] object-contain rounded-lg border shadow-sm"
+              />
+              {imagePreviews.length > 1 && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                    onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? imagePreviews.length - 1 : prev - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                    onClick={() => setCurrentImageIndex((prev) => (prev === imagePreviews.length - 1 ? 0 : prev + 1))}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1 text-xs">
+                    {currentImageIndex + 1} / {imagePreviews.length}
+                  </div>
+                </>
+              )}
+            </div>
+            {imagePreviews.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {imagePreviews.map((preview, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`shrink-0 w-12 h-12 rounded-md overflow-hidden border-2 transition-colors ${
+                      idx === currentImageIndex ? "border-primary" : "border-transparent"
+                    }`}
+                  >
+                    <img src={preview} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
             {prescriptions.length > 1 && (
-              <div className="mt-3 flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
                 {prescriptions.map((_, idx) => (
                   <Button
                     key={idx}
