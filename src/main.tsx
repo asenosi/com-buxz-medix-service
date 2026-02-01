@@ -17,8 +17,9 @@ import "./index.css";
   }
 })();
 
-// Register service worker for PWA and push notifications
-if ('serviceWorker' in navigator) {
+// Register service worker for PWA and push notifications (production only)
+// Skip in development to avoid redirect errors with dev-sw.js
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
