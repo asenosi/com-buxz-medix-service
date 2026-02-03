@@ -127,9 +127,10 @@ export const SimpleDoseCard = ({
           <div className={cn("w-1 shrink-0", getBorderColor())} />
           
           {/* Content */}
-          <div className="flex-1 p-3 space-y-1">
+          <div className="flex-1 min-w-0 p-3 space-y-1 overflow-hidden">
             <div className="flex items-start gap-2">
-              <div className="flex-1 min-w-0">
+              {/* Left content - medication info */}
+              <div className="flex-1 min-w-0 overflow-hidden">
                 {/* Time and Form */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span className="font-medium">{schedule.time_of_day ? formatTime(schedule.time_of_day) : "Anytime"}</span>
@@ -152,10 +153,10 @@ export const SimpleDoseCard = ({
                 </p>
               </div>
               
-              {/* Expand button - always visible */}
+              {/* Expand button - always visible, cannot be pushed off */}
               <button
                 onClick={handleExpandClick}
-                className="p-1.5 hover:bg-muted rounded-md transition-colors shrink-0"
+                className="p-1.5 hover:bg-muted rounded-md transition-colors shrink-0 ml-auto"
               >
                 {expanded ? (
                   <ChevronUp className="h-5 w-5 text-muted-foreground" />
