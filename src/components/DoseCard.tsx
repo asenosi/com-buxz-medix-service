@@ -187,25 +187,24 @@ export const DoseCard = ({ dose, isPastDate = false, isFutureDate = false, onMar
 
             <div className="flex items-center gap-1 shrink-0">
               <p className={cn(
-                "text-sm font-medium",
+                "text-sm font-medium whitespace-nowrap",
                 isCompleted ? "text-muted-foreground" : 
                 dose.status === "overdue" ? "text-destructive" : "text-primary"
               )}>
                 {getRelativeTime()}
               </p>
-              {canShowActions && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleToggleActions}
-                  className={cn(
-                    "h-7 w-7 p-0 rounded-full hover:bg-muted transition-transform",
-                    showActions && "rotate-180"
-                  )}
-                >
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </Button>
-              )}
+              {/* Always show chevron for expanding details */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleToggleActions}
+                className={cn(
+                  "h-7 w-7 p-0 rounded-full hover:bg-muted transition-transform shrink-0",
+                  showActions && "rotate-180"
+                )}
+              >
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              </Button>
             </div>
           </div>
 
@@ -267,64 +266,76 @@ export const DoseCard = ({ dose, isPastDate = false, isFutureDate = false, onMar
             )}
           </div>
 
-          {/* Collapsible Action buttons */}
-          {showActions && canShowActions && (
+          {/* Collapsible details/actions section */}
+          {showActions && (
             <div className="space-y-2 pt-2 border-t border-border/50 animate-fade-in">
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  onClick={(e) => { e.stopPropagation(); onMarkTaken(dose); setShowActions(false); }}
-                  size="sm"
-                  className="rounded-xl h-9 text-xs"
-                >
-                  <CheckCircle2 className="w-4 h-4 mr-1" /> Take
-                </Button>
-                <Button 
-                  onClick={(e) => { e.stopPropagation(); setShowSnoozeOptions(!showSnoozeOptions); }}
-                  size="sm" 
-                  variant="outline" 
-                  className="rounded-xl h-9 text-xs"
-                >
-                  <AlarmClock className="w-4 h-4 mr-1" /> Snooze
-                </Button>
-                <Button 
-                  onClick={(e) => { e.stopPropagation(); onMarkSkipped(dose); setShowActions(false); }}
-                  size="sm" 
-                  variant="outline" 
-                  className="rounded-xl h-9 text-xs border-destructive text-destructive hover:bg-destructive/5"
-                >
-                  <XCircle className="w-4 h-4 mr-1" /> Skip
-                </Button>
-              </div>
+              {/* Show action buttons only when actions are available */}
+              {canShowActions && (
+                <>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      onClick={(e) => { e.stopPropagation(); onMarkTaken(dose); setShowActions(false); }}
+                      size="sm"
+                      className="rounded-xl h-9 text-xs"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-1" /> Take
+                    </Button>
+                    <Button 
+                      onClick={(e) => { e.stopPropagation(); setShowSnoozeOptions(!showSnoozeOptions); }}
+                      size="sm" 
+                      variant="outline" 
+                      className="rounded-xl h-9 text-xs"
+                    >
+                      <AlarmClock className="w-4 h-4 mr-1" /> Snooze
+                    </Button>
+                    <Button 
+                      onClick={(e) => { e.stopPropagation(); onMarkSkipped(dose); setShowActions(false); }}
+                      size="sm" 
+                      variant="outline" 
+                      className="rounded-xl h-9 text-xs border-destructive text-destructive hover:bg-destructive/5"
+                    >
+                      <XCircle className="w-4 h-4 mr-1" /> Skip
+                    </Button>
+                  </div>
+                  
+                  {showSnoozeOptions && (
+                    <div className="flex flex-col gap-2 p-2 bg-muted/30 rounded-xl">
+                      <span className="text-xs text-muted-foreground">Remind me in:</span>
+                      <Select value={snoozeMinutes} onValueChange={setSnoozeMinutes}>
+                        <SelectTrigger className="w-full h-8 text-xs rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border shadow-lg z-50">
+                          <SelectItem value="5">5 minutes</SelectItem>
+                          <SelectItem value="10">10 minutes</SelectItem>
+                          <SelectItem value="15">15 minutes</SelectItem>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                          <SelectItem value="60">1 hour</SelectItem>
+                          <SelectItem value="120">2 hours</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMarkSnoozed(dose, parseInt(snoozeMinutes));
+                          setShowSnoozeOptions(false);
+                          setShowActions(false);
+                        }}
+                        size="sm"
+                        className="rounded-xl h-8 text-xs"
+                      >
+                        Confirm Snooze
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
               
-              {showSnoozeOptions && (
-                <div className="flex flex-col gap-2 p-2 bg-muted/30 rounded-xl">
-                  <span className="text-xs text-muted-foreground">Remind me in:</span>
-                  <Select value={snoozeMinutes} onValueChange={setSnoozeMinutes}>
-                    <SelectTrigger className="w-full h-8 text-xs rounded-lg">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5 minutes</SelectItem>
-                      <SelectItem value="10">10 minutes</SelectItem>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="60">1 hour</SelectItem>
-                      <SelectItem value="120">2 hours</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onMarkSnoozed(dose, parseInt(snoozeMinutes));
-                      setShowSnoozeOptions(false);
-                      setShowActions(false);
-                    }}
-                    size="sm"
-                    className="rounded-xl h-8 text-xs"
-                  >
-                    Confirm Snooze
-                  </Button>
-                </div>
+              {/* For completed/past doses, show a message */}
+              {!canShowActions && (
+                <p className="text-xs text-muted-foreground text-center py-1">
+                  Tap card to view details
+                </p>
               )}
             </div>
           )}

@@ -128,7 +128,7 @@ export const SimpleDoseCard = ({
           
           {/* Content */}
           <div className="flex-1 p-3 space-y-1">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2">
               <div className="flex-1 min-w-0">
                 {/* Time and Form */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -152,10 +152,10 @@ export const SimpleDoseCard = ({
                 </p>
               </div>
               
-              {/* Expand button */}
+              {/* Expand button - always visible */}
               <button
                 onClick={handleExpandClick}
-                className="p-1 -m-1 hover:bg-muted rounded-md transition-colors"
+                className="p-1.5 hover:bg-muted rounded-md transition-colors shrink-0"
               >
                 {expanded ? (
                   <ChevronUp className="h-5 w-5 text-muted-foreground" />
