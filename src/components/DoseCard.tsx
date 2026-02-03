@@ -148,8 +148,9 @@ export const DoseCard = ({ dose, isPastDate = false, isFutureDate = false, onMar
       <CardContent className="p-3 pl-4">
         <div className="space-y-2">
           {/* Header: Title + Relative time */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className="flex items-start gap-2">
+            {/* Left content - medication info */}
+            <div className="flex items-start gap-3 flex-1 min-w-0 overflow-hidden">
               {/* Medication Image */}
               <div className="shrink-0">
                 {((dose.medication.image_urls && dose.medication.image_urls.length > 0) || dose.medication.image_url || primaryImage) ? (
@@ -174,18 +175,19 @@ export const DoseCard = ({ dose, isPastDate = false, isFutureDate = false, onMar
                 )}
               </div>
               
-              <div className="flex-1 min-w-0 space-y-0.5">
+              <div className="flex-1 min-w-0 overflow-hidden space-y-0.5">
                 <h3 className="text-base font-semibold text-foreground leading-tight truncate">
                   {truncateText(dose.medication.name)}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground truncate">
                   {dose.medication.dosage}
                   {dose.medication.form && ` • ${dose.medication.form}`}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
+            {/* Right content - time and chevron - MUST stay visible */}
+            <div className="flex items-center gap-1 shrink-0 ml-auto">
               <p className={cn(
                 "text-sm font-medium whitespace-nowrap",
                 isCompleted ? "text-muted-foreground" : 
