@@ -222,6 +222,11 @@ export const DoseCard = ({ dose, isPastDate = false, isFutureDate = false, onMar
                 ✓ Late
               </Badge>
             )}
+            {dose.isTaken && dose.doseStatus === 'MISSED' && (
+              <Badge variant="secondary" className="text-xs font-normal bg-destructive/10 text-destructive border-destructive/30">
+                ✓ Taken (very late)
+              </Badge>
+            )}
             {dose.isTaken && !dose.doseStatus && (
               <Badge variant="secondary" className={cn("text-xs font-normal", statusColors.taken)}>
                 ✓ Taken

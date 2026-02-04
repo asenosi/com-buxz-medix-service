@@ -163,6 +163,11 @@ export const SimpleDoseCard = ({
                       ✓ Late
                     </Badge>
                   )}
+                  {isTaken && doseStatus === 'MISSED' && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-destructive text-destructive bg-destructive/10 shrink-0">
+                      ✓ Taken (very late)
+                    </Badge>
+                  )}
                   {isTaken && !doseStatus && (
                     <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 shrink-0", statusColors.taken)}>
                       ✓ Taken
@@ -234,6 +239,11 @@ export const SimpleDoseCard = ({
                 {isTaken && doseStatus === 'LATE' && (
                   <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-warning text-warning bg-warning/10">
                     ✓ Late
+                  </Badge>
+                )}
+                {isTaken && doseStatus === 'MISSED' && (
+                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-destructive text-destructive bg-destructive/10">
+                    ✓ Taken (very late)
                   </Badge>
                 )}
                 {isTaken && !doseStatus && (
