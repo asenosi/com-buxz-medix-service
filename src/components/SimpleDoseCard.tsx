@@ -147,10 +147,43 @@ export const SimpleDoseCard = ({
                   {truncateText(medication.name)}
                 </h4>
                 
-                {/* Dosage */}
-                <p className="text-sm text-muted-foreground truncate">
-                  {medication.dosage}
-                </p>
+                {/* Dosage + Status Badge */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm text-muted-foreground truncate">
+                    {medication.dosage}
+                  </p>
+                  {/* Status badges - visible in collapsed state */}
+                  {isTaken && doseStatus === 'ON_TIME' && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-success text-success bg-success/10 shrink-0">
+                      ✓ On Time
+                    </Badge>
+                  )}
+                  {isTaken && doseStatus === 'LATE' && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-warning text-warning bg-warning/10 shrink-0">
+                      ✓ Late
+                    </Badge>
+                  )}
+                  {isTaken && !doseStatus && (
+                    <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 shrink-0", statusColors.taken)}>
+                      ✓ Taken
+                    </Badge>
+                  )}
+                  {isSkipped && (
+                    <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 shrink-0", statusColors.skipped)}>
+                      ✕ Skipped
+                    </Badge>
+                  )}
+                  {isPastDate && !isTaken && !isSkipped && !isSnoozed && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-destructive text-destructive bg-destructive/10 shrink-0">
+                      ⚠ Missed
+                    </Badge>
+                  )}
+                  {isSnoozed && (
+                    <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 shrink-0", statusColors.snoozed)}>
+                      ⏰ Snoozed
+                    </Badge>
+                  )}
+                </div>
               </div>
               
               {/* Expand button - always visible, cannot be pushed off */}
