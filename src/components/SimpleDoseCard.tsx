@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn, truncateText } from "@/lib/utils";
-import { Pill, CheckCircle2, XCircle, Clock, AlarmClock, ChevronDown, ChevronUp, User, FileText } from "lucide-react";
+import { Pill, CheckCircle2, XCircle, Clock, AlarmClock, ChevronDown, ChevronUp, User, FileText, Droplets, Wind, Syringe, SprayCan, CircleDot } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Medication {
@@ -100,6 +100,20 @@ export const SimpleDoseCard = ({
     return form.charAt(0).toUpperCase() + form.slice(1).toLowerCase();
   };
 
+  const getFormIcon = (form: string | null) => {
+    if (!form) return null;
+    const f = form.toLowerCase();
+    if (f.includes("pill") || f.includes("tablet") || f.includes("capsule")) return Pill;
+    if (f.includes("drop") || f.includes("solution") || f.includes("liquid")) return Droplets;
+    if (f.includes("inhaler")) return Wind;
+    if (f.includes("injection") || f.includes("syringe")) return Syringe;
+    if (f.includes("spray")) return SprayCan;
+    if (f.includes("cream") || f.includes("ointment") || f.includes("gel")) return CircleDot;
+    return Pill;
+  };
+
+  const FormIcon = getFormIcon(medication.form);
+
   const handleCardClick = () => {
     onClick?.();
   };
@@ -127,14 +141,19 @@ export const SimpleDoseCard = ({
           <div className={cn("w-1 shrink-0", getBorderColor())} />
           
           {/* Content */}
-          <div className="flex-1 p-3 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 p-3 space-y-1 overflow-hidden">
+            <div className="flex items-start gap-2">
+              {/* Left content - medication info */}
+              <div className="flex-1 min-w-0 overflow-hidden">
                 {/* Time and Form */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <span className="font-medium">{schedule.time_of_day ? formatTime(schedule.time_of_day) : "Anytime"}</span>
-                  {medication.form && (
-                    <span className="text-xs">• {formatForm(medication.form)}</span>
+                  {medication.form && FormIcon && (
+                    <>
+                      <span className="text-xs">•</span>
+                      <FormIcon className="h-3.5 w-3.5" />
+                      <span className="text-xs">{formatForm(medication.form)}</span>
+                    </>
                   )}
                 </div>
                 
@@ -146,16 +165,54 @@ export const SimpleDoseCard = ({
                   {truncateText(medication.name)}
                 </h4>
                 
-                {/* Dosage */}
-                <p className="text-sm text-muted-foreground truncate">
-                  {medication.dosage}
-                </p>
+                {/* Dosage + Status Badge */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm text-muted-foreground truncate">
+                    {medication.dosage}
+                  </p>
+                  {/* Status badges - visible in collapsed state */}
+                  {isTaken && doseStatus === 'ON_TIME' && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-success text-success bg-success/10 shrink-0">
+                      ✓ On Time
+                    </Badge>
+                  )}
+                  {isTaken && doseStatus === 'LATE' && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-warning text-warning bg-warning/10 shrink-0">
+                      ✓ Late
+                    </Badge>
+                  )}
+                  {isTaken && doseStatus === 'MISSED' && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-destructive text-destructive bg-destructive/10 shrink-0">
+                      ✓ Taken (very late)
+                    </Badge>
+                  )}
+                  {isTaken && !doseStatus && (
+                    <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 shrink-0", statusColors.taken)}>
+                      ✓ Taken
+                    </Badge>
+                  )}
+                  {isSkipped && (
+                    <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 shrink-0", statusColors.skipped)}>
+                      ✕ Skipped
+                    </Badge>
+                  )}
+                  {isPastDate && !isTaken && !isSkipped && !isSnoozed && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-destructive text-destructive bg-destructive/10 shrink-0">
+                      ⚠ Missed
+                    </Badge>
+                  )}
+                  {isSnoozed && (
+                    <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5 shrink-0", statusColors.snoozed)}>
+                      ⏰ Snoozed
+                    </Badge>
+                  )}
+                </div>
               </div>
               
-              {/* Expand button */}
+              {/* Expand button - always visible, cannot be pushed off */}
               <button
                 onClick={handleExpandClick}
-                className="p-1 -m-1 hover:bg-muted rounded-md transition-colors"
+                className="p-1.5 hover:bg-muted rounded-md transition-colors shrink-0 ml-auto"
               >
                 {expanded ? (
                   <ChevronUp className="h-5 w-5 text-muted-foreground" />
@@ -186,41 +243,6 @@ export const SimpleDoseCard = ({
                     <User className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate max-w-[120px]">{medication.reason_for_taking}</span>
                   </div>
-                )}
-                {medication.form && (
-                  <Badge variant="secondary" className="text-[10px] capitalize h-5 px-1.5">
-                    {medication.form}
-                  </Badge>
-                )}
-                {isTaken && doseStatus === 'ON_TIME' && (
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-success text-success bg-success/10">
-                    ✓ On Time
-                  </Badge>
-                )}
-                {isTaken && doseStatus === 'LATE' && (
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-warning text-warning bg-warning/10">
-                    ✓ Late
-                  </Badge>
-                )}
-                {isTaken && !doseStatus && (
-                  <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5", statusColors.taken)}>
-                    ✓ Taken
-                  </Badge>
-                )}
-                {isSkipped && (
-                  <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5", statusColors.skipped)}>
-                    ✕ Skipped
-                  </Badge>
-                )}
-                {isPastDate && !isTaken && !isSkipped && !isSnoozed && (
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-destructive text-destructive bg-destructive/10">
-                    ⚠ Missed
-                  </Badge>
-                )}
-                {isSnoozed && (
-                  <Badge variant="outline" className={cn("text-[10px] h-5 px-1.5", statusColors.snoozed)}>
-                    ⏰ Snoozed
-                  </Badge>
                 )}
               </div>
 
