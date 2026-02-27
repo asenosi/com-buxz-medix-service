@@ -98,6 +98,38 @@ export type Database = {
           },
         ]
       }
+      audit_events: {
+        Row: {
+          created_at: string
+          document_id: string
+          event_type: string
+          id: string
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          event_type: string
+          id?: string
+          payload?: Json
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_events_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_sync_settings: {
         Row: {
           access_token: string | null
@@ -191,6 +223,77 @@ export type Database = {
         }
         Relationships: []
       }
+      confirmed_plans: {
+        Row: {
+          confirmed_at: string
+          confirmed_json: Json
+          created_at: string
+          document_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          confirmed_at?: string
+          confirmed_json?: Json
+          created_at?: string
+          document_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          confirmed_at?: string
+          confirmed_json?: Json
+          created_at?: string
+          document_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "confirmed_plans_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          created_at: string
+          document_type_hint: Database["public"]["Enums"]["document_type_hint"]
+          error_message: string | null
+          id: string
+          original_file_url: string
+          page_count: number
+          status: Database["public"]["Enums"]["document_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type_hint?: Database["public"]["Enums"]["document_type_hint"]
+          error_message?: string | null
+          id?: string
+          original_file_url: string
+          page_count?: number
+          status?: Database["public"]["Enums"]["document_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type_hint?: Database["public"]["Enums"]["document_type_hint"]
+          error_message?: string | null
+          id?: string
+          original_file_url?: string
+          page_count?: number
+          status?: Database["public"]["Enums"]["document_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dose_logs: {
         Row: {
           created_at: string
@@ -244,6 +347,50 @@ export type Database = {
             columns: ["schedule_id"]
             isOneToOne: false
             referencedRelation: "medication_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extraction_drafts: {
+        Row: {
+          created_at: string
+          document_id: string
+          draft_json: Json
+          extraction_version: string
+          id: string
+          llm_model: string | null
+          needs_human_review: boolean
+          normalized_json: Json
+          prompt_version: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          draft_json?: Json
+          extraction_version?: string
+          id?: string
+          llm_model?: string | null
+          needs_human_review?: boolean
+          normalized_json?: Json
+          prompt_version?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          draft_json?: Json
+          extraction_version?: string
+          id?: string
+          llm_model?: string | null
+          needs_human_review?: boolean
+          normalized_json?: Json
+          prompt_version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extraction_drafts_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
         ]
@@ -769,6 +916,16 @@ export type Database = {
         | "vaccination"
         | "therapy"
         | "other"
+      document_status:
+        | "UPLOADED"
+        | "PREPROCESSING"
+        | "OCR_RUNNING"
+        | "EXTRACTION_RUNNING"
+        | "DRAFT_READY"
+        | "NEEDS_REVIEW"
+        | "CONFIRMED"
+        | "FAILED"
+      document_type_hint: "PRINTED" | "HANDWRITTEN" | "MIXED" | "UNKNOWN"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -914,6 +1071,17 @@ export const Constants = {
         "therapy",
         "other",
       ],
+      document_status: [
+        "UPLOADED",
+        "PREPROCESSING",
+        "OCR_RUNNING",
+        "EXTRACTION_RUNNING",
+        "DRAFT_READY",
+        "NEEDS_REVIEW",
+        "CONFIRMED",
+        "FAILED",
+      ],
+      document_type_hint: ["PRINTED", "HANDWRITTEN", "MIXED", "UNKNOWN"],
     },
   },
 } as const
