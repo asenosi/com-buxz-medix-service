@@ -13,13 +13,17 @@ const tools = [
     function: {
       name: "log_dose",
       description:
-        "Record that a user has taken a medication dose. Use when the user says they took their medication.",
+        "Record that a user has taken a medication dose. Use when the user says they took their medication. IMPORTANT: Always call list_medications first to check the scheduled times, then specify the correct scheduled_time for the dose being logged.",
       parameters: {
         type: "object",
         properties: {
           medication_name: {
             type: "string",
             description: "Name of the medication taken",
+          },
+          scheduled_time: {
+            type: "string",
+            description: "The scheduled time this dose corresponds to, in HH:MM format (24h). Must match one of the medication's scheduled times. If the user doesn't specify, ask which time slot they mean.",
           },
           status: {
             type: "string",
