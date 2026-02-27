@@ -188,24 +188,31 @@ const Dashboard = () => {
 
   const fetchGamificationStats = useCallback(async () => {
     try {
-      // Get total taken doses
-      const { data: allLogs, error: logsError } = await supabase
+      // Use count query instead of fetching all rows
+      const { count: takenCount } = await supabase
         .from("dose_logs")
-        .select("*")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "taken");
+
+      setTotalTaken(takenCount || 0);
+
+      // Calculate streak using only last 30 days of taken logs (not all 365 * all fields)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { data: recentLogs } = await supabase
+        .from("dose_logs")
+        .select("taken_at, scheduled_time")
         .eq("status", "taken")
-        .order("taken_at", { ascending: false });
+        .gte("scheduled_time", thirtyDaysAgo.toISOString())
+        .order("scheduled_time", { ascending: false });
 
-      if (logsError) throw logsError;
-
-      setTotalTaken(allLogs?.length || 0);
-
-      // Calculate streak
-      if (allLogs && allLogs.length > 0) {
+      if (recentLogs && recentLogs.length > 0) {
         let currentStreak = 0;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        for (let i = 0; i < 365; i++) {
+        for (let i = 0; i < 30; i++) {
           const checkDate = new Date(today);
           checkDate.setDate(today.getDate() - i);
           checkDate.setHours(0, 0, 0, 0);
@@ -213,7 +220,7 @@ const Dashboard = () => {
           const nextDay = new Date(checkDate);
           nextDay.setDate(checkDate.getDate() + 1);
           
-          const hasLog = allLogs.some(log => {
+          const hasLog = recentLogs.some(log => {
             const logDate = new Date(log.taken_at || log.scheduled_time);
             return logDate >= checkDate && logDate < nextDay;
           });
@@ -227,18 +234,26 @@ const Dashboard = () => {
         setStreak(currentStreak);
       }
 
-      // Calculate weekly adherence
+      // Calculate weekly adherence using count queries in parallel
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
-      const { data: weekLogs } = await supabase
-        .from("dose_logs")
-        .select("*")
-        .gte("scheduled_time", sevenDaysAgo.toISOString());
+      const [weekTotalResult, weekTakenResult] = await Promise.all([
+        supabase
+          .from("dose_logs")
+          .select("id", { count: "exact", head: true })
+          .gte("scheduled_time", sevenDaysAgo.toISOString()),
+        supabase
+          .from("dose_logs")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "taken")
+          .gte("scheduled_time", sevenDaysAgo.toISOString()),
+      ]);
 
-      if (weekLogs && weekLogs.length > 0) {
-        const takenCount = weekLogs.filter(l => l.status === "taken").length;
-        setWeeklyAdherence(Math.round((takenCount / weekLogs.length) * 100));
+      const weekTotal = weekTotalResult.count || 0;
+      const weekTaken = weekTakenResult.count || 0;
+      if (weekTotal > 0) {
+        setWeeklyAdherence(Math.round((weekTaken / weekTotal) * 100));
       }
     } catch (error: unknown) {
       console.error("Failed to fetch gamification stats:", error);
@@ -387,27 +402,27 @@ const Dashboard = () => {
       const { data: sess } = await supabase.auth.getSession();
       const userId = sess.session?.user?.id;
       if (!userId) throw new Error("Not authenticated");
-      const { data: medsData, error: medsError } = await supabase
-        .from("medications")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("active", true)
-        .order("name");
 
+      // Fetch medications and gamification stats in parallel
+      const [medsResult, gamificationPromise] = await Promise.all([
+        supabase
+          .from("medications")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("active", true)
+          .order("name"),
+        fetchGamificationStats(),
+      ]);
+
+      const { data: medsData, error: medsError } = medsResult;
       if (medsError) throw medsError;
       
-      // Attach up to 5 storage images per medication
-      const medsWithImages: Medication[] = await (async () => {
-        const listForMed = async (med: Pick<Medication, "user_id" | "id">): Promise<string[]> => {
-          const base = `${med.user_id}/${med.id}`;
-          const { data: files } = await supabase.storage
-            .from("medication-images")
-            .list(base, { limit: 10, sortBy: { column: "updated_at", order: "desc" } });
-          const names = (files || []).slice(0, 5).map(f => `${base}/${f.name}`);
-          return names.map(n => supabase.storage.from("medication-images").getPublicUrl(n).data.publicUrl);
-        };
-        return Promise.all(((medsData || []) as Medication[]).map(async (m) => ({ ...m, images: await listForMed(m) })));
-      })();
+      // Use image_url and image_urls from the DB instead of N+1 storage.list() calls
+      const medsWithImages: Medication[] = ((medsData || []) as (Medication & { image_urls?: string[] | null })[]).map((m) => {
+        const dbImages = (m.image_urls || []).filter(Boolean);
+        const fallback = m.image_url ? [m.image_url] : [];
+        return { ...m, images: dbImages.length > 0 ? dbImages : fallback };
+      });
 
       setMedications(medsWithImages || []);
 
@@ -433,9 +448,6 @@ const Dashboard = () => {
           setTodayProgress(Math.round((takenCount / doses.length) * 100));
         }
       }
-
-      // Fetch gamification stats
-      await fetchGamificationStats();
     } catch (error: unknown) {
       toast.error("Failed to load medications");
       console.error(error);
