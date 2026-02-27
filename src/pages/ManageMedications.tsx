@@ -10,7 +10,8 @@ import {
   Shield,
   Bell,
   HelpCircle,
-  Share2
+  Share2,
+  FileText
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
