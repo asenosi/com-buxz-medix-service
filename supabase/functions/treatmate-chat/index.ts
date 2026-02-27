@@ -7,6 +7,58 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// --- Local types for edge-function DB rows (avoids importing shared types) ---
+interface MedRow {
+  id: string;
+  name: string;
+  pills_remaining: number | null;
+}
+
+interface ScheduleRow {
+  id: string;
+  time_of_day: string;
+  medication_id?: string;
+}
+
+interface DoseLogRow {
+  id: string;
+  status: string;
+}
+
+interface AppointmentRow {
+  id: string;
+  title: string;
+  appointment_date: string;
+  appointment_time: string;
+  doctor_name: string | null;
+  location: string | null;
+  status: string;
+}
+
+interface MedListRow {
+  id: string;
+  name: string;
+  dosage: string;
+  form: string | null;
+  pills_remaining: number | null;
+}
+
+interface ScheduleListRow {
+  medication_id: string;
+  time_of_day: string;
+  days_of_week: number[] | null;
+  with_food: boolean;
+  special_instructions: string | null;
+  frequency_type: string | null;
+}
+
+interface DoseLogListRow {
+  medication_id: string;
+  schedule_id: string;
+  status: string;
+  taken_at: string | null;
+}
+
 const tools = [
   {
     type: "function",
@@ -126,7 +178,7 @@ async function executeTool(
       console.log(`[log_dose] medication_name="${medication_name}", status="${status}", requestedTime="${requestedTime ?? 'none'}", userId="${userId}"`);
 
       // Find the medication
-      const { data: meds, error: medErr } = await supabaseAdmin
+      const { data: medsRaw, error: medErr } = await supabaseAdmin
         .from("medications")
         .select("id, name, pills_remaining")
         .eq("user_id", userId)
@@ -134,6 +186,7 @@ async function executeTool(
         .ilike("name", `%${medication_name}%`)
         .limit(1);
 
+      const meds = medsRaw as MedRow[] | null;
       console.log(`[log_dose] meds found: ${meds?.length ?? 0}, error: ${medErr?.message ?? 'none'}`);
 
       if (medErr || !meds?.length) {
@@ -147,13 +200,14 @@ async function executeTool(
       console.log(`[log_dose] matched medication: ${med.name} (${med.id})`);
 
       // Find all active schedules for this medication
-      const { data: schedules } = await supabaseAdmin
+      const { data: schedulesRaw } = await supabaseAdmin
         .from("medication_schedules")
         .select("id, time_of_day")
         .eq("medication_id", med.id)
         .eq("active", true)
         .order("time_of_day");
 
+      const schedules = schedulesRaw as ScheduleRow[] | null;
       console.log(`[log_dose] schedules found: ${schedules?.length ?? 0}`);
 
       if (!schedules?.length) {
@@ -164,7 +218,7 @@ async function executeTool(
       }
 
       // Match to the correct schedule
-      let schedule;
+      let schedule: ScheduleRow | undefined;
       if (schedules.length === 1) {
         schedule = schedules[0];
       } else if (requestedTime) {
@@ -193,7 +247,7 @@ async function executeTool(
       const scheduledForTimestamp = `${todayDate}T${schedule.time_of_day}`;
 
       // Check if a dose log already exists for this medication+schedule today
-      const { data: existingLogs } = await supabaseAdmin
+      const { data: existingLogsRaw } = await supabaseAdmin
         .from("dose_logs")
         .select("id, status")
         .eq("medication_id", med.id)
@@ -202,6 +256,7 @@ async function executeTool(
         .lte("scheduled_for", `${todayDate}T23:59:59Z`)
         .limit(1);
 
+      const existingLogs = existingLogsRaw as DoseLogRow[] | null;
       console.log(`[log_dose] existing logs today: ${existingLogs?.length ?? 0}`);
 
       let shouldDecrementPills = false;
@@ -217,7 +272,7 @@ async function executeTool(
             status,
             notes: notes || null,
             dose_status: status === "taken" ? "ON_TIME" : null,
-          })
+          } as Record<string, unknown>)
           .eq("id", existingLog.id);
 
         console.log(`[log_dose] update result: ${updateErr?.message ?? 'success'}`);
@@ -237,7 +292,7 @@ async function executeTool(
             .update({
               pills_remaining: med.pills_remaining - 1,
               updated_at: now.toISOString(),
-            })
+            } as Record<string, unknown>)
             .eq("id", med.id)
             .eq("user_id", userId);
 
@@ -263,7 +318,7 @@ async function executeTool(
           status,
           notes: notes || null,
           dose_status: status === "taken" ? "ON_TIME" : null,
-        });
+        } as Record<string, unknown>);
 
       console.log(`[log_dose] insert result: ${logErr?.message ?? 'success'}`);
 
@@ -282,7 +337,7 @@ async function executeTool(
           .update({
             pills_remaining: med.pills_remaining - 1,
             updated_at: now.toISOString(),
-          })
+          } as Record<string, unknown>)
           .eq("id", med.id)
           .eq("user_id", userId);
 
@@ -317,7 +372,7 @@ async function executeTool(
       };
 
       // Check for existing appointment on same date/time
-      const { data: existing } = await supabaseAdmin
+      const { data: existingRaw } = await supabaseAdmin
         .from("appointments")
         .select("id, title, appointment_date, appointment_time")
         .eq("user_id", userId)
@@ -325,6 +380,8 @@ async function executeTool(
         .eq("appointment_time", appointment_time)
         .eq("status", "scheduled")
         .limit(1);
+
+      const existing = existingRaw as AppointmentRow[] | null;
 
       if (existing?.length) {
         // Update existing appointment instead of creating duplicate
@@ -336,7 +393,7 @@ async function executeTool(
             location: location || null,
             appointment_type: appointment_type || "checkup",
             notes: notes || null,
-          })
+          } as Record<string, unknown>)
           .eq("id", existing[0].id);
 
         if (error) {
@@ -353,7 +410,7 @@ async function executeTool(
       }
 
       // Also check for same title on same date (different time)
-      const { data: sameDayMatch } = await supabaseAdmin
+      const { data: sameDayRaw } = await supabaseAdmin
         .from("appointments")
         .select("id, title, appointment_time")
         .eq("user_id", userId)
@@ -361,6 +418,8 @@ async function executeTool(
         .ilike("title", `%${title}%`)
         .eq("status", "scheduled")
         .limit(1);
+
+      const sameDayMatch = sameDayRaw as AppointmentRow[] | null;
 
       if (sameDayMatch?.length) {
         const { error } = await supabaseAdmin
@@ -372,7 +431,7 @@ async function executeTool(
             location: location || null,
             appointment_type: appointment_type || "checkup",
             notes: notes || null,
-          })
+          } as Record<string, unknown>)
           .eq("id", sameDayMatch[0].id);
 
         if (error) {
@@ -398,7 +457,7 @@ async function executeTool(
         appointment_type: appointment_type || "checkup",
         notes: notes || null,
         status: "scheduled",
-      });
+      } as Record<string, unknown>);
 
       if (error) {
         return JSON.stringify({
@@ -414,12 +473,14 @@ async function executeTool(
     }
 
     case "list_medications": {
-      const { data: meds } = await supabaseAdmin
+      const { data: medsRaw } = await supabaseAdmin
         .from("medications")
         .select("id, name, dosage, form, pills_remaining")
         .eq("user_id", userId)
         .eq("active", true)
         .order("name");
+
+      const meds = medsRaw as MedListRow[] | null;
 
       if (!meds?.length) {
         return JSON.stringify({ medications: [], message: "No active medications found." });
@@ -427,21 +488,25 @@ async function executeTool(
 
       // Fetch schedules for all medications
       const medIds = meds.map((m) => m.id);
-      const { data: schedules } = await supabaseAdmin
+      const { data: schedulesRaw } = await supabaseAdmin
         .from("medication_schedules")
         .select("medication_id, time_of_day, days_of_week, with_food, special_instructions, frequency_type")
         .in("medication_id", medIds)
         .eq("active", true)
         .order("time_of_day");
 
+      const schedules = schedulesRaw as ScheduleListRow[] | null;
+
       // Fetch today's dose logs
       const todayDate = new Date().toISOString().split("T")[0];
-      const { data: todayLogs } = await supabaseAdmin
+      const { data: todayLogsRaw } = await supabaseAdmin
         .from("dose_logs")
         .select("medication_id, schedule_id, status, taken_at")
         .in("medication_id", medIds)
         .gte("scheduled_for", `${todayDate}T00:00:00Z`)
         .lte("scheduled_for", `${todayDate}T23:59:59Z`);
+
+      const todayLogs = todayLogsRaw as DoseLogListRow[] | null;
 
       const medsWithSchedules = meds.map((med) => {
         const medSchedules = (schedules || []).filter((s) => s.medication_id === med.id);
@@ -472,7 +537,7 @@ async function executeTool(
 
     case "list_upcoming_appointments": {
       const today = new Date().toISOString().split("T")[0];
-      const { data: appts } = await supabaseAdmin
+      const { data: apptsRaw } = await supabaseAdmin
         .from("appointments")
         .select("title, appointment_date, appointment_time, doctor_name, location, status")
         .eq("user_id", userId)
@@ -481,6 +546,8 @@ async function executeTool(
         .order("appointment_date")
         .order("appointment_time")
         .limit(10);
+
+      const appts = apptsRaw as AppointmentRow[] | null;
 
       if (!appts?.length) {
         return JSON.stringify({ appointments: [], message: "No upcoming appointments." });
