@@ -411,18 +411,12 @@ const Dashboard = () => {
 
       if (medsError) throw medsError;
       
-      // Attach up to 5 storage images per medication
-      const medsWithImages: Medication[] = await (async () => {
-        const listForMed = async (med: Pick<Medication, "user_id" | "id">): Promise<string[]> => {
-          const base = `${med.user_id}/${med.id}`;
-          const { data: files } = await supabase.storage
-            .from("medication-images")
-            .list(base, { limit: 10, sortBy: { column: "updated_at", order: "desc" } });
-          const names = (files || []).slice(0, 5).map(f => `${base}/${f.name}`);
-          return names.map(n => supabase.storage.from("medication-images").getPublicUrl(n).data.publicUrl);
-        };
-        return Promise.all(((medsData || []) as Medication[]).map(async (m) => ({ ...m, images: await listForMed(m) })));
-      })();
+      // Use image_url and image_urls from the DB instead of N+1 storage.list() calls
+      const medsWithImages: Medication[] = ((medsData || []) as (Medication & { image_urls?: string[] | null })[]).map((m) => {
+        const dbImages = (m.image_urls || []).filter(Boolean);
+        const fallback = m.image_url ? [m.image_url] : [];
+        return { ...m, images: dbImages.length > 0 ? dbImages : fallback };
+      });
 
       setMedications(medsWithImages || []);
 
