@@ -504,6 +504,12 @@ Interactive UI hints — append these tags at the END of your message when appro
       if (!choice) throw new Error("No response from AI");
 
       const assistantMessage = choice.message;
+      console.log(`[Iteration ${i}] finish_reason=${choice.finish_reason}, tool_calls=${assistantMessage.tool_calls?.length ?? 0}, content_length=${assistantMessage.content?.length ?? 0}`);
+      if (assistantMessage.tool_calls?.length) {
+        for (const tc of assistantMessage.tool_calls) {
+          console.log(`  Tool call: ${tc.function.name}(${tc.function.arguments})`);
+        }
+      }
       currentMessages.push(assistantMessage);
 
       // If no tool calls, we're done
