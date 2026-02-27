@@ -402,13 +402,19 @@ const Dashboard = () => {
       const { data: sess } = await supabase.auth.getSession();
       const userId = sess.session?.user?.id;
       if (!userId) throw new Error("Not authenticated");
-      const { data: medsData, error: medsError } = await supabase
-        .from("medications")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("active", true)
-        .order("name");
 
+      // Fetch medications and gamification stats in parallel
+      const [medsResult, gamificationPromise] = await Promise.all([
+        supabase
+          .from("medications")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("active", true)
+          .order("name"),
+        fetchGamificationStats(),
+      ]);
+
+      const { data: medsData, error: medsError } = medsResult;
       if (medsError) throw medsError;
       
       // Use image_url and image_urls from the DB instead of N+1 storage.list() calls
@@ -442,9 +448,6 @@ const Dashboard = () => {
           setTodayProgress(Math.round((takenCount / doses.length) * 100));
         }
       }
-
-      // Fetch gamification stats
-      await fetchGamificationStats();
     } catch (error: unknown) {
       toast.error("Failed to load medications");
       console.error(error);
