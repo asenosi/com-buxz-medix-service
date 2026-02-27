@@ -841,18 +841,9 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-card/95">
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6" />
-        </header>
-        <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-8">
-          <div className="mb-6">
-            <DoseItemSkeleton count={5} />
-          </div>
-          <div className="mt-8">
-            <MedCardGridSkeleton count={4} />
-          </div>
-        </main>
+      <div className="space-y-6 py-4">
+        <DoseItemSkeleton count={4} />
+        <MedCardGridSkeleton count={2} />
       </div>
     );
   }
