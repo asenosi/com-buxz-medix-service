@@ -31,6 +31,10 @@ const RefillDetails = lazy(() => import("./pages/RefillDetails"));
 const CaregiverDashboard = lazy(() => import("./pages/CaregiverDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Chat = lazy(() => import("./pages/Chat"));
+const UploadPrescription = lazy(() => import("./pages/UploadPrescription"));
+const Documents = lazy(() => import("./pages/Documents"));
+const ReviewPrescription = lazy(() => import("./pages/ReviewPrescription"));
+const ConfirmedPlan = lazy(() => import("./pages/ConfirmedPlan"));
 
 const queryClient = new QueryClient();
 
