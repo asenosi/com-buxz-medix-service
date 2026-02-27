@@ -188,24 +188,31 @@ const Dashboard = () => {
 
   const fetchGamificationStats = useCallback(async () => {
     try {
-      // Get total taken doses
-      const { data: allLogs, error: logsError } = await supabase
+      // Use count query instead of fetching all rows
+      const { count: takenCount } = await supabase
         .from("dose_logs")
-        .select("*")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "taken");
+
+      setTotalTaken(takenCount || 0);
+
+      // Calculate streak using only last 30 days of taken logs (not all 365 * all fields)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { data: recentLogs } = await supabase
+        .from("dose_logs")
+        .select("taken_at, scheduled_time")
         .eq("status", "taken")
-        .order("taken_at", { ascending: false });
+        .gte("scheduled_time", thirtyDaysAgo.toISOString())
+        .order("scheduled_time", { ascending: false });
 
-      if (logsError) throw logsError;
-
-      setTotalTaken(allLogs?.length || 0);
-
-      // Calculate streak
-      if (allLogs && allLogs.length > 0) {
+      if (recentLogs && recentLogs.length > 0) {
         let currentStreak = 0;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        for (let i = 0; i < 365; i++) {
+        for (let i = 0; i < 30; i++) {
           const checkDate = new Date(today);
           checkDate.setDate(today.getDate() - i);
           checkDate.setHours(0, 0, 0, 0);
@@ -213,7 +220,7 @@ const Dashboard = () => {
           const nextDay = new Date(checkDate);
           nextDay.setDate(checkDate.getDate() + 1);
           
-          const hasLog = allLogs.some(log => {
+          const hasLog = recentLogs.some(log => {
             const logDate = new Date(log.taken_at || log.scheduled_time);
             return logDate >= checkDate && logDate < nextDay;
           });
@@ -227,18 +234,26 @@ const Dashboard = () => {
         setStreak(currentStreak);
       }
 
-      // Calculate weekly adherence
+      // Calculate weekly adherence using count queries in parallel
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
-      const { data: weekLogs } = await supabase
-        .from("dose_logs")
-        .select("*")
-        .gte("scheduled_time", sevenDaysAgo.toISOString());
+      const [weekTotalResult, weekTakenResult] = await Promise.all([
+        supabase
+          .from("dose_logs")
+          .select("id", { count: "exact", head: true })
+          .gte("scheduled_time", sevenDaysAgo.toISOString()),
+        supabase
+          .from("dose_logs")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "taken")
+          .gte("scheduled_time", sevenDaysAgo.toISOString()),
+      ]);
 
-      if (weekLogs && weekLogs.length > 0) {
-        const takenCount = weekLogs.filter(l => l.status === "taken").length;
-        setWeeklyAdherence(Math.round((takenCount / weekLogs.length) * 100));
+      const weekTotal = weekTotalResult.count || 0;
+      const weekTaken = weekTakenResult.count || 0;
+      if (weekTotal > 0) {
+        setWeeklyAdherence(Math.round((weekTaken / weekTotal) * 100));
       }
     } catch (error: unknown) {
       console.error("Failed to fetch gamification stats:", error);
