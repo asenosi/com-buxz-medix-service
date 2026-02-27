@@ -198,8 +198,8 @@ async function executeTool(
         .select("id")
         .eq("medication_id", med.id)
         .eq("schedule_id", schedule.id)
-        .gte("scheduled_time", `${todayDate}T00:00:00Z`)
-        .lte("scheduled_time", `${todayDate}T23:59:59Z`)
+        .gte("scheduled_for", `${todayDate}T00:00:00Z`)
+        .lte("scheduled_for", `${todayDate}T23:59:59Z`)
         .limit(1);
 
       console.log(`[log_dose] existing logs today: ${existingLogs?.length ?? 0}`);
@@ -209,7 +209,7 @@ async function executeTool(
           .from("dose_logs")
           .update({
             taken_at: status === "taken" ? now.toISOString() : null,
-            scheduled_for: now.toISOString(),
+            scheduled_for: scheduledForTimestamp,
             status,
             notes: notes || null,
             dose_status: status === "taken" ? "ON_TIME" : null,
@@ -227,7 +227,7 @@ async function executeTool(
 
         return JSON.stringify({
           success: true,
-          message: `✅ Updated ${med.name} as ${status}${notes ? ` — "${notes}"` : ""}.`,
+          message: `✅ Updated ${med.name} (${schedule.time_of_day.substring(0, 5)}) as ${status}${notes ? ` — "${notes}"` : ""}.`,
         });
       }
 
@@ -236,8 +236,8 @@ async function executeTool(
         .insert({
           medication_id: med.id,
           schedule_id: schedule.id,
-          scheduled_time: now.toISOString(),
-          scheduled_for: now.toISOString(),
+          scheduled_time: scheduledForTimestamp,
+          scheduled_for: scheduledForTimestamp,
           taken_at: status === "taken" ? now.toISOString() : null,
           status,
           notes: notes || null,
@@ -255,7 +255,7 @@ async function executeTool(
 
       return JSON.stringify({
         success: true,
-        message: `✅ Logged ${med.name} as ${status}${notes ? ` — "${notes}"` : ""}.`,
+        message: `✅ Logged ${med.name} (${schedule.time_of_day.substring(0, 5)}) as ${status}${notes ? ` — "${notes}"` : ""}.`,
       });
     }
 
