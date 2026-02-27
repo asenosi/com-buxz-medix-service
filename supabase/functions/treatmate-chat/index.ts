@@ -128,7 +128,7 @@ async function executeTool(
       // Find the medication
       const { data: meds, error: medErr } = await supabaseAdmin
         .from("medications")
-        .select("id, name")
+        .select("id, name, pills_remaining")
         .eq("user_id", userId)
         .eq("active", true)
         .ilike("name", `%${medication_name}%`)
@@ -195,7 +195,7 @@ async function executeTool(
       // Check if a dose log already exists for this medication+schedule today
       const { data: existingLogs } = await supabaseAdmin
         .from("dose_logs")
-        .select("id")
+        .select("id, status")
         .eq("medication_id", med.id)
         .eq("schedule_id", schedule.id)
         .gte("scheduled_for", `${todayDate}T00:00:00Z`)
@@ -204,7 +204,11 @@ async function executeTool(
 
       console.log(`[log_dose] existing logs today: ${existingLogs?.length ?? 0}`);
 
+      let shouldDecrementPills = false;
+
       if (existingLogs?.length) {
+        const existingLog = existingLogs[0];
+
         const { error: updateErr } = await supabaseAdmin
           .from("dose_logs")
           .update({
@@ -214,7 +218,7 @@ async function executeTool(
             notes: notes || null,
             dose_status: status === "taken" ? "ON_TIME" : null,
           })
-          .eq("id", existingLogs[0].id);
+          .eq("id", existingLog.id);
 
         console.log(`[log_dose] update result: ${updateErr?.message ?? 'success'}`);
 
@@ -223,6 +227,23 @@ async function executeTool(
             success: false,
             message: `Failed to update dose: ${updateErr.message}`,
           });
+        }
+
+        shouldDecrementPills = status === "taken" && existingLog.status !== "taken";
+
+        if (shouldDecrementPills && med.pills_remaining !== null && med.pills_remaining > 0) {
+          const { error: medUpdateErr } = await supabaseAdmin
+            .from("medications")
+            .update({
+              pills_remaining: med.pills_remaining - 1,
+              updated_at: now.toISOString(),
+            })
+            .eq("id", med.id)
+            .eq("user_id", userId);
+
+          if (medUpdateErr) {
+            console.error(`[log_dose] failed to decrement pills_remaining: ${medUpdateErr.message}`);
+          }
         }
 
         return JSON.stringify({
@@ -251,6 +272,23 @@ async function executeTool(
           success: false,
           message: `Failed to log dose: ${logErr.message}`,
         });
+      }
+
+      shouldDecrementPills = status === "taken";
+
+      if (shouldDecrementPills && med.pills_remaining !== null && med.pills_remaining > 0) {
+        const { error: medUpdateErr } = await supabaseAdmin
+          .from("medications")
+          .update({
+            pills_remaining: med.pills_remaining - 1,
+            updated_at: now.toISOString(),
+          })
+          .eq("id", med.id)
+          .eq("user_id", userId);
+
+        if (medUpdateErr) {
+          console.error(`[log_dose] failed to decrement pills_remaining: ${medUpdateErr.message}`);
+        }
       }
 
       return JSON.stringify({
