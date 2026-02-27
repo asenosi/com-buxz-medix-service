@@ -121,7 +121,7 @@ export function useNotification() {
       const registration = await navigator.serviceWorker.ready;
       
       // Check if already subscribed
-      let subscription = await registration.pushManager.getSubscription();
+      let subscription = await (registration as any).pushManager.getSubscription();
       
       if (!subscription) {
         // Subscribe to push notifications
@@ -138,7 +138,7 @@ export function useNotification() {
         
         const { publicKey } = await response.json();
         
-        subscription = await registration.pushManager.subscribe({
+        subscription = await (registration as any).pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: publicKey,
         });
@@ -197,7 +197,7 @@ export function useNotification() {
       if ("serviceWorker" in navigator && "PushManager" in window) {
         try {
           const registration = await navigator.serviceWorker.ready;
-          const subscription = await registration.pushManager.getSubscription();
+          const subscription = await (registration as any).pushManager.getSubscription();
           setPushSubscription(subscription);
         } catch (error) {
           console.error("Failed to load push subscription:", error);

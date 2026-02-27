@@ -31,7 +31,7 @@ export function useTheme() {
 
   const [palette, setPalette] = useState<ThemeName>(() => {
     const saved = localStorage.getItem("theme:palette") as ThemeName | null;
-    return saved ?? "african-sunset";
+    return saved ?? "default";
   });
 
   useEffect(() => {
