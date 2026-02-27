@@ -97,6 +97,14 @@ export default function DesktopSidebar() {
           )}
         </button>
         <button
+          onClick={() => navigate("/documents")}
+          className={`${itemBase} ${isActive("/documents", true) || isActive("/upload") || isActive("/review", true) || isActive("/plans", true) ? itemActive : itemHover}`}
+          aria-current={isActive("/documents", true) ? "page" : undefined}
+        >
+          <FileText className="h-4 w-4" />
+          <span className="text-sm font-medium">Prescriptions</span>
+        </button>
+        <button
           onClick={() => navigate("/calendar")}
           className={`${itemBase} ${isActive("/calendar", true) ? itemActive : itemHover}`}
           aria-current={isActive("/calendar", true) ? "page" : undefined}
