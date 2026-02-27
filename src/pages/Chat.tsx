@@ -3,9 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Send, Bot, User, Loader2, Sparkles, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 
 interface Message {
@@ -13,6 +16,33 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  quickReplies?: string[];
+  showDatePicker?: boolean;
+}
+
+function parseInteractiveTags(content: string): {
+  cleanContent: string;
+  quickReplies?: string[];
+  showDatePicker?: boolean;
+} {
+  let cleanContent = content;
+  let quickReplies: string[] | undefined;
+  let showDatePicker = false;
+
+  // Parse [QUICK_REPLIES:opt1,opt2,...]
+  const qrMatch = cleanContent.match(/\[QUICK_REPLIES:([^\]]+)\]/);
+  if (qrMatch) {
+    quickReplies = qrMatch[1].split(",").map((s) => s.trim());
+    cleanContent = cleanContent.replace(qrMatch[0], "").trim();
+  }
+
+  // Parse [DATE_PICKER]
+  if (cleanContent.includes("[DATE_PICKER]")) {
+    showDatePicker = true;
+    cleanContent = cleanContent.replace("[DATE_PICKER]", "").trim();
+  }
+
+  return { cleanContent, quickReplies, showDatePicker };
 }
 
 const SUGGESTIONS = [
@@ -26,6 +56,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -69,11 +100,17 @@ export default function Chat() {
           return;
         }
 
+        const rawReply = data?.reply || "I'm sorry, I couldn't process that.";
+        const { cleanContent, quickReplies, showDatePicker } =
+          parseInteractiveTags(rawReply);
+
         const assistantMsg: Message = {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: data?.reply || "I'm sorry, I couldn't process that.",
+          content: cleanContent,
           timestamp: new Date(),
+          quickReplies,
+          showDatePicker,
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
@@ -92,6 +129,21 @@ export default function Chat() {
     e.preventDefault();
     sendMessage(input);
   };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setCalendarOpen(false);
+      sendMessage(format(date, "yyyy-MM-dd"));
+    }
+  };
+
+  const handleQuickReply = (reply: string) => {
+    sendMessage(reply);
+  };
+
+  // Check if the last assistant message has interactive elements
+  const lastAssistantMsg = [...messages].reverse().find((m) => m.role === "assistant");
+  const showInteractive = !isLoading && lastAssistantMsg;
 
   return (
     <div className="flex flex-col h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-6rem)]">
@@ -122,42 +174,92 @@ export default function Chat() {
             </div>
           </div>
         ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn(
-                "flex gap-3 max-w-2xl mx-auto animate-fade-in",
-                msg.role === "user" ? "justify-end" : "justify-start"
-              )}
-            >
-              {msg.role === "assistant" && (
-                <div className="shrink-0 w-8 h-8 rounded-full bg-chat-bot flex items-center justify-center mt-1">
-                  <Bot className="w-4 h-4 text-chat-bot-foreground" />
+          messages.map((msg, idx) => {
+            const isLastAssistant =
+              msg.role === "assistant" &&
+              idx === messages.length - 1 &&
+              !isLoading;
+
+            return (
+              <div key={msg.id} className="space-y-2">
+                <div
+                  className={cn(
+                    "flex gap-3 max-w-2xl mx-auto animate-fade-in",
+                    msg.role === "user" ? "justify-end" : "justify-start"
+                  )}
+                >
+                  {msg.role === "assistant" && (
+                    <div className="shrink-0 w-8 h-8 rounded-full bg-chat-bot flex items-center justify-center mt-1">
+                      <Bot className="w-4 h-4 text-chat-bot-foreground" />
+                    </div>
+                  )}
+                  <Card
+                    className={cn(
+                      "px-4 py-3 max-w-[80%] shadow-sm",
+                      msg.role === "user"
+                        ? "bg-chat-user text-chat-user-foreground border-transparent rounded-2xl rounded-br-md"
+                        : "bg-chat-bot text-chat-bot-foreground border-transparent rounded-2xl rounded-bl-md"
+                    )}
+                  >
+                    {msg.role === "assistant" ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:text-sm [&_p]:leading-relaxed [&_p]:m-0 [&_ul]:text-sm [&_li]:text-sm">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed m-0">
+                        {msg.content}
+                      </p>
+                    )}
+                  </Card>
+                  {msg.role === "user" && (
+                    <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
+                      <User className="w-4 h-4 text-primary" />
+                    </div>
+                  )}
                 </div>
-              )}
-              <Card
-                className={cn(
-                  "px-4 py-3 max-w-[80%] shadow-sm",
-                  msg.role === "user"
-                    ? "bg-chat-user text-chat-user-foreground border-transparent rounded-2xl rounded-br-md"
-                    : "bg-chat-bot text-chat-bot-foreground border-transparent rounded-2xl rounded-bl-md"
-                )}
-              >
-                {msg.role === "assistant" ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:text-sm [&_p]:leading-relaxed [&_p]:m-0 [&_ul]:text-sm [&_li]:text-sm">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+
+                {/* Interactive elements for the last assistant message */}
+                {isLastAssistant && (msg.quickReplies || msg.showDatePicker) && (
+                  <div className="flex flex-wrap gap-2 max-w-2xl mx-auto pl-11 animate-fade-in">
+                    {msg.showDatePicker && (
+                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full gap-2 text-sm border-primary/30 text-primary hover:bg-primary/10"
+                          >
+                            <CalendarIcon className="w-4 h-4" />
+                            Pick a date
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            onSelect={handleDateSelect}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    {msg.quickReplies?.map((reply) => (
+                      <Button
+                        key={reply}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickReply(reply)}
+                        className="rounded-full text-sm border-primary/30 text-primary hover:bg-primary/10"
+                      >
+                        {reply}
+                      </Button>
+                    ))}
                   </div>
-                ) : (
-                  <p className="text-sm leading-relaxed m-0">{msg.content}</p>
                 )}
-              </Card>
-              {msg.role === "user" && (
-                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-                  <User className="w-4 h-4 text-primary" />
-                </div>
-              )}
-            </div>
-          ))
+              </div>
+            );
+          })
         )}
 
         {isLoading && (
