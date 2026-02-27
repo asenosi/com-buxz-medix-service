@@ -118,6 +118,7 @@ async function executeTool(
         status: string;
         notes?: string;
       };
+      console.log(`[log_dose] medication_name="${medication_name}", status="${status}", userId="${userId}"`);
 
       // Find the medication
       const { data: meds, error: medErr } = await supabaseAdmin
@@ -128,6 +129,8 @@ async function executeTool(
         .ilike("name", `%${medication_name}%`)
         .limit(1);
 
+      console.log(`[log_dose] meds found: ${meds?.length ?? 0}, error: ${medErr?.message ?? 'none'}`);
+
       if (medErr || !meds?.length) {
         return JSON.stringify({
           success: false,
@@ -136,6 +139,7 @@ async function executeTool(
       }
 
       const med = meds[0];
+      console.log(`[log_dose] matched medication: ${med.name} (${med.id})`);
 
       // Find the schedule
       const { data: schedules } = await supabaseAdmin
@@ -144,6 +148,8 @@ async function executeTool(
         .eq("medication_id", med.id)
         .eq("active", true)
         .limit(1);
+
+      console.log(`[log_dose] schedules found: ${schedules?.length ?? 0}`);
 
       if (!schedules?.length) {
         return JSON.stringify({
@@ -166,17 +172,21 @@ async function executeTool(
         .lte("scheduled_time", `${todayDate}T23:59:59Z`)
         .limit(1);
 
+      console.log(`[log_dose] existing logs today: ${existingLogs?.length ?? 0}`);
+
       if (existingLogs?.length) {
-        // Update existing log instead of creating duplicate
         const { error: updateErr } = await supabaseAdmin
           .from("dose_logs")
           .update({
             taken_at: status === "taken" ? now.toISOString() : null,
+            scheduled_for: now.toISOString(),
             status,
             notes: notes || null,
             dose_status: status === "taken" ? "ON_TIME" : null,
           })
           .eq("id", existingLogs[0].id);
+
+        console.log(`[log_dose] update result: ${updateErr?.message ?? 'success'}`);
 
         if (updateErr) {
           return JSON.stringify({
@@ -203,6 +213,8 @@ async function executeTool(
           notes: notes || null,
           dose_status: status === "taken" ? "ON_TIME" : null,
         });
+
+      console.log(`[log_dose] insert result: ${logErr?.message ?? 'success'}`);
 
       if (logErr) {
         return JSON.stringify({
@@ -504,6 +516,12 @@ Interactive UI hints — append these tags at the END of your message when appro
       if (!choice) throw new Error("No response from AI");
 
       const assistantMessage = choice.message;
+      console.log(`[Iteration ${i}] finish_reason=${choice.finish_reason}, tool_calls=${assistantMessage.tool_calls?.length ?? 0}, content_length=${assistantMessage.content?.length ?? 0}`);
+      if (assistantMessage.tool_calls?.length) {
+        for (const tc of assistantMessage.tool_calls) {
+          console.log(`  Tool call: ${tc.function.name}(${tc.function.arguments})`);
+        }
+      }
       currentMessages.push(assistantMessage);
 
       // If no tool calls, we're done
