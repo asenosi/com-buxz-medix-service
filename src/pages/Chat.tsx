@@ -74,7 +74,7 @@ export default function Chat() {
 
       if (data?.length) {
         setMessages(
-          data.map((m: any) => ({
+          data.map((m: { id: string; role: string; content: string; created_at: string; quick_replies?: string[] | null; show_date_picker?: boolean | null }) => ({
             id: m.id,
             role: m.role as "user" | "assistant",
             content: m.content,
