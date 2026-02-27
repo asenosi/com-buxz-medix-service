@@ -117,12 +117,13 @@ async function executeTool(
 ): Promise<string> {
   switch (toolName) {
     case "log_dose": {
-      const { medication_name, status, notes } = args as {
+      const { medication_name, status, notes, scheduled_time: requestedTime } = args as {
         medication_name: string;
         status: string;
         notes?: string;
+        scheduled_time?: string;
       };
-      console.log(`[log_dose] medication_name="${medication_name}", status="${status}", userId="${userId}"`);
+      console.log(`[log_dose] medication_name="${medication_name}", status="${status}", requestedTime="${requestedTime ?? 'none'}", userId="${userId}"`);
 
       // Find the medication
       const { data: meds, error: medErr } = await supabaseAdmin
@@ -145,13 +146,13 @@ async function executeTool(
       const med = meds[0];
       console.log(`[log_dose] matched medication: ${med.name} (${med.id})`);
 
-      // Find the schedule
+      // Find all active schedules for this medication
       const { data: schedules } = await supabaseAdmin
         .from("medication_schedules")
         .select("id, time_of_day")
         .eq("medication_id", med.id)
         .eq("active", true)
-        .limit(1);
+        .order("time_of_day");
 
       console.log(`[log_dose] schedules found: ${schedules?.length ?? 0}`);
 
@@ -162,9 +163,34 @@ async function executeTool(
         });
       }
 
-      const schedule = schedules[0];
+      // Match to the correct schedule
+      let schedule;
+      if (schedules.length === 1) {
+        schedule = schedules[0];
+      } else if (requestedTime) {
+        // Match by time (compare HH:MM)
+        const normalizedReq = requestedTime.substring(0, 5);
+        schedule = schedules.find((s) => s.time_of_day.substring(0, 5) === normalizedReq);
+        if (!schedule) {
+          const availableTimes = schedules.map((s) => s.time_of_day.substring(0, 5)).join(", ");
+          return JSON.stringify({
+            success: false,
+            message: `No schedule at ${requestedTime} for ${med.name}. Available times: ${availableTimes}. Which one did you take?`,
+          });
+        }
+      } else {
+        // Multiple schedules, no time specified — ask the user
+        const availableTimes = schedules.map((s) => s.time_of_day.substring(0, 5)).join(", ");
+        return JSON.stringify({
+          success: false,
+          message: `${med.name} has multiple scheduled times: ${availableTimes}. Which dose did you take?`,
+        });
+      }
+
       const now = new Date();
       const todayDate = now.toISOString().split("T")[0];
+      // Build the scheduled_for timestamp using the schedule's time_of_day
+      const scheduledForTimestamp = `${todayDate}T${schedule.time_of_day}`;
 
       // Check if a dose log already exists for this medication+schedule today
       const { data: existingLogs } = await supabaseAdmin
