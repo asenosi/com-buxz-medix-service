@@ -302,7 +302,14 @@ Return ONLY the JSON object, no markdown fences.`;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // 10-minute timeout for the AI extraction call
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+
+    let aiResponse: Response;
+    try {
+      aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        signal: controller.signal,
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -327,7 +334,16 @@ Return ONLY the JSON object, no markdown fences.`;
           },
         ],
       }),
-    });
+      });
+    } catch (fetchErr) {
+      clearTimeout(timeout);
+      if (fetchErr instanceof DOMException && fetchErr.name === "AbortError") {
+        throw new Error("Extraction timed out after 10 minutes");
+      }
+      throw fetchErr;
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();

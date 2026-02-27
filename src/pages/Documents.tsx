@@ -34,7 +34,19 @@ export default function Documents() {
         .eq("user_id", userData.user.id)
         .order("created_at", { ascending: false });
 
-      if (!error && data) setDocuments(data as unknown as DocumentRow[]);
+      if (!error && data) {
+        const TEN_MIN_MS = 10 * 60 * 1000;
+        const now = Date.now();
+        const processed = (data as unknown as DocumentRow[]).map((doc) => {
+          const isProcessing = ["UPLOADED", "PREPROCESSING", "OCR_RUNNING", "EXTRACTION_RUNNING"].includes(doc.status);
+          const age = now - new Date(doc.updated_at || doc.created_at).getTime();
+          if (isProcessing && age > TEN_MIN_MS) {
+            return { ...doc, status: "FAILED" as const, error_message: doc.error_message || "Extraction timed out" };
+          }
+          return doc;
+        });
+        setDocuments(processed);
+      }
       setLoading(false);
     };
 
