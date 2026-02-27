@@ -1,128 +1,138 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+/* Design system: Teal/warm palette inspired by Fixr. All colors HSL. */
 
 @layer base {
   :root {
-    /* Medical blue - trustworthy, calming */
-    --background: 210 40% 98%;
-    --foreground: 215 25% 20%;
+    /* Warm off-white background */
+    --background: 180 10% 97%;
+    --foreground: 200 25% 10%;
 
-    /* Clean white cards for clarity */
+    /* Clean white cards */
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 20%;
+    --card-foreground: 200 25% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 20%;
+    --popover-foreground: 200 25% 10%;
 
-    /* Medical blue primary */
-    --primary: 210 90% 48%;
+    /* Teal primary */
+    --primary: 174 62% 42%;
     --primary-foreground: 0 0% 100%;
 
     /* Health green secondary */
-    --secondary: 142 76% 36%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 180 15% 92%;
+    --secondary-foreground: 200 25% 15%;
 
-    /* Soft gray muted */
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* Soft muted */
+    --muted: 180 10% 94%;
+    --muted-foreground: 200 10% 45%;
 
-    /* Warm amber accent for alerts */
-    --accent: 38 92% 50%;
+    /* Warm amber accent */
+    --accent: 38 90% 55%;
     --accent-foreground: 0 0% 100%;
 
     /* Alert red */
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     /* Subtle borders */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 210 90% 48% / 0.7;
+    --border: 180 12% 88%;
+    --input: 180 12% 88%;
+    --ring: 174 62% 42%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Success green */
-    --success: 142 76% 36%;
+    --success: 152 60% 40%;
     --success-foreground: 0 0% 100%;
 
     /* Warning orange */
     --warning: 25 95% 53%;
-    --warning-foreground: 215 25% 20%;
+    --warning-foreground: 200 25% 10%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 90% 48%), hsl(210 90% 60%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 48%));
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
+    /* Chat tokens */
+    --chat-user: 174 62% 42%;
+    --chat-user-foreground: 0 0% 100%;
+    --chat-bot: 180 10% 94%;
+    --chat-bot-foreground: 200 25% 10%;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 25% 20%;
-    --sidebar-primary: 210 90% 48%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 200 25% 10%;
+    --sidebar-primary: 174 62% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 215 25% 20%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 210 90% 48%;
+    --sidebar-accent: 180 10% 94%;
+    --sidebar-accent-foreground: 200 25% 10%;
+    --sidebar-border: 180 12% 88%;
+    --sidebar-ring: 174 62% 42%;
   }
 
   .dark {
-    --background: 215 28% 17%;
-    --foreground: 210 40% 98%;
+    --background: 200 25% 8%;
+    --foreground: 180 10% 95%;
 
-    --card: 215 28% 20%;
-    --card-foreground: 210 40% 98%;
+    --card: 200 20% 12%;
+    --card-foreground: 180 10% 95%;
 
-    --popover: 215 28% 20%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 200 20% 12%;
+    --popover-foreground: 180 10% 95%;
 
-    --primary: 210 90% 55%;
+    --primary: 174 62% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 142 70% 42%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 200 15% 18%;
+    --secondary-foreground: 180 10% 90%;
 
-    --muted: 215 28% 25%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 200 15% 18%;
+    --muted-foreground: 200 10% 55%;
 
     --accent: 38 90% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 62% 31%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 28% 25%;
-    --input: 215 28% 25%;
-    --ring: 210 90% 55% / 0.7;
+    --border: 200 15% 20%;
+    --input: 200 15% 20%;
+    --ring: 174 62% 48%;
 
-    --success: 142 70% 42%;
+    --success: 152 55% 45%;
     --success-foreground: 0 0% 100%;
 
     --warning: 25 95% 53%;
     --warning-foreground: 0 0% 100%;
 
-    --sidebar-background: 215 28% 17%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 90% 55%;
+    --chat-user: 174 62% 48%;
+    --chat-user-foreground: 0 0% 100%;
+    --chat-bot: 200 15% 18%;
+    --chat-bot-foreground: 180 10% 95%;
+
+    --sidebar-background: 200 25% 8%;
+    --sidebar-foreground: 180 10% 95%;
+    --sidebar-primary: 174 62% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 28% 25%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 28% 25%;
-    --sidebar-ring: 210 90% 55%;
+    --sidebar-accent: 200 15% 18%;
+    --sidebar-accent-foreground: 180 10% 95%;
+    --sidebar-border: 200 15% 20%;
+    --sidebar-ring: 174 62% 48%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border/60;
+    @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
   }
 
   /* Elderly-friendly typography */
@@ -171,7 +181,6 @@ All colors MUST be HSL.
     animation: bounce-subtle 2s ease-in-out infinite;
   }
 
-  /* Missing common animations */
   .animate-fade-in {
     animation: fade-in 0.6s ease-out both;
   }
@@ -184,7 +193,6 @@ All colors MUST be HSL.
     animation: slide-in-right 0.6s ease-out both;
   }
 
-  /* Amazing loading animations */
   .animate-shimmer {
     animation: shimmer 2s ease-in-out infinite;
     background: linear-gradient(
@@ -217,112 +225,58 @@ All colors MUST be HSL.
   }
 
   @keyframes slide-down {
-    from {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 
   @keyframes slide-in-left {
-    from {
-      transform: translateX(-50px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
+    from { transform: translateX(-50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
 
   @keyframes slide-in-right {
-    from {
-      transform: translateX(50px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
+    from { transform: translateX(50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
 
   @keyframes fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes scale-in {
-    from {
-      opacity: 0;
-      transform: scale(0.96);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   @keyframes bounce-subtle {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-5px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
   }
 
   @keyframes shimmer {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 
   @keyframes wave {
-    0%, 100% {
-      transform: scaleX(1);
-    }
-    50% {
-      transform: scaleX(0.95);
-    }
+    0%, 100% { transform: scaleX(1); }
+    50% { transform: scaleX(0.95); }
   }
 
   @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
   }
 
   @keyframes glow {
-    0%, 100% {
-      box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
-    }
-    50% {
-      box-shadow: 0 0 30px hsl(var(--primary) / 0.6);
-    }
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
+    50% { box-shadow: 0 0 30px hsl(var(--primary) / 0.6); }
   }
 
   @keyframes spin-slow {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   @keyframes bounce-smooth {
@@ -336,151 +290,106 @@ All colors MUST be HSL.
     }
   }
 
-  /* Marching-ants dotted outline utilities using theme primary color */
-  .ants-hover { position: relative; }
-  .ants-hover::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    opacity: 0;
-    background: hsl(var(--primary) / 0.06);
-    transition: opacity 200ms ease;
-  }
-  .ants-hover:hover::before { opacity: 1; }
-
-  .ants-hover::after {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    pointer-events: none;
-    opacity: 0;
-    background:
-      linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 0) top / 12px 2px repeat-x,
-      linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 0) bottom / 12px 2px repeat-x,
-      linear-gradient(0deg, hsl(var(--primary)) 50%, transparent 0) left / 2px 12px repeat-y,
-      linear-gradient(0deg, hsl(var(--primary)) 50%, transparent 0) right / 2px 12px repeat-y;
-    animation: ants 3s linear infinite;
-  }
-  .ants-hover:hover::after { opacity: 1; }
-
-  .ants-border { position: relative; }
-  .ants-border::after {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    pointer-events: none;
-    background:
-      linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 0) top / 12px 2px repeat-x,
-      linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 0) bottom / 12px 2px repeat-x,
-      linear-gradient(0deg, hsl(var(--primary)) 50%, transparent 0) left / 2px 12px repeat-y,
-      linear-gradient(0deg, hsl(var(--primary)) 50%, transparent 0) right / 2px 12px repeat-y;
-    animation: ants 3s linear infinite;
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes ants {
-    to {
-      background-position:
-        12px 0,
-        -12px 0,
-        0 12px,
-        0 -12px;
-    }
+  @keyframes pulse-dot {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
   }
 }
 
 /* Theme palettes (override primary/secondary/accent). Declared after base/dark for precedence */
 @layer base {
   :root[data-theme="default"] {
-    --primary: 210 90% 48%;
-    --secondary: 142 76% 36%;
-    --accent: 38 92% 50%;
-    --ring: 210 90% 48% / 0.7;
-    --sidebar-primary: 210 90% 48%;
-    --sidebar-ring: 210 90% 48%;
+    --primary: 174 62% 42%;
+    --secondary: 180 15% 92%;
+    --accent: 38 90% 55%;
+    --ring: 174 62% 42%;
+    --sidebar-primary: 174 62% 42%;
+    --sidebar-ring: 174 62% 42%;
   }
 
   :root[data-theme="ubuntu"] {
-    --primary: 180 80% 50%; /* teal */
-    --secondary: 180 70% 45%; /* deep teal */
-    --accent: 180 85% 55%; /* bright teal */
-    --ring: 180 80% 50% / 0.7;
+    --primary: 180 80% 50%;
+    --secondary: 180 70% 45%;
+    --accent: 180 85% 55%;
+    --ring: 180 80% 50%;
     --sidebar-primary: 180 80% 50%;
     --sidebar-ring: 180 80% 50%;
   }
 
   :root[data-theme="african-sunset"] {
-    --primary: 330 80% 60%; /* coral pink */
-    --secondary: 340 75% 55%; /* deep pink */
-    --accent: 320 85% 65%; /* bright pink */
-    --ring: 330 80% 60% / 0.7;
+    --primary: 330 80% 60%;
+    --secondary: 340 75% 55%;
+    --accent: 320 85% 65%;
+    --ring: 330 80% 60%;
     --sidebar-primary: 330 80% 60%;
     --sidebar-ring: 330 80% 60%;
   }
 
   :root[data-theme="township-green"] {
-    --primary: 142 70% 45%; /* vibrant green */
-    --secondary: 156 72% 40%; /* teal green */
-    --accent: 120 60% 45%; /* forest */
-    --ring: 142 70% 45% / 0.7;
+    --primary: 142 70% 45%;
+    --secondary: 156 72% 40%;
+    --accent: 120 60% 45%;
+    --ring: 142 70% 45%;
     --sidebar-primary: 142 70% 45%;
     --sidebar-ring: 142 70% 45%;
   }
 
   :root[data-theme="kwazulu-gold"] {
-    --primary: 42 96% 56%; /* gold */
-    --secondary: 36 90% 52%; /* warm gold */
-    --accent: 25 95% 53%; /* orange */
-    --ring: 42 96% 56% / 0.7;
+    --primary: 42 96% 56%;
+    --secondary: 36 90% 52%;
+    --accent: 25 95% 53%;
+    --ring: 42 96% 56%;
     --sidebar-primary: 42 96% 56%;
     --sidebar-ring: 42 96% 56%;
   }
 
   :root[data-theme="cape-blue"] {
-    --primary: 217 92% 55%; /* ocean blue */
-    --secondary: 199 89% 48%; /* sea teal */
-    --accent: 222 84% 57%; /* sky */
-    --ring: 217 92% 55% / 0.7;
+    --primary: 217 92% 55%;
+    --secondary: 199 89% 48%;
+    --accent: 222 84% 57%;
+    --ring: 217 92% 55%;
     --sidebar-primary: 217 92% 55%;
     --sidebar-ring: 217 92% 55%;
   }
 
   :root[data-theme="pretoria-purple"] {
-    --primary: 262 83% 58%; /* violet */
-    --secondary: 270 80% 55%; /* purple */
-    --accent: 286 75% 60%; /* accent violet */
-    --ring: 262 83% 58% / 0.7;
+    --primary: 262 83% 58%;
+    --secondary: 270 80% 55%;
+    --accent: 286 75% 60%;
+    --ring: 262 83% 58%;
     --sidebar-primary: 262 83% 58%;
     --sidebar-ring: 262 83% 58%;
   }
 
   :root[data-theme="mandela"] {
-    --primary: 0 0% 15%; /* near black */
-    --secondary: 0 0% 35%; /* dark gray */
-    --accent: 42 96% 56%; /* gold accent */
-    --ring: 0 0% 15% / 0.7;
+    --primary: 0 0% 15%;
+    --secondary: 0 0% 35%;
+    --accent: 42 96% 56%;
+    --ring: 0 0% 15%;
     --sidebar-primary: 0 0% 15%;
     --sidebar-ring: 0 0% 15%;
   }
 
   /* Dark mode theme overrides */
   .dark[data-theme="default"] {
-    --primary: 210 90% 58%;
-    --secondary: 142 70% 45%;
+    --primary: 174 62% 48%;
+    --secondary: 200 15% 18%;
     --accent: 38 90% 55%;
-    --ring: 210 90% 58% / 0.7;
-    --sidebar-primary: 210 90% 58%;
-    --sidebar-ring: 210 90% 58%;
+    --ring: 174 62% 48%;
+    --sidebar-primary: 174 62% 48%;
+    --sidebar-ring: 174 62% 48%;
   }
 
   .dark[data-theme="ubuntu"] {
     --primary: 180 75% 55%;
     --secondary: 180 65% 50%;
     --accent: 180 80% 60%;
-    --ring: 180 75% 55% / 0.7;
+    --ring: 180 75% 55%;
     --sidebar-primary: 180 75% 55%;
     --sidebar-ring: 180 75% 55%;
   }
@@ -489,7 +398,7 @@ All colors MUST be HSL.
     --primary: 330 75% 65%;
     --secondary: 340 70% 60%;
     --accent: 320 80% 70%;
-    --ring: 330 75% 65% / 0.7;
+    --ring: 330 75% 65%;
     --sidebar-primary: 330 75% 65%;
     --sidebar-ring: 330 75% 65%;
   }
@@ -498,7 +407,7 @@ All colors MUST be HSL.
     --primary: 142 70% 50%;
     --secondary: 156 72% 45%;
     --accent: 120 60% 50%;
-    --ring: 142 70% 50% / 0.7;
+    --ring: 142 70% 50%;
     --sidebar-primary: 142 70% 50%;
     --sidebar-ring: 142 70% 50%;
   }
@@ -507,7 +416,7 @@ All colors MUST be HSL.
     --primary: 42 96% 60%;
     --secondary: 36 90% 56%;
     --accent: 25 95% 58%;
-    --ring: 42 96% 60% / 0.7;
+    --ring: 42 96% 60%;
     --sidebar-primary: 42 96% 60%;
     --sidebar-ring: 42 96% 60%;
   }
@@ -516,7 +425,7 @@ All colors MUST be HSL.
     --primary: 217 92% 60%;
     --secondary: 199 89% 52%;
     --accent: 222 84% 62%;
-    --ring: 217 92% 60% / 0.7;
+    --ring: 217 92% 60%;
     --sidebar-primary: 217 92% 60%;
     --sidebar-ring: 217 92% 60%;
   }
@@ -525,7 +434,7 @@ All colors MUST be HSL.
     --primary: 262 83% 62%;
     --secondary: 270 80% 60%;
     --accent: 286 75% 65%;
-    --ring: 262 83% 62% / 0.7;
+    --ring: 262 83% 62%;
     --sidebar-primary: 262 83% 62%;
     --sidebar-ring: 262 83% 62%;
   }
@@ -534,13 +443,8 @@ All colors MUST be HSL.
     --primary: 0 0% 85%;
     --secondary: 0 0% 65%;
     --accent: 42 96% 60%;
-    --ring: 0 0% 85% / 0.7;
+    --ring: 0 0% 85%;
     --sidebar-primary: 0 0% 85%;
     --sidebar-ring: 0 0% 85%;
   }
 }
-
-
-
-
-
