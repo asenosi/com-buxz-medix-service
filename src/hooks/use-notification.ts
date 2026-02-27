@@ -121,7 +121,7 @@ export function useNotification() {
       const registration = await navigator.serviceWorker.ready;
       
       // Check if already subscribed
-      let subscription = await (registration as any).pushManager.getSubscription();
+      let subscription = await (registration as unknown as { pushManager: PushManager }).pushManager.getSubscription();
       
       if (!subscription) {
         // Subscribe to push notifications
