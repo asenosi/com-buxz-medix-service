@@ -118,6 +118,7 @@ async function executeTool(
         status: string;
         notes?: string;
       };
+      console.log(`[log_dose] medication_name="${medication_name}", status="${status}", userId="${userId}"`);
 
       // Find the medication
       const { data: meds, error: medErr } = await supabaseAdmin
