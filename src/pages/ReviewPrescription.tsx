@@ -44,9 +44,10 @@ function getBlockers(
       if (!resolvedAmbiguities[key]) blockers.push(`Resolve: ${a.text}`);
     });
 
-    // Blocking issues
+    // Blocking issues — can be resolved by editing the related field or choosing a resolution
     med.ambiguities?.filter((a) => a.severity === "BLOCKING").forEach((a) => {
-      blockers.push(`Blocking: ${a.text}`);
+      const key = `${idx}-${a.type}`;
+      if (!resolvedAmbiguities[key]) blockers.push(`Blocking: ${a.text}`);
     });
   });
 
