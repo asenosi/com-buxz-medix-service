@@ -129,6 +129,8 @@ async function executeTool(
         .ilike("name", `%${medication_name}%`)
         .limit(1);
 
+      console.log(`[log_dose] meds found: ${meds?.length ?? 0}, error: ${medErr?.message ?? 'none'}`);
+
       if (medErr || !meds?.length) {
         return JSON.stringify({
           success: false,
@@ -137,6 +139,7 @@ async function executeTool(
       }
 
       const med = meds[0];
+      console.log(`[log_dose] matched medication: ${med.name} (${med.id})`);
 
       // Find the schedule
       const { data: schedules } = await supabaseAdmin
@@ -145,6 +148,8 @@ async function executeTool(
         .eq("medication_id", med.id)
         .eq("active", true)
         .limit(1);
+
+      console.log(`[log_dose] schedules found: ${schedules?.length ?? 0}`);
 
       if (!schedules?.length) {
         return JSON.stringify({
@@ -167,8 +172,9 @@ async function executeTool(
         .lte("scheduled_time", `${todayDate}T23:59:59Z`)
         .limit(1);
 
+      console.log(`[log_dose] existing logs today: ${existingLogs?.length ?? 0}`);
+
       if (existingLogs?.length) {
-        // Update existing log instead of creating duplicate
         const { error: updateErr } = await supabaseAdmin
           .from("dose_logs")
           .update({
@@ -178,6 +184,8 @@ async function executeTool(
             dose_status: status === "taken" ? "ON_TIME" : null,
           })
           .eq("id", existingLogs[0].id);
+
+        console.log(`[log_dose] update result: ${updateErr?.message ?? 'success'}`);
 
         if (updateErr) {
           return JSON.stringify({
@@ -204,6 +212,8 @@ async function executeTool(
           notes: notes || null,
           dose_status: status === "taken" ? "ON_TIME" : null,
         });
+
+      console.log(`[log_dose] insert result: ${logErr?.message ?? 'success'}`);
 
       if (logErr) {
         return JSON.stringify({
