@@ -44,9 +44,10 @@ function getBlockers(
       if (!resolvedAmbiguities[key]) blockers.push(`Resolve: ${a.text}`);
     });
 
-    // Blocking issues
+    // Blocking issues — can be resolved by editing the related field or choosing a resolution
     med.ambiguities?.filter((a) => a.severity === "BLOCKING").forEach((a) => {
-      blockers.push(`Blocking: ${a.text}`);
+      const key = `${idx}-${a.type}`;
+      if (!resolvedAmbiguities[key]) blockers.push(`Blocking: ${a.text}`);
     });
   });
 
@@ -344,7 +345,7 @@ export default function ReviewPrescription() {
                             }`} />
                             <div className="flex-1">
                               <p>{amb.text}</p>
-                              {amb.severity === "HIGH" && amb.suggestedUserChoices && amb.suggestedUserChoices.length > 0 && (
+                              {(amb.severity === "HIGH" || amb.severity === "BLOCKING") && amb.suggestedUserChoices && amb.suggestedUserChoices.length > 0 && (
                                 <Select
                                   value={resolvedAmbiguities[`${idx}-${amb.type}`] || ""}
                                   onValueChange={(v) =>
@@ -360,6 +361,16 @@ export default function ReviewPrescription() {
                                     ))}
                                   </SelectContent>
                                 </Select>
+                              )}
+                              {(amb.severity === "HIGH" || amb.severity === "BLOCKING") && (!amb.suggestedUserChoices || amb.suggestedUserChoices.length === 0) && (
+                                <Input
+                                  className="mt-2 h-8"
+                                  placeholder="Enter correct value to resolve..."
+                                  value={resolvedAmbiguities[`${idx}-${amb.type}`] || ""}
+                                  onChange={(e) =>
+                                    setResolvedAmbiguities((p) => ({ ...p, [`${idx}-${amb.type}`]: e.target.value }))
+                                  }
+                                />
                               )}
                             </div>
                             <Badge variant={
