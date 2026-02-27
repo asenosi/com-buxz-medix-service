@@ -68,6 +68,14 @@ export default function DesktopSidebar() {
           <span className="text-sm font-medium">Dashboard</span>
         </button>
         <button
+          onClick={() => navigate("/chat")}
+          className={`${itemBase} ${isActive("/chat") ? itemActive : itemHover}`}
+          aria-current={isActive("/chat") ? "page" : undefined}
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-sm font-medium">Chat</span>
+        </button>
+        <button
           onClick={() => navigate("/alerts")}
           className={`${itemBase} ${isActive("/alerts") ? itemActive : itemHover}`}
           aria-current={isActive("/alerts") ? "page" : undefined}
