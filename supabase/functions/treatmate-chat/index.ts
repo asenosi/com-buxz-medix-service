@@ -179,6 +179,7 @@ async function executeTool(
           .from("dose_logs")
           .update({
             taken_at: status === "taken" ? now.toISOString() : null,
+            scheduled_for: now.toISOString(),
             status,
             notes: notes || null,
             dose_status: status === "taken" ? "ON_TIME" : null,
