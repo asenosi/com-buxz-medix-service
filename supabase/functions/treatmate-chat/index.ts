@@ -575,7 +575,7 @@ Interactive UI hints — append these tags at the END of your message when appro
 - Only use these when actively asking the user for that specific input`;
 
     // Non-streaming: handle tool calls in a loop
-    let currentMessages = [
+    const currentMessages = [
       { role: "system", content: systemPrompt },
       ...messages,
     ];
