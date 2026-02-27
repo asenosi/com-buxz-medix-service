@@ -10,7 +10,8 @@ import {
   Shield,
   Bell,
   HelpCircle,
-  Share2
+  Share2,
+  FileText
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,13 @@ const menuSections = {
       label: "Refills",
       path: "/refills",
       iconBg: "bg-blue-400/10 text-blue-400",
+    },
+    {
+      icon: FileText,
+      label: "Prescription Scanner",
+      description: "Upload & extract medications via AI",
+      path: "/documents",
+      iconBg: "bg-violet-500/10 text-violet-500",
     },
   ],
   settings: [
