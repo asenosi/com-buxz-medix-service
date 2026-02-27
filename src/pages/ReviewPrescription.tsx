@@ -144,7 +144,75 @@ export default function ReviewPrescription() {
         payload: JSON.parse(JSON.stringify({ medicationCount: data.medications?.length ?? 0 })),
       }]);
 
-      toast.success("Medication plan confirmed!");
+      // Create actual medications from confirmed data
+      let createdCount = 0;
+      if (finalData.medications) {
+        for (const med of finalData.medications) {
+          const name = med.drug?.brandName || med.drug?.genericName || "Unknown";
+          const dosage = med.strength?.value
+            ? `${med.strength.value}${med.strength.unit || ""}`
+            : med.dose?.amount
+            ? `${med.dose.amount} ${med.dose.unit || ""}`.trim()
+            : "As prescribed";
+
+          // Map frequency to a known type
+          const freqRaw = med.frequency?.raw?.toLowerCase() || "";
+          let frequencyType = "Once daily";
+          if (freqRaw.includes("twice") || freqRaw.includes("bd") || freqRaw.includes("bid") || freqRaw.includes("2")) {
+            frequencyType = "Twice daily";
+          } else if (freqRaw.includes("three") || freqRaw.includes("tds") || freqRaw.includes("tid") || freqRaw.includes("3")) {
+            frequencyType = "Three times daily";
+          } else if (freqRaw.includes("four") || freqRaw.includes("qid") || freqRaw.includes("4")) {
+            frequencyType = "Four times daily";
+          } else if (freqRaw.includes("meal")) {
+            frequencyType = "With meals";
+          }
+
+          const { data: newMed, error: medErr } = await supabase
+            .from("medications")
+            .insert({
+              user_id: userData.user.id,
+              name,
+              dosage,
+              form: med.form || "pill",
+              frequency_type: frequencyType,
+              route_of_administration: med.route || null,
+              instructions: med.instructions?.join("; ") || null,
+              active: true,
+              start_date: new Date().toISOString().split("T")[0],
+              treatment_duration_days: med.duration?.value || null,
+              pills_remaining: med.quantity?.value || null,
+              total_pills: med.quantity?.value || null,
+              refills_remaining: med.refills ?? null,
+            })
+            .select()
+            .single();
+
+          if (medErr) {
+            console.error("Failed to create medication:", name, medErr);
+            continue;
+          }
+
+          // Create a default schedule
+          const timesPerDay = med.frequency?.normalized?.timesPerDay || 1;
+          const defaultTimes = ["08:00", "12:00", "18:00", "22:00"];
+          const scheduleTimes = defaultTimes.slice(0, timesPerDay);
+
+          const schedules = scheduleTimes.map((t) => ({
+            medication_id: newMed.id,
+            time_of_day: t,
+            frequency_type: frequencyType,
+            with_food: freqRaw.includes("meal") || freqRaw.includes("food"),
+            special_instructions: med.instructions?.join("; ") || null,
+            active: true,
+          }));
+
+          await supabase.from("medication_schedules").insert(schedules);
+          createdCount++;
+        }
+      }
+
+      toast.success(`Plan confirmed! ${createdCount} medication${createdCount !== 1 ? "s" : ""} added.`);
       navigate(`/plans/${id}`);
     } catch (e) {
       console.error("Confirm error:", e);
