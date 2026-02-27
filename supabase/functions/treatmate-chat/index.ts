@@ -13,13 +13,17 @@ const tools = [
     function: {
       name: "log_dose",
       description:
-        "Record that a user has taken a medication dose. Use when the user says they took their medication.",
+        "Record that a user has taken a medication dose. Use when the user says they took their medication. IMPORTANT: Always call list_medications first to check the scheduled times, then specify the correct scheduled_time for the dose being logged.",
       parameters: {
         type: "object",
         properties: {
           medication_name: {
             type: "string",
             description: "Name of the medication taken",
+          },
+          scheduled_time: {
+            type: "string",
+            description: "The scheduled time this dose corresponds to, in HH:MM format (24h). Must match one of the medication's scheduled times. If the user doesn't specify, ask which time slot they mean.",
           },
           status: {
             type: "string",
@@ -113,12 +117,13 @@ async function executeTool(
 ): Promise<string> {
   switch (toolName) {
     case "log_dose": {
-      const { medication_name, status, notes } = args as {
+      const { medication_name, status, notes, scheduled_time: requestedTime } = args as {
         medication_name: string;
         status: string;
         notes?: string;
+        scheduled_time?: string;
       };
-      console.log(`[log_dose] medication_name="${medication_name}", status="${status}", userId="${userId}"`);
+      console.log(`[log_dose] medication_name="${medication_name}", status="${status}", requestedTime="${requestedTime ?? 'none'}", userId="${userId}"`);
 
       // Find the medication
       const { data: meds, error: medErr } = await supabaseAdmin
@@ -141,13 +146,13 @@ async function executeTool(
       const med = meds[0];
       console.log(`[log_dose] matched medication: ${med.name} (${med.id})`);
 
-      // Find the schedule
+      // Find all active schedules for this medication
       const { data: schedules } = await supabaseAdmin
         .from("medication_schedules")
         .select("id, time_of_day")
         .eq("medication_id", med.id)
         .eq("active", true)
-        .limit(1);
+        .order("time_of_day");
 
       console.log(`[log_dose] schedules found: ${schedules?.length ?? 0}`);
 
@@ -158,9 +163,34 @@ async function executeTool(
         });
       }
 
-      const schedule = schedules[0];
+      // Match to the correct schedule
+      let schedule;
+      if (schedules.length === 1) {
+        schedule = schedules[0];
+      } else if (requestedTime) {
+        // Match by time (compare HH:MM)
+        const normalizedReq = requestedTime.substring(0, 5);
+        schedule = schedules.find((s) => s.time_of_day.substring(0, 5) === normalizedReq);
+        if (!schedule) {
+          const availableTimes = schedules.map((s) => s.time_of_day.substring(0, 5)).join(", ");
+          return JSON.stringify({
+            success: false,
+            message: `No schedule at ${requestedTime} for ${med.name}. Available times: ${availableTimes}. Which one did you take?`,
+          });
+        }
+      } else {
+        // Multiple schedules, no time specified — ask the user
+        const availableTimes = schedules.map((s) => s.time_of_day.substring(0, 5)).join(", ");
+        return JSON.stringify({
+          success: false,
+          message: `${med.name} has multiple scheduled times: ${availableTimes}. Which dose did you take?`,
+        });
+      }
+
       const now = new Date();
       const todayDate = now.toISOString().split("T")[0];
+      // Build the scheduled_for timestamp using the schedule's time_of_day
+      const scheduledForTimestamp = `${todayDate}T${schedule.time_of_day}`;
 
       // Check if a dose log already exists for this medication+schedule today
       const { data: existingLogs } = await supabaseAdmin
@@ -168,8 +198,8 @@ async function executeTool(
         .select("id")
         .eq("medication_id", med.id)
         .eq("schedule_id", schedule.id)
-        .gte("scheduled_time", `${todayDate}T00:00:00Z`)
-        .lte("scheduled_time", `${todayDate}T23:59:59Z`)
+        .gte("scheduled_for", `${todayDate}T00:00:00Z`)
+        .lte("scheduled_for", `${todayDate}T23:59:59Z`)
         .limit(1);
 
       console.log(`[log_dose] existing logs today: ${existingLogs?.length ?? 0}`);
@@ -179,7 +209,7 @@ async function executeTool(
           .from("dose_logs")
           .update({
             taken_at: status === "taken" ? now.toISOString() : null,
-            scheduled_for: now.toISOString(),
+            scheduled_for: scheduledForTimestamp,
             status,
             notes: notes || null,
             dose_status: status === "taken" ? "ON_TIME" : null,
@@ -197,7 +227,7 @@ async function executeTool(
 
         return JSON.stringify({
           success: true,
-          message: `✅ Updated ${med.name} as ${status}${notes ? ` — "${notes}"` : ""}.`,
+          message: `✅ Updated ${med.name} (${schedule.time_of_day.substring(0, 5)}) as ${status}${notes ? ` — "${notes}"` : ""}.`,
         });
       }
 
@@ -206,8 +236,8 @@ async function executeTool(
         .insert({
           medication_id: med.id,
           schedule_id: schedule.id,
-          scheduled_time: now.toISOString(),
-          scheduled_for: now.toISOString(),
+          scheduled_time: scheduledForTimestamp,
+          scheduled_for: scheduledForTimestamp,
           taken_at: status === "taken" ? now.toISOString() : null,
           status,
           notes: notes || null,
@@ -225,7 +255,7 @@ async function executeTool(
 
       return JSON.stringify({
         success: true,
-        message: `✅ Logged ${med.name} as ${status}${notes ? ` — "${notes}"` : ""}.`,
+        message: `✅ Logged ${med.name} (${schedule.time_of_day.substring(0, 5)}) as ${status}${notes ? ` — "${notes}"` : ""}.`,
       });
     }
 
@@ -348,7 +378,7 @@ async function executeTool(
     case "list_medications": {
       const { data: meds } = await supabaseAdmin
         .from("medications")
-        .select("name, dosage, form, pills_remaining")
+        .select("id, name, dosage, form, pills_remaining")
         .eq("user_id", userId)
         .eq("active", true)
         .order("name");
@@ -357,9 +387,48 @@ async function executeTool(
         return JSON.stringify({ medications: [], message: "No active medications found." });
       }
 
+      // Fetch schedules for all medications
+      const medIds = meds.map((m) => m.id);
+      const { data: schedules } = await supabaseAdmin
+        .from("medication_schedules")
+        .select("medication_id, time_of_day, days_of_week, with_food, special_instructions, frequency_type")
+        .in("medication_id", medIds)
+        .eq("active", true)
+        .order("time_of_day");
+
+      // Fetch today's dose logs
+      const todayDate = new Date().toISOString().split("T")[0];
+      const { data: todayLogs } = await supabaseAdmin
+        .from("dose_logs")
+        .select("medication_id, schedule_id, status, taken_at")
+        .in("medication_id", medIds)
+        .gte("scheduled_for", `${todayDate}T00:00:00Z`)
+        .lte("scheduled_for", `${todayDate}T23:59:59Z`);
+
+      const medsWithSchedules = meds.map((med) => {
+        const medSchedules = (schedules || []).filter((s) => s.medication_id === med.id);
+        const medLogs = (todayLogs || []).filter((l) => l.medication_id === med.id);
+        return {
+          name: med.name,
+          dosage: med.dosage,
+          form: med.form,
+          pills_remaining: med.pills_remaining,
+          scheduled_times: medSchedules.map((s) => {
+            const log = medLogs.find((l) => l.schedule_id === s.medication_id) || null;
+            return {
+              time: s.time_of_day,
+              with_food: s.with_food,
+              frequency: s.frequency_type,
+              special_instructions: s.special_instructions,
+              today_status: log?.status || "pending",
+            };
+          }),
+        };
+      });
+
       return JSON.stringify({
-        medications: meds,
-        message: `Found ${meds.length} active medication(s).`,
+        medications: medsWithSchedules,
+        message: `Found ${meds.length} active medication(s) with their schedules.`,
       });
     }
 
@@ -457,6 +526,7 @@ Guidelines:
 - Use simple language suitable for elderly users
 - Keep responses concise but friendly
 - If you're unsure about a medication name, list their medications and ask them to confirm
+- IMPORTANT: Before logging a dose, ALWAYS call list_medications first to check the user's medications and their scheduled times. When logging, match the dose to the correct scheduled time. If a medication has multiple scheduled times and the user doesn't specify which one, ask them.
 - For dates, help interpret relative dates like "tomorrow", "next Monday", etc. relative to today (${today})
 - Always confirm details before saving: "Just to confirm, you'd like me to schedule X on Y at Z?"
 
