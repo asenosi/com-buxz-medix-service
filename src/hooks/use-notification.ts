@@ -138,7 +138,7 @@ export function useNotification() {
         
         const { publicKey } = await response.json();
         
-        subscription = await registration.pushManager.subscribe({
+        subscription = await (registration as any).pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: publicKey,
         });
