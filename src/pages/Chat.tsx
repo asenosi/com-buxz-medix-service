@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, Bot, User, Loader2, Sparkles, CalendarIcon } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, CalendarIcon, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -29,14 +29,12 @@ function parseInteractiveTags(content: string): {
   let quickReplies: string[] | undefined;
   let showDatePicker = false;
 
-  // Parse [QUICK_REPLIES:opt1,opt2,...]
   const qrMatch = cleanContent.match(/\[QUICK_REPLIES:([^\]]+)\]/);
   if (qrMatch) {
     quickReplies = qrMatch[1].split(",").map((s) => s.trim());
     cleanContent = cleanContent.replace(qrMatch[0], "").trim();
   }
 
-  // Parse [DATE_PICKER]
   if (cleanContent.includes("[DATE_PICKER]")) {
     showDatePicker = true;
     cleanContent = cleanContent.replace("[DATE_PICKER]", "").trim();
@@ -57,8 +55,39 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load chat history on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setHistoryLoaded(true); return; }
+
+      const { data } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(100);
+
+      if (data?.length) {
+        setMessages(
+          data.map((m: any) => ({
+            id: m.id,
+            role: m.role as "user" | "assistant",
+            content: m.content,
+            timestamp: new Date(m.created_at),
+            quickReplies: m.quick_replies || undefined,
+            showDatePicker: m.show_date_picker || false,
+          }))
+        );
+      }
+      setHistoryLoaded(true);
+    };
+    loadHistory();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -66,6 +95,28 @@ export default function Chat() {
       behavior: "smooth",
     });
   }, [messages]);
+
+  // Persist a message to DB
+  const persistMessage = async (msg: Message) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("chat_messages").insert({
+      id: msg.id,
+      user_id: user.id,
+      role: msg.role,
+      content: msg.content,
+      quick_replies: msg.quickReplies || null,
+      show_date_picker: msg.showDatePicker || false,
+    });
+  };
+
+  const clearHistory = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("chat_messages").delete().eq("user_id", user.id);
+    setMessages([]);
+    toast.success("Chat history cleared");
+  };
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -81,6 +132,7 @@ export default function Chat() {
       setMessages((prev) => [...prev, userMsg]);
       setInput("");
       setIsLoading(true);
+      persistMessage(userMsg);
 
       try {
         const chatHistory = [...messages, userMsg].map((m) => ({
@@ -114,6 +166,7 @@ export default function Chat() {
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
+        persistMessage(assistantMsg);
       } catch (err) {
         console.error("Chat error:", err);
         toast.error("Failed to send message. Please try again.");
@@ -141,7 +194,6 @@ export default function Chat() {
     sendMessage(reply);
   };
 
-  // Check if the last assistant message has interactive elements
   const lastAssistantMsg = [...messages].reverse().find((m) => m.role === "assistant");
   const showInteractive = !isLoading && lastAssistantMsg;
 
@@ -149,7 +201,7 @@ export default function Chat() {
     <div className="flex flex-col h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-6rem)]">
       {/* Chat messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-1 py-4 space-y-4">
-        {messages.length === 0 ? (
+        {messages.length === 0 && historyLoaded ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4 animate-fade-in">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8 text-primary" />
@@ -174,92 +226,106 @@ export default function Chat() {
             </div>
           </div>
         ) : (
-          messages.map((msg, idx) => {
-            const isLastAssistant =
-              msg.role === "assistant" &&
-              idx === messages.length - 1 &&
-              !isLoading;
-
-            return (
-              <div key={msg.id} className="space-y-2">
-                <div
-                  className={cn(
-                    "flex gap-3 max-w-2xl mx-auto animate-fade-in",
-                    msg.role === "user" ? "justify-end" : "justify-start"
-                  )}
+          <>
+            {messages.length > 0 && (
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearHistory}
+                  className="text-xs text-muted-foreground gap-1"
                 >
-                  {msg.role === "assistant" && (
-                    <div className="shrink-0 w-8 h-8 rounded-full bg-chat-bot flex items-center justify-center mt-1">
-                      <Bot className="w-4 h-4 text-chat-bot-foreground" />
-                    </div>
-                  )}
-                  <Card
+                  <Trash2 className="w-3 h-3" />
+                  Clear chat
+                </Button>
+              </div>
+            )}
+            {messages.map((msg, idx) => {
+              const isLastAssistant =
+                msg.role === "assistant" &&
+                idx === messages.length - 1 &&
+                !isLoading;
+
+              return (
+                <div key={msg.id} className="space-y-2">
+                  <div
                     className={cn(
-                      "px-4 py-3 max-w-[80%] shadow-sm",
-                      msg.role === "user"
-                        ? "bg-chat-user text-chat-user-foreground border-transparent rounded-2xl rounded-br-md"
-                        : "bg-chat-bot text-chat-bot-foreground border-transparent rounded-2xl rounded-bl-md"
+                      "flex gap-3 max-w-2xl mx-auto animate-fade-in",
+                      msg.role === "user" ? "justify-end" : "justify-start"
                     )}
                   >
-                    {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:text-sm [&_p]:leading-relaxed [&_p]:m-0 [&_ul]:text-sm [&_li]:text-sm">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    {msg.role === "assistant" && (
+                      <div className="shrink-0 w-8 h-8 rounded-full bg-chat-bot flex items-center justify-center mt-1">
+                        <Bot className="w-4 h-4 text-chat-bot-foreground" />
                       </div>
-                    ) : (
-                      <p className="text-sm leading-relaxed m-0">
-                        {msg.content}
-                      </p>
                     )}
-                  </Card>
-                  {msg.role === "user" && (
-                    <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
-                      <User className="w-4 h-4 text-primary" />
+                    <Card
+                      className={cn(
+                        "px-4 py-3 max-w-[80%] shadow-sm",
+                        msg.role === "user"
+                          ? "bg-chat-user text-chat-user-foreground border-transparent rounded-2xl rounded-br-md"
+                          : "bg-chat-bot text-chat-bot-foreground border-transparent rounded-2xl rounded-bl-md"
+                      )}
+                    >
+                      {msg.role === "assistant" ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:text-sm [&_p]:leading-relaxed [&_p]:m-0 [&_ul]:text-sm [&_li]:text-sm">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-sm leading-relaxed m-0">
+                          {msg.content}
+                        </p>
+                      )}
+                    </Card>
+                    {msg.role === "user" && (
+                      <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-1">
+                        <User className="w-4 h-4 text-primary" />
+                      </div>
+                    )}
+                  </div>
+
+                  {isLastAssistant && (msg.quickReplies || msg.showDatePicker) && (
+                    <div className="flex flex-wrap gap-2 max-w-2xl mx-auto pl-11 animate-fade-in">
+                      {msg.showDatePicker && (
+                        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-full gap-2 text-sm border-primary/30 text-primary hover:bg-primary/10"
+                            >
+                              <CalendarIcon className="w-4 h-4" />
+                              Pick a date
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              onSelect={handleDateSelect}
+                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                              initialFocus
+                              className={cn("p-3 pointer-events-auto")}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      {msg.quickReplies?.map((reply) => (
+                        <Button
+                          key={reply}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuickReply(reply)}
+                          className="rounded-full text-sm border-primary/30 text-primary hover:bg-primary/10"
+                        >
+                          {reply}
+                        </Button>
+                      ))}
                     </div>
                   )}
                 </div>
-
-                {/* Interactive elements for the last assistant message */}
-                {isLastAssistant && (msg.quickReplies || msg.showDatePicker) && (
-                  <div className="flex flex-wrap gap-2 max-w-2xl mx-auto pl-11 animate-fade-in">
-                    {msg.showDatePicker && (
-                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="rounded-full gap-2 text-sm border-primary/30 text-primary hover:bg-primary/10"
-                          >
-                            <CalendarIcon className="w-4 h-4" />
-                            Pick a date
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            onSelect={handleDateSelect}
-                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                            initialFocus
-                            className={cn("p-3 pointer-events-auto")}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                    {msg.quickReplies?.map((reply) => (
-                      <Button
-                        key={reply}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuickReply(reply)}
-                        className="rounded-full text-sm border-primary/30 text-primary hover:bg-primary/10"
-                      >
-                        {reply}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })
+              );
+            })}
+          </>
         )}
 
         {isLoading && (

@@ -199,6 +199,78 @@ async function executeTool(
         notes?: string;
       };
 
+      // Check for existing appointment on same date/time
+      const { data: existing } = await supabaseAdmin
+        .from("appointments")
+        .select("id, title, appointment_date, appointment_time")
+        .eq("user_id", userId)
+        .eq("appointment_date", appointment_date)
+        .eq("appointment_time", appointment_time)
+        .eq("status", "scheduled")
+        .limit(1);
+
+      if (existing?.length) {
+        // Update existing appointment instead of creating duplicate
+        const { error } = await supabaseAdmin
+          .from("appointments")
+          .update({
+            title,
+            doctor_name: doctor_name || null,
+            location: location || null,
+            appointment_type: appointment_type || "checkup",
+            notes: notes || null,
+          })
+          .eq("id", existing[0].id);
+
+        if (error) {
+          return JSON.stringify({
+            success: false,
+            message: `Failed to update appointment: ${error.message}`,
+          });
+        }
+
+        return JSON.stringify({
+          success: true,
+          message: `✅ Updated existing appointment to "${title}" on ${appointment_date} at ${appointment_time}${doctor_name ? ` with ${doctor_name}` : ""}.`,
+        });
+      }
+
+      // Also check for same title on same date (different time)
+      const { data: sameDayMatch } = await supabaseAdmin
+        .from("appointments")
+        .select("id, title, appointment_time")
+        .eq("user_id", userId)
+        .eq("appointment_date", appointment_date)
+        .ilike("title", `%${title}%`)
+        .eq("status", "scheduled")
+        .limit(1);
+
+      if (sameDayMatch?.length) {
+        const { error } = await supabaseAdmin
+          .from("appointments")
+          .update({
+            title,
+            appointment_time,
+            doctor_name: doctor_name || null,
+            location: location || null,
+            appointment_type: appointment_type || "checkup",
+            notes: notes || null,
+          })
+          .eq("id", sameDayMatch[0].id);
+
+        if (error) {
+          return JSON.stringify({
+            success: false,
+            message: `Failed to update appointment: ${error.message}`,
+          });
+        }
+
+        return JSON.stringify({
+          success: true,
+          message: `✅ Updated existing "${title}" appointment on ${appointment_date} to ${appointment_time}${doctor_name ? ` with ${doctor_name}` : ""}.`,
+        });
+      }
+
       const { error } = await supabaseAdmin.from("appointments").insert({
         user_id: userId,
         title,
