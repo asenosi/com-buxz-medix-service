@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Pill, Calendar as CalendarIcon, Search, User as UserIcon, SunMedium, Moon, Monitor, LogOut, Home, Bell, Stethoscope, Users } from "lucide-react";
+import { Pill, Calendar as CalendarIcon, Search, User as UserIcon, SunMedium, Moon, Monitor, LogOut, Home, Bell, Stethoscope, Users, MessageCircle } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,6 +66,14 @@ export default function DesktopSidebar() {
         >
           <Home className="h-4 w-4" />
           <span className="text-sm font-medium">Dashboard</span>
+        </button>
+        <button
+          onClick={() => navigate("/chat")}
+          className={`${itemBase} ${isActive("/chat") ? itemActive : itemHover}`}
+          aria-current={isActive("/chat") ? "page" : undefined}
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-sm font-medium">Chat</span>
         </button>
         <button
           onClick={() => navigate("/alerts")}

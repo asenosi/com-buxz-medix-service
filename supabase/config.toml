@@ -2,3 +2,6 @@ project_id = "tuzclixxptjczuhgrnlq"
 
 [functions.extract-prescription-v2]
 verify_jwt = false
+
+[functions.treatmate-chat]
+verify_jwt = false

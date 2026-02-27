@@ -10,7 +10,7 @@ import "./index.css";
     const isDark = saved === "dark" || (!saved || saved === "system") && systemDark;
     document.documentElement.classList.toggle("dark", Boolean(isDark));
 
-    const palette = (localStorage.getItem("theme:palette") || "african-sunset");
+    const palette = (localStorage.getItem("theme:palette") || "default");
     document.documentElement.setAttribute("data-theme", palette);
   } catch {
     // no-op
