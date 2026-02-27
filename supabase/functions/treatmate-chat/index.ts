@@ -154,6 +154,42 @@ async function executeTool(
 
       const schedule = schedules[0];
       const now = new Date();
+      const todayDate = now.toISOString().split("T")[0];
+
+      // Check if a dose log already exists for this medication+schedule today
+      const { data: existingLogs } = await supabaseAdmin
+        .from("dose_logs")
+        .select("id")
+        .eq("medication_id", med.id)
+        .eq("schedule_id", schedule.id)
+        .gte("scheduled_time", `${todayDate}T00:00:00Z`)
+        .lte("scheduled_time", `${todayDate}T23:59:59Z`)
+        .limit(1);
+
+      if (existingLogs?.length) {
+        // Update existing log instead of creating duplicate
+        const { error: updateErr } = await supabaseAdmin
+          .from("dose_logs")
+          .update({
+            taken_at: status === "taken" ? now.toISOString() : null,
+            status,
+            notes: notes || null,
+            dose_status: status === "taken" ? "ON_TIME" : null,
+          })
+          .eq("id", existingLogs[0].id);
+
+        if (updateErr) {
+          return JSON.stringify({
+            success: false,
+            message: `Failed to update dose: ${updateErr.message}`,
+          });
+        }
+
+        return JSON.stringify({
+          success: true,
+          message: `✅ Updated ${med.name} as ${status}${notes ? ` — "${notes}"` : ""}.`,
+        });
+      }
 
       const { error: logErr } = await supabaseAdmin
         .from("dose_logs")
@@ -161,6 +197,7 @@ async function executeTool(
           medication_id: med.id,
           schedule_id: schedule.id,
           scheduled_time: now.toISOString(),
+          scheduled_for: now.toISOString(),
           taken_at: status === "taken" ? now.toISOString() : null,
           status,
           notes: notes || null,
