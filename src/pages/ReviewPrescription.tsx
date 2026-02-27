@@ -127,23 +127,23 @@ export default function ReviewPrescription() {
       // Save confirmed plan
       const { error: planErr } = await supabase
         .from("confirmed_plans")
-        .insert({
+        .insert([{
           document_id: id,
           user_id: userData.user.id,
           confirmed_json: finalData as unknown as Record<string, unknown>,
           confirmed_at: new Date().toISOString(),
-        });
+        }]);
       if (planErr) throw planErr;
 
       // Update document status
-      await supabase.from("documents").update({ status: "CONFIRMED" as unknown as string }).eq("id", id);
+      await supabase.from("documents").update({ status: "CONFIRMED" }).eq("id", id);
 
       // Audit
-      await supabase.from("audit_events").insert({
+      await supabase.from("audit_events").insert([{
         document_id: id,
         event_type: "PLAN_CONFIRMED",
         payload: { medicationCount: data.medications?.length ?? 0 } as unknown as Record<string, unknown>,
-      });
+      }]);
 
       toast.success("Medication plan confirmed!");
       navigate(`/plans/${id}`);
