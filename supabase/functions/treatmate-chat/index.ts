@@ -128,7 +128,7 @@ async function executeTool(
       // Find the medication
       const { data: meds, error: medErr } = await supabaseAdmin
         .from("medications")
-        .select("id, name")
+        .select("id, name, pills_remaining")
         .eq("user_id", userId)
         .eq("active", true)
         .ilike("name", `%${medication_name}%`)
