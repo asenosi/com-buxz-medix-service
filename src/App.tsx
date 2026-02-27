@@ -30,6 +30,7 @@ const Refills = lazy(() => import("./pages/Refills"));
 const RefillDetails = lazy(() => import("./pages/RefillDetails"));
 const CaregiverDashboard = lazy(() => import("./pages/CaregiverDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Chat = lazy(() => import("./pages/Chat"));
 
 const queryClient = new QueryClient();
 
