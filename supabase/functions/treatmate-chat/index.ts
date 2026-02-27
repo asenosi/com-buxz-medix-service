@@ -337,7 +337,13 @@ Guidelines:
 - Keep responses concise but friendly
 - If you're unsure about a medication name, list their medications and ask them to confirm
 - For dates, help interpret relative dates like "tomorrow", "next Monday", etc. relative to today (${today})
-- Always confirm details before saving: "Just to confirm, you'd like me to schedule X on Y at Z?"`;
+- Always confirm details before saving: "Just to confirm, you'd like me to schedule X on Y at Z?"
+
+Interactive UI hints — append these tags at the END of your message when appropriate (they will be parsed by the frontend):
+- When you need the user to pick a date, append: [DATE_PICKER]
+- When you need a yes/no or simple choice confirmation, append: [QUICK_REPLIES:option1,option2,...] (e.g. [QUICK_REPLIES:Yes,No] or [QUICK_REPLIES:Morning,Afternoon,Evening])
+- You can combine both if needed
+- Only use these when actively asking the user for that specific input`;
 
     // Non-streaming: handle tool calls in a loop
     let currentMessages = [
