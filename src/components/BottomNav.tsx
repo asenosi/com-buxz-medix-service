@@ -1,10 +1,11 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Bell, Calendar, Settings } from "lucide-react";
+import { Home, Bell, Calendar, Settings, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHaptic } from "@/hooks/use-haptic";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
+  { icon: MessageCircle, label: "Chat", path: "/chat" },
   { icon: Bell, label: "Alerts", path: "/alerts" },
   { icon: Calendar, label: "Progress", path: "/calendar" },
   { icon: Settings, label: "Manage", path: "/medications" },
