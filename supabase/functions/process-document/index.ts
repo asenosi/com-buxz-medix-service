@@ -249,7 +249,13 @@ serve(async (req) => {
     if (dlErr || !fileData) throw new Error("Failed to download file: " + (dlErr?.message || "unknown"));
 
     const arrayBuf = await fileData.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
+    const bytes = new Uint8Array(arrayBuf);
+    let binary = "";
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    const base64 = btoa(binary);
     const mimeType = filePath.endsWith(".png") ? "image/png" : filePath.endsWith(".webp") ? "image/webp" : "image/jpeg";
 
     const typeHint = doc.document_type_hint || "UNKNOWN";
