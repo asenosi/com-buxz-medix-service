@@ -348,7 +348,7 @@ async function executeTool(
     case "list_medications": {
       const { data: meds } = await supabaseAdmin
         .from("medications")
-        .select("name, dosage, form, pills_remaining")
+        .select("id, name, dosage, form, pills_remaining")
         .eq("user_id", userId)
         .eq("active", true)
         .order("name");
@@ -357,9 +357,48 @@ async function executeTool(
         return JSON.stringify({ medications: [], message: "No active medications found." });
       }
 
+      // Fetch schedules for all medications
+      const medIds = meds.map((m) => m.id);
+      const { data: schedules } = await supabaseAdmin
+        .from("medication_schedules")
+        .select("medication_id, time_of_day, days_of_week, with_food, special_instructions, frequency_type")
+        .in("medication_id", medIds)
+        .eq("active", true)
+        .order("time_of_day");
+
+      // Fetch today's dose logs
+      const todayDate = new Date().toISOString().split("T")[0];
+      const { data: todayLogs } = await supabaseAdmin
+        .from("dose_logs")
+        .select("medication_id, schedule_id, status, taken_at")
+        .in("medication_id", medIds)
+        .gte("scheduled_for", `${todayDate}T00:00:00Z`)
+        .lte("scheduled_for", `${todayDate}T23:59:59Z`);
+
+      const medsWithSchedules = meds.map((med) => {
+        const medSchedules = (schedules || []).filter((s) => s.medication_id === med.id);
+        const medLogs = (todayLogs || []).filter((l) => l.medication_id === med.id);
+        return {
+          name: med.name,
+          dosage: med.dosage,
+          form: med.form,
+          pills_remaining: med.pills_remaining,
+          scheduled_times: medSchedules.map((s) => {
+            const log = medLogs.find((l) => l.schedule_id === s.medication_id) || null;
+            return {
+              time: s.time_of_day,
+              with_food: s.with_food,
+              frequency: s.frequency_type,
+              special_instructions: s.special_instructions,
+              today_status: log?.status || "pending",
+            };
+          }),
+        };
+      });
+
       return JSON.stringify({
-        medications: meds,
-        message: `Found ${meds.length} active medication(s).`,
+        medications: medsWithSchedules,
+        message: `Found ${meds.length} active medication(s) with their schedules.`,
       });
     }
 
