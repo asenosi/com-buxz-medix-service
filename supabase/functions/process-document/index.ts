@@ -334,7 +334,16 @@ Return ONLY the JSON object, no markdown fences.`;
           },
         ],
       }),
-    });
+      });
+    } catch (fetchErr) {
+      clearTimeout(timeout);
+      if (fetchErr instanceof DOMException && fetchErr.name === "AbortError") {
+        throw new Error("Extraction timed out after 10 minutes");
+      }
+      throw fetchErr;
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
