@@ -63,6 +63,13 @@ const menuSections = {
       path: "/refills",
       iconBg: "bg-blue-400/10 text-blue-400",
     },
+    {
+      icon: FileText,
+      label: "Prescription Scanner",
+      description: "Upload & extract medications via AI",
+      path: "/documents",
+      iconBg: "bg-violet-500/10 text-violet-500",
+    },
   ],
   settings: [
     {
