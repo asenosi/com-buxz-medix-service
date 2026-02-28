@@ -140,31 +140,33 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
+    @apply font-display tracking-tight;
   }
 
   /* Elderly-friendly typography */
   h1 {
-    @apply text-4xl md:text-5xl font-bold tracking-tight;
+    @apply text-3xl md:text-4xl font-bold leading-tight;
   }
 
   h2 {
-    @apply text-3xl md:text-4xl font-bold tracking-tight;
+    @apply text-2xl md:text-3xl font-bold leading-tight;
   }
 
   h3 {
-    @apply text-2xl md:text-3xl font-semibold tracking-tight;
+    @apply text-xl md:text-2xl font-semibold leading-snug;
   }
 
   h4 {
-    @apply text-xl md:text-2xl font-semibold;
+    @apply text-lg md:text-xl font-semibold leading-snug;
   }
 
   p {
-    @apply text-lg md:text-xl leading-relaxed;
+    @apply text-base md:text-lg leading-relaxed;
   }
 
   /* Large touch targets */
@@ -175,6 +177,16 @@
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Elevated card style */
+  .card-elevated {
+    box-shadow: var(--shadow-md);
+    border-color: hsl(var(--border) / 0.6);
+  }
+
+  .card-elevated:hover {
+    box-shadow: var(--shadow-lg);
   }
 }
 
