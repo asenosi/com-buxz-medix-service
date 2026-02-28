@@ -42,12 +42,12 @@ export function StreakCard({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-full",
-              streak > 0 ? "bg-orange-500/15" : "bg-muted"
+              "flex items-center justify-center w-12 h-12 rounded-2xl",
+              streak > 0 ? "bg-accent/15" : "bg-muted"
             )}>
               <Flame className={cn(
                 "h-6 w-6",
-                streak > 0 ? "text-orange-500" : "text-muted-foreground"
+                streak > 0 ? "text-accent" : "text-muted-foreground"
               )} />
             </div>
             <div>

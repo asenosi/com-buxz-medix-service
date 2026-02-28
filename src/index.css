@@ -400,12 +400,12 @@
 
   /* Dark mode theme overrides */
   .dark[data-theme="default"] {
-    --primary: 174 62% 48%;
-    --secondary: 200 15% 18%;
+    --primary: 174 60% 48%;
+    --secondary: 210 12% 16%;
     --accent: 38 90% 55%;
-    --ring: 174 62% 48%;
-    --sidebar-primary: 174 62% 48%;
-    --sidebar-ring: 174 62% 48%;
+    --ring: 174 60% 48%;
+    --sidebar-primary: 174 60% 48%;
+    --sidebar-ring: 174 60% 48%;
   }
 
   .dark[data-theme="ubuntu"] {
