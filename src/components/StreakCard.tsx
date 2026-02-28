@@ -31,8 +31,8 @@ export function StreakCard({
   return (
     <Card 
       className={cn(
-        "bg-gradient-to-br from-primary/5 via-background to-accent/5 border-border overflow-hidden",
-        onClick && "cursor-pointer hover:border-primary/40 transition-all hover:shadow-md",
+        "bg-gradient-to-br from-primary/5 via-card to-accent/5 border-border/40 overflow-hidden shadow-[var(--shadow-sm)]",
+        onClick && "cursor-pointer hover:border-primary/30 transition-all duration-300 hover:shadow-[var(--shadow-md)]",
         className
       )}
       onClick={onClick}

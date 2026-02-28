@@ -7,7 +7,7 @@ import BottomNav from "@/components/BottomNav";
 export default function AppLayout() {
   const location = useLocation();
   return (
-    <div className="min-h-dvh bg-background pb-16 lg:pb-0">
+    <div className="min-h-dvh bg-background pb-20 lg:pb-0">
       <AppHeader />
       <div className="mx-auto max-w-screen-2xl px-4 pb-8 pt-4 lg:flex lg:gap-6">
         <aside className="hidden lg:block w-64 shrink-0">
