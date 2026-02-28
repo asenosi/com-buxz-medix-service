@@ -103,11 +103,11 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border/40 shadow-sm">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      <Card className="w-full max-w-md border-border/30 shadow-[var(--shadow-lg)]">
         <CardHeader className="text-center space-y-4 pb-4">
           <div className="flex justify-center">
-            <div className="bg-primary rounded-full p-3">
+            <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-3.5 shadow-[var(--shadow-glow)]">
               <Pill className="w-8 h-8 text-primary-foreground" />
             </div>
           </div>

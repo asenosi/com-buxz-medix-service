@@ -19,9 +19,9 @@ export function StreakCard({
   onClick 
 }: StreakCardProps) {
   const getStreakLevel = () => {
-    if (streak >= 30) return { label: "Champion", color: "text-amber-500" };
-    if (streak >= 14) return { label: "Strong", color: "text-emerald-500" };
-    if (streak >= 7) return { label: "Building", color: "text-blue-500" };
+    if (streak >= 30) return { label: "Champion", color: "text-accent" };
+    if (streak >= 14) return { label: "Strong", color: "text-success" };
+    if (streak >= 7) return { label: "Building", color: "text-primary" };
     if (streak >= 1) return { label: "Started", color: "text-primary" };
     return { label: "Begin", color: "text-muted-foreground" };
   };
@@ -31,8 +31,8 @@ export function StreakCard({
   return (
     <Card 
       className={cn(
-        "bg-gradient-to-br from-primary/5 via-background to-accent/5 border-border overflow-hidden",
-        onClick && "cursor-pointer hover:border-primary/40 transition-all hover:shadow-md",
+        "bg-gradient-to-br from-primary/5 via-card to-accent/5 border-border/40 overflow-hidden shadow-[var(--shadow-sm)]",
+        onClick && "cursor-pointer hover:border-primary/30 transition-all duration-300 hover:shadow-[var(--shadow-md)]",
         className
       )}
       onClick={onClick}
@@ -42,12 +42,12 @@ export function StreakCard({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-full",
-              streak > 0 ? "bg-orange-500/15" : "bg-muted"
+              "flex items-center justify-center w-12 h-12 rounded-2xl",
+              streak > 0 ? "bg-accent/15" : "bg-muted"
             )}>
               <Flame className={cn(
                 "h-6 w-6",
-                streak > 0 ? "text-orange-500" : "text-muted-foreground"
+                streak > 0 ? "text-accent" : "text-muted-foreground"
               )} />
             </div>
             <div>

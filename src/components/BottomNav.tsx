@@ -22,8 +22,8 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-area-inset-bottom">
-      <div className="grid grid-cols-5 h-14 max-w-screen-2xl mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-border/40 safe-area-inset-bottom shadow-[0_-4px_16px_-4px_hsl(200_25%_10%/0.06)]">
+      <div className="grid grid-cols-5 h-16 max-w-screen-2xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -38,10 +38,15 @@ export default function BottomNav() {
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5]")} />
+              <div className={cn(
+                "flex items-center justify-center w-10 h-10 rounded-xl transition-colors duration-200",
+                isActive && "bg-primary/10"
+              )}>
+                <Icon className={cn("h-5 w-5 transition-all", isActive && "stroke-[2.5]")} />
+              </div>
               <span className={cn(
-                "text-[10px] font-medium leading-tight",
-                isActive && "font-semibold"
+                "text-[10px] font-medium leading-none",
+                isActive && "font-semibold text-primary"
               )}>
                 {item.label}
               </span>
