@@ -22,8 +22,8 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-area-inset-bottom">
-      <div className="grid grid-cols-5 h-14 max-w-screen-2xl mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-border/40 safe-area-inset-bottom shadow-[0_-4px_16px_-4px_hsl(200_25%_10%/0.06)]">
+      <div className="grid grid-cols-5 h-16 max-w-screen-2xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
