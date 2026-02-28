@@ -38,10 +38,15 @@ export default function BottomNav() {
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5]")} />
+              <div className={cn(
+                "flex items-center justify-center w-10 h-10 rounded-xl transition-colors duration-200",
+                isActive && "bg-primary/10"
+              )}>
+                <Icon className={cn("h-5 w-5 transition-all", isActive && "stroke-[2.5]")} />
+              </div>
               <span className={cn(
-                "text-[10px] font-medium leading-tight",
-                isActive && "font-semibold"
+                "text-[10px] font-medium leading-none",
+                isActive && "font-semibold text-primary"
               )}>
                 {item.label}
               </span>

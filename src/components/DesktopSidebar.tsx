@@ -47,10 +47,10 @@ export default function DesktopSidebar() {
   const isActive = (path: string, startsWith = false) =>
     startsWith ? location.pathname.startsWith(path) : location.pathname === path;
 
-  const itemBase = "flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors";
-  const itemActive = "bg-primary/10 text-primary";
-  const itemHover = "hover:bg-muted";
-  const badgeCls = "ml-auto inline-flex items-center justify-center min-w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] px-1.5 leading-none";
+  const itemBase = "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200";
+  const itemActive = "bg-primary/10 text-primary font-medium";
+  const itemHover = "hover:bg-muted/60";
+  const badgeCls = "ml-auto inline-flex items-center justify-center min-w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] px-1.5 leading-none font-semibold";
 
   return (
     <div className="sticky top-14 h-[calc(100dvh-56px)] overflow-auto rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-3 shadow-[var(--shadow-sm)]">
