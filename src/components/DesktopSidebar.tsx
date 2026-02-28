@@ -53,7 +53,7 @@ export default function DesktopSidebar() {
   const badgeCls = "ml-auto inline-flex items-center justify-center min-w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] px-1.5 leading-none";
 
   return (
-    <div className="sticky top-14 h-[calc(100dvh-56px)] overflow-auto rounded-md border bg-card p-3">
+    <div className="sticky top-14 h-[calc(100dvh-56px)] overflow-auto rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-3 shadow-[var(--shadow-sm)]">
       <div className="flex items-center gap-2 px-1 py-2">
         <Pill className="h-5 w-5 text-primary" />
         <span className="text-sm font-semibold">TreatMate</span>
