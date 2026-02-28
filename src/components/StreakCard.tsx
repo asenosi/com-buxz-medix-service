@@ -19,9 +19,9 @@ export function StreakCard({
   onClick 
 }: StreakCardProps) {
   const getStreakLevel = () => {
-    if (streak >= 30) return { label: "Champion", color: "text-amber-500" };
-    if (streak >= 14) return { label: "Strong", color: "text-emerald-500" };
-    if (streak >= 7) return { label: "Building", color: "text-blue-500" };
+    if (streak >= 30) return { label: "Champion", color: "text-accent" };
+    if (streak >= 14) return { label: "Strong", color: "text-success" };
+    if (streak >= 7) return { label: "Building", color: "text-primary" };
     if (streak >= 1) return { label: "Started", color: "text-primary" };
     return { label: "Begin", color: "text-muted-foreground" };
   };
