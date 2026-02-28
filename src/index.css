@@ -327,12 +327,12 @@
 /* Theme palettes (override primary/secondary/accent). Declared after base/dark for precedence */
 @layer base {
   :root[data-theme="default"] {
-    --primary: 174 62% 42%;
-    --secondary: 180 15% 92%;
-    --accent: 38 90% 55%;
-    --ring: 174 62% 42%;
-    --sidebar-primary: 174 62% 42%;
-    --sidebar-ring: 174 62% 42%;
+    --primary: 174 65% 40%;
+    --secondary: 180 12% 93%;
+    --accent: 38 92% 54%;
+    --ring: 174 65% 40%;
+    --sidebar-primary: 174 65% 40%;
+    --sidebar-ring: 174 65% 40%;
   }
 
   :root[data-theme="ubuntu"] {
