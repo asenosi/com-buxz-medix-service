@@ -17,31 +17,40 @@ import "./index.css";
   }
 })();
 
-// Register service worker for PWA and push notifications (production only)
-// Skip in development to avoid redirect errors with dev-sw.js
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// Register service worker for push notifications (production only, never in Lovable preview/iframe)
+const swAllowed = (() => {
+  if (!("serviceWorker" in navigator)) return false;
+  if (!import.meta.env.PROD) return false;
+  try {
+    if (window.self !== window.top) return false;
+  } catch {
+    return false;
+  }
+  const h = window.location.hostname;
+  if (new URLSearchParams(window.location.search).has("sw") ) return false;
+  if (h.startsWith("id-preview--") || h.startsWith("preview--")) return false;
+  if (h === "lovableproject.com" || h.endsWith(".lovableproject.com")) return false;
+  if (h === "lovableproject-dev.com" || h.endsWith(".lovableproject-dev.com")) return false;
+  if (h === "beta.lovable.dev" || h.endsWith(".beta.lovable.dev")) return false;
+  return true;
+})();
+
+if ("serviceWorker" in navigator && !swAllowed) {
+  // Clean up any stale worker that could serve deleted chunks in preview/dev
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    regs.forEach((r) => r.unregister());
+  }).catch(() => {});
+}
+
+if (swAllowed) {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/',
-      });
-      console.log('Service Worker registered successfully:', registration);
-      
-      // Listen for service worker updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('New service worker available');
-            }
-          });
-        }
-      });
+      await navigator.serviceWorker.register('/sw.js', { scope: '/' });
     } catch (error) {
       console.error('Service Worker registration failed:', error);
     }
   });
 }
+
 
 createRoot(document.getElementById("root")!).render(<App />);
